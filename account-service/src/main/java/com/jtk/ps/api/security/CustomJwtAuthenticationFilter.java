@@ -55,7 +55,11 @@ public class CustomJwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // JWT Token is in the form "Bearer token". Remove Bearer word and
         // get  only the Token
-        if (!request.getServletPath().equals("/account/login") || !request.getServletPath().equals("/account/verify")) {
+        boolean isAuthPath = 
+            "/login".equals(request.getServletPath()) || "/verify".equals(request.getServletPath()) ||
+            "/account/login".equals(request.getServletPath()) || "/account/verify".equals(request.getServletPath());
+
+        if (!isAuthPath) {
             String jwtToken = getJwtToken(request, true);
             try {
                 boolean isValid = StringUtils.hasText(jwtToken) && jwtTokenUtil.validateToken(jwtToken);
