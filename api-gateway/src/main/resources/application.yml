@@ -8,6 +8,8 @@ spring:
           uri: lb://account-service
           predicates:
             - Path=/account/**
+          filters:
+            - StripPrefix=1
         - id: participant-service
           uri: lb://participant-service
           predicates:

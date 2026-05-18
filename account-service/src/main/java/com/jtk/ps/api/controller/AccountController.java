@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("")
+@RequestMapping({"/", "/account"})
 public class AccountController {
     @Autowired
     private IAccountService service;
