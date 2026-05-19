@@ -2107,7 +2107,7 @@ const UpdatePrerequisite = () => {
                 <CCard className="mb-4">
                     <CCardBody>
                         {steps[current].content}
-                        <div className="steps-action" align="right">
+                        <div className="steps-action" style={{ textAlign: "right" }}>
                             {current > 0 && (
                                 <>
                                     <Button type="primary" style={{ margin: '0 8px' }}
