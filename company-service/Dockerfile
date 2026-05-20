@@ -1,18 +1,32 @@
-FROM maven:3.9.9-eclipse-temurin-11 AS build
+# ================== BUILD STAGE ==================
+FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && update-ca-certificates && rm -rf /var/lib/apt/lists/*
+# Install certificates
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && \
+    update-ca-certificates && rm -rf /var/lib/apt/lists/*
 
+# Copy settings
 COPY settings.xml /root/.m2/settings.xml
 
+# Copy pom files
 COPY pom.xml ./
-RUN mvn -s /root/.m2/settings.xml dependency:go-offline -B --no-transfer-progress
+COPY */pom.xml ./ 
 
+# Copy source code
 COPY src ./src
-RUN mvn -s /root/.m2/settings.xml clean package -DskipTests --no-transfer-progress
 
-FROM eclipse-temurin:11-jre
+# Build (dengan retry untuk stabilitas jaringan)
+RUN mvn -s /root/.m2/settings.xml clean package -DskipTests --no-transfer-progress \
+    -Dmaven.wagon.http.retryhandler.count=3
+
+# ================== RUNTIME STAGE ==================
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
+# Salin hasil jar dari build stage
 COPY --from=build /app/target/*.jar app.jar
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+
+# Gunakan port 8080 (sesuai standar Spring Boot)
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

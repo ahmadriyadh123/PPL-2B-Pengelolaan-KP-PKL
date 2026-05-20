@@ -1,32 +1,32 @@
 # ================== BUILD STAGE ==================
-FROM maven:3.9.9-eclipse-temurin-17 AS build
+FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Update CA Certificates (untuk menghindari SSL issue)
-RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
+# Install certificates
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && \
+    update-ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Copy Maven settings (mirror)
+# Copy settings
 COPY settings.xml /root/.m2/settings.xml
 
-# Copy pom.xml untuk dependency caching
-COPY pom.xml .
-# Jika multi-module, copy semua pom
-COPY */pom.xml ./
-
-RUN mvn dependency:go-offline -B --no-transfer-progress
+# Copy pom files
+COPY pom.xml ./
+COPY */pom.xml ./ 
 
 # Copy source code
-COPY . .
+COPY src ./src
 
-# Build
-RUN mvn clean package -DskipTests --no-transfer-progress \
+# Build (dengan retry untuk stabilitas jaringan)
+RUN mvn -s /root/.m2/settings.xml clean package -DskipTests --no-transfer-progress \
     -Dmaven.wagon.http.retryhandler.count=3
 
 # ================== RUNTIME STAGE ==================
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
+# Salin hasil jar dari build stage
 COPY --from=build /app/target/*.jar app.jar
 
+# Gunakan port 8080 (sesuai standar Spring Boot)
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
