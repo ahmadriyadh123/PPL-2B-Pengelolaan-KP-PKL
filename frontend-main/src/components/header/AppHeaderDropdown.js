@@ -14,7 +14,6 @@ import avatar8 from './../../assets/images/avatars/8.jpg'
 import { useHistory } from 'react-router-dom';
 import {notification, Spin} from 'antd'
 import { LoadingOutlined } from '@ant-design/icons';
-require('dotenv').config()
 
 const antIcon = <LoadingOutlined style={{ fontSize: 20 }} spin />;
 
