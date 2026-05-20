@@ -472,7 +472,7 @@ public class AccountService implements UserDetailsService, IAccountService {
         // Participant D3
         LoginRequest lr = new LoginRequest();
         lr.setUsername("panitiad3");
-        lr.setPassword("1234");
+        lr.setPassword("12345");
         LoginResponse loginResponse = login(lr, "", "");
         
         String accessToken = String.valueOf(loginResponse.getHeaders().get("Set-Cookie").get(0));
