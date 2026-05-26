@@ -1,13 +1,11 @@
 package com.jtk.ps.api.security;
 
 import com.jtk.ps.api.dto.RefreshResponse;
-import com.jtk.ps.api.dto.VerifyResponse;
 import com.jtk.ps.api.model.Account;
 import com.jtk.ps.api.service.AccountService;
-import com.jtk.ps.api.util.Constant;
-import com.jtk.ps.api.util.CookieUtil;
 import com.jtk.ps.api.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -26,10 +24,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.HttpCookie;
-import java.util.List;
 import java.util.Map;
 
 
+@Slf4j
 @Component
 public class CustomJwtAuthenticationFilter extends OncePerRequestFilter {
     @Value("${jwt.accessTokenCookieName}")
@@ -46,9 +44,6 @@ public class CustomJwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtUtil jwtUtils;
-
-    @Autowired
-    private CookieUtil cookieUtil;
 
 
     @Override
@@ -89,7 +84,8 @@ public class CustomJwtAuthenticationFilter extends OncePerRequestFilter {
             }catch (BadCredentialsException ex) {
                 request.setAttribute("exception", ex);
             } catch (Exception ex) {
-                System.out.println(ex);
+                log.warn("Token validation failed: {}", ex.getMessage());
+                request.setAttribute("exception", ex);
             }
         }
         filterChain.doFilter(request, response);
