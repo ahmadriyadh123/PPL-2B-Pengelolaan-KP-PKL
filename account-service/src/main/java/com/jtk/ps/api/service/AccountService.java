@@ -13,7 +13,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -39,6 +42,8 @@ import java.util.regex.Pattern;
 @Service
 public class AccountService implements UserDetailsService, IAccountService {
 
+    private static final Logger log = LoggerFactory.getLogger(AccountService.class);
+
     @Autowired
     private AccountRepository accountRepository;
 
@@ -59,6 +64,18 @@ public class AccountService implements UserDetailsService, IAccountService {
     
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Value("${app.scheduled-job.d3.username:}")
+    private String jobD3Username;
+
+    @Value("${app.scheduled-job.d3.password:}")
+    private String jobD3Password;
+
+    @Value("${app.scheduled-job.d4.username:}")
+    private String jobD4Username;
+
+    @Value("${app.scheduled-job.d4.password:}")
+    private String jobD4Password;
 
     @Override
     public ReadAccountsResponse readAccounts(String token) {
@@ -469,57 +486,51 @@ public class AccountService implements UserDetailsService, IAccountService {
 
     @Scheduled(cron = "0 0 0 1 1 *")
     public void deleteParticipantAccountJob() {
-        // Participant D3
-        LoginRequest lr = new LoginRequest();
-        lr.setUsername("panitiad3");
-        lr.setPassword("12345");
-        LoginResponse loginResponse = login(lr, "", "");
-        
-        String accessToken = String.valueOf(loginResponse.getHeaders().get("Set-Cookie").get(0));
-        
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add(Constant.PayloadResponseConstant.COOKIE, accessToken);
-        HttpEntity<String> req = new HttpEntity<>(headers);
-        
+        if (isBlank(jobD3Username) || isBlank(jobD3Password)
+                || isBlank(jobD4Username) || isBlank(jobD4Password)) {
+            log.error("Scheduled job credentials tidak diset (app.scheduled-job.d3.* / app.scheduled-job.d4.*). Job dilewati.");
+            return;
+        }
+
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-        
-        ResponseEntity<ResponseList<Participant>> response =
-                restTemplate.exchange("http://participant-service/participant/get-all?year=" + currentYear,
-                HttpMethod.GET,req, new ParameterizedTypeReference<>() {});
-        List<Participant> participantList = Objects.requireNonNull(response.getBody()).getData();
-        
-        for (Participant p: participantList) {
-            try {
-                accountRepository.deleteById(p.getIdAccount());
-            } catch (Exception ex) {
-                System.out.println(ex.getMessage());
+
+        // Hapus participant D3 dan D4 dengan kredensial committee masing-masing prodi.
+        deleteParticipantsForProdi(jobD3Username, jobD3Password, currentYear);
+        deleteParticipantsForProdi(jobD4Username, jobD4Password, currentYear);
+    }
+
+    private void deleteParticipantsForProdi(String username, String password, int year) {
+        try {
+            LoginRequest lr = new LoginRequest();
+            lr.setUsername(username);
+            lr.setPassword(password);
+            LoginResponse loginResponse = login(lr, "", "");
+
+            String accessToken = String.valueOf(loginResponse.getHeaders().get("Set-Cookie").get(0));
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.add(Constant.PayloadResponseConstant.COOKIE, accessToken);
+            HttpEntity<String> req = new HttpEntity<>(headers);
+
+            ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange(
+                    "http://participant-service/participant/get-all?year=" + year,
+                    HttpMethod.GET, req, new ParameterizedTypeReference<>() {});
+            List<Participant> participantList = Objects.requireNonNull(response.getBody()).getData();
+
+            for (Participant p : participantList) {
+                try {
+                    accountRepository.deleteById(p.getIdAccount());
+                } catch (Exception ex) {
+                    log.warn("Gagal menghapus akun participant id={}: {}", p.getIdAccount(), ex.getMessage());
+                }
             }
+        } catch (Exception ex) {
+            log.error("Scheduled job gagal untuk user '{}': {}", username, ex.getMessage(), ex);
         }
-        
-        // Participant D4
-        lr = new LoginRequest();
-        lr.setUsername("panitiad4");
-        lr.setPassword("1234");
-        loginResponse = login(lr, "", "");
-        
-        accessToken = String.valueOf(loginResponse.getHeaders().get("Set-Cookie").get(0));
-        
-        headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add(Constant.PayloadResponseConstant.COOKIE, accessToken);
-        req = new HttpEntity<>(headers);
-        
-        response = restTemplate.exchange("http://participant-service/participant/get-all?year=" + currentYear,
-                HttpMethod.GET,req, new ParameterizedTypeReference<>() {});
-        participantList = Objects.requireNonNull(response.getBody()).getData();
-        
-        for (Participant p: participantList) {
-            try {
-                accountRepository.deleteById(p.getIdAccount());
-            } catch (Exception ex) {
-                System.out.println(ex.getMessage());
-            }
-        }
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
     }
 }
