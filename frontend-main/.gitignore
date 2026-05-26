@@ -11,6 +11,15 @@ package-lock.json
 /build
 
 # misc
+.env
+.env.*
+!.env.example
+.log
+hs_err_pid*.log
+.vscode/
+*.iml
+*.iws
+*.ipr
 .eslintcache
 .DS_Store
 .idea
