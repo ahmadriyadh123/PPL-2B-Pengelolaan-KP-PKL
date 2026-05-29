@@ -32,8 +32,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.AuthenticationManager;
 
 import java.util.regex.Matcher;
@@ -61,7 +59,7 @@ public class AccountService implements UserDetailsService, IAccountService {
 
     @Autowired
     private RestTemplate restTemplate;
-    
+
     @Autowired
     private AuthenticationManager authenticationManager;
 
@@ -87,17 +85,20 @@ public class AccountService implements UserDetailsService, IAccountService {
         headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        //Get all account Participant
-        ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange("http://participant-service/participant/get-all?year=" + year,
-                HttpMethod.GET,req, new ParameterizedTypeReference<>() {});
+        // Get all account Participant
+        ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange(
+                "http://participant-service/participant/get-all?year=" + year,
+                HttpMethod.GET, req, new ParameterizedTypeReference<>() {});
         List<Participant> participantList = Objects.requireNonNull(response.getBody()).getData();
         List<Integer> accountId = new ArrayList<>();
         for (Participant p : participantList) {
             accountId.add(p.getIdAccount());
         }
         List<Account> accountList = accountRepository.findByIdIn(accountId);
-        List<Participant> participantsSorted = participantList.stream().sorted(Comparator.comparing(Participant::getIdAccount)).collect(Collectors.toList());
-        List<Account> accountsSorted = accountList.stream().sorted(Comparator.comparing(Account::getId)).collect(Collectors.toList());
+        List<Participant> participantsSorted = participantList.stream()
+                .sorted(Comparator.comparing(Participant::getIdAccount)).collect(Collectors.toList());
+        List<Account> accountsSorted = accountList.stream()
+                .sorted(Comparator.comparing(Account::getId)).collect(Collectors.toList());
 
         List<AccountResponse> accountResponses = new ArrayList<>();
         for (int i = 0; i < accountId.size(); i++) {
@@ -106,27 +107,28 @@ public class AccountService implements UserDetailsService, IAccountService {
             accountResponse.setName(participantsSorted.get(i).getName());
             accountResponse.setIdProdi(participantsSorted.get(i).getIdProdi());
 
-            accountsSorted.stream().filter(account -> account.getId() == accountResponse.getIdAccount())
+            accountsSorted.stream()
+                    .filter(account -> account.getId() == accountResponse.getIdAccount())
                     .findFirst().ifPresent(account -> {
-                    accountResponse.setUsername(account.getUsername());
-                    accountResponse.setIdRole(account.getRole().id);
-                            });
+                        accountResponse.setUsername(account.getUsername());
+                        accountResponse.setIdRole(account.getRole().id);
+                    });
             accountResponses.add(accountResponse);
         }
         readAccountsResponse.setParticipant(accountResponses);
 
         // Get all account Lecturer by prodi
-        if(jwtTokenUtil.getRoleFromToken(token) == ERole.COMMITTEE.id){
+        if (jwtTokenUtil.getRoleFromToken(token) == ERole.COMMITTEE.id) {
             EProdi prodi = jwtTokenUtil.getProdiFromToken(token);
             readAccountsResponse.setLecturer(accountRepository.getAllAccountForCommittee(prodi));
-        }else{
+        } else {
             EProdi prodi = jwtTokenUtil.getProdiFromToken(token);
             readAccountsResponse.setLecturer(accountRepository.getAllAccountForHeadStudyProgram(prodi));
         }
 
-
         // Get all account Company
-        ResponseEntity<ResponseList<CompanyResponse>> res = restTemplate.exchange("http://company-service/company/get-all",
+        ResponseEntity<ResponseList<CompanyResponse>> res = restTemplate.exchange(
+                "http://company-service/company/get-all",
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {});
         List<CompanyResponse> companyResponses = Objects.requireNonNull(res.getBody()).getData();
         accountId.clear();
@@ -137,12 +139,14 @@ public class AccountService implements UserDetailsService, IAccountService {
         accountId.clear();
         accountList.forEach(account -> accountId.add(account.getId()));
         companyResponses.removeIf(companyResponse -> !accountId.contains(companyResponse.getIdAccount()));
-        List<CompanyResponse> companyResponseSorted = companyResponses.stream().sorted(Comparator.comparing(CompanyResponse::getIdAccount)).collect(Collectors.toList());
-        accountsSorted = accountList.stream().sorted(Comparator.comparing(Account::getId)).collect(Collectors.toList());
+        List<CompanyResponse> companyResponseSorted = companyResponses.stream()
+                .sorted(Comparator.comparing(CompanyResponse::getIdAccount)).collect(Collectors.toList());
+        accountsSorted = accountList.stream()
+                .sorted(Comparator.comparing(Account::getId)).collect(Collectors.toList());
 
         accountResponses = new ArrayList<>();
         for (int i = 0; i < accountsSorted.size(); i++) {
-            if(Objects.equals(accountsSorted.get(i).getId(), companyResponseSorted.get(i).getIdAccount())) {
+            if (Objects.equals(accountsSorted.get(i).getId(), companyResponseSorted.get(i).getIdAccount())) {
                 AccountResponse accountResponse = new AccountResponse();
                 accountResponse.setIdAccount(companyResponseSorted.get(i).getIdAccount());
                 accountResponse.setName(companyResponseSorted.get(i).getCompanyName());
@@ -158,19 +162,25 @@ public class AccountService implements UserDetailsService, IAccountService {
 
     @Override
     public LoginResponse login(LoginRequest loginRequest, String accessToken, String refreshToken) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        
+        // [S2-T13] Sistem stateless: cukup verifikasi kredensial, tidak perlu set SecurityContext.
+        // SecurityContext akan dibuang setelah request ini selesai — tidak ada gunanya di-set.
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsername(), loginRequest.getPassword()));
+
         String username = loginRequest.getUsername();
-        Account account = accountRepository.findByUsername(username).orElseThrow(() -> new IllegalStateException("Username or password incorrect"));
+        Account account = accountRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalStateException("Username or password incorrect"));
         HttpHeaders responseHeaders = new HttpHeaders();
         CustomUserDetails user = new CustomUserDetails(account);
 
         AtomicReference<Token> newAccessToken = new AtomicReference<>(jwtTokenUtil.generateAccessToken(user));
-        AtomicReference<Token> newRefreshToken = new AtomicReference<>(jwtTokenUtil.generateRefreshToken(String.valueOf(user.getId())));
+        AtomicReference<Token> newRefreshToken = new AtomicReference<>(
+                jwtTokenUtil.generateRefreshToken(String.valueOf(user.getId())));
 
         Map<String, Object> claims = new HashMap<>();
-        String cookie = "accessToken=" + newAccessToken.get().getTokenValue() + ";refreshToken=" + newRefreshToken.get().getTokenValue();
+        String cookie = "accessToken=" + newAccessToken.get().getTokenValue()
+                + ";refreshToken=" + newRefreshToken.get().getTokenValue();
 
         if (account.getRole() == ERole.COMMITTEE || account.getRole() == ERole.HEAD_STUDY_PROGRAM) {
             Optional<Lecturer> lecturer = lecturerRepository.findByAccountId(account.getId());
@@ -178,7 +188,6 @@ public class AccountService implements UserDetailsService, IAccountService {
             lecturer.ifPresent(value -> {
                 claims.put(Constant.PayloadResponseConstant.NAME, value.getName());
                 claims.put(Constant.PayloadResponseConstant.ID_PRODI, value.getProdi().id);
-
                 newAccessToken.set(jwtTokenUtil.generateAccessToken(user, value.getProdi().id, value.getId(), value.getName()));
                 newRefreshToken.set(jwtTokenUtil.generateRefreshToken(String.valueOf(user.getId())));
             });
@@ -187,28 +196,31 @@ public class AccountService implements UserDetailsService, IAccountService {
                 throw new IllegalStateException("COMMITTEE OR HEAD OF STUDY PROGRAM NOT HAVE DATA NAME");
             }
         } else if (account.getRole() == ERole.PARTICIPANT) {
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
-                headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
 
-                JSONArray jsonArray = new JSONArray();
-                jsonArray.put(account.getId());
+            JSONArray jsonArray = new JSONArray();
+            jsonArray.put(account.getId());
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put(Constant.PayloadResponseConstant.ID, jsonArray);
+            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put(Constant.PayloadResponseConstant.ID, jsonArray);
-                HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange("http://participant-service/participant/get-by-account", HttpMethod.POST, request, new ParameterizedTypeReference<>() {
-                });
+            ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange(
+                    "http://participant-service/participant/get-by-account",
+                    HttpMethod.POST, request, new ParameterizedTypeReference<>() {});
             if (response.getStatusCode().value() == HttpStatus.OK.value()) {
-                if(!Objects.requireNonNull(response.getBody()).getData().isEmpty()) {
+                if (!Objects.requireNonNull(response.getBody()).getData().isEmpty()) {
                     claims.put(Constant.PayloadResponseConstant.NAME, response.getBody().getData().get(0).getName());
                     claims.put(Constant.PayloadResponseConstant.ID_PRODI, response.getBody().getData().get(0).getIdProdi());
-
-                    newAccessToken.set(jwtTokenUtil.generateAccessToken(user, response.getBody().getData().get(0).getIdProdi(), response.getBody().getData().get(0).getIdParticipant(), response.getBody().getData().get(0).getName()));
+                    newAccessToken.set(jwtTokenUtil.generateAccessToken(user,
+                            response.getBody().getData().get(0).getIdProdi(),
+                            response.getBody().getData().get(0).getIdParticipant(),
+                            response.getBody().getData().get(0).getName()));
                     newRefreshToken.set(jwtTokenUtil.generateRefreshToken(String.valueOf(user.getId())));
                 }
             }
-        } else if(account.getRole() == ERole.COMPANY){
+        } else if (account.getRole() == ERole.COMPANY) {
             HttpHeaders headers = new HttpHeaders();
             headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -216,23 +228,28 @@ public class AccountService implements UserDetailsService, IAccountService {
             JSONArray jsonArray = new JSONArray();
             jsonArray.put(account.getId());
             JSONObject jsonObject = new JSONObject();
-
             jsonObject.put(Constant.PayloadResponseConstant.ID_ACCOUNT, jsonArray);
-            HttpEntity<String> req = new HttpEntity<>(jsonObject.toString(),headers);
-            System.out.println("masuk");
-            ResponseEntity<ResponseList<CompanyResponse>> response = restTemplate.exchange("http://company-service/company/get-by-account", HttpMethod.POST, req, new ParameterizedTypeReference<>() {
-            });
-            if (response.getStatusCode().is3xxRedirection() || response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
+            HttpEntity<String> req = new HttpEntity<>(jsonObject.toString(), headers);
+
+            ResponseEntity<ResponseList<CompanyResponse>> response = restTemplate.exchange(
+                    "http://company-service/company/get-by-account",
+                    HttpMethod.POST, req, new ParameterizedTypeReference<>() {});
+            if (response.getStatusCode().is3xxRedirection()
+                    || response.getStatusCode().is4xxClientError()
+                    || response.getStatusCode().is5xxServerError()) {
                 throw new IllegalStateException("Error when update pic");
-            }else{
-                if(!Objects.requireNonNull(response.getBody()).getData().isEmpty()){
-                    claims.put(Constant.PayloadResponseConstant.NAME, response.getBody().getData().get(0).getCompanyName());
-                    newAccessToken.set(jwtTokenUtil.generateAccessToken(user, null, response.getBody().getData().get(0).getIdCompany(), response.getBody().getData().get(0).getCompanyName()));
+            } else {
+                if (!Objects.requireNonNull(response.getBody()).getData().isEmpty()) {
+                    claims.put(Constant.PayloadResponseConstant.NAME,
+                            response.getBody().getData().get(0).getCompanyName());
+                    newAccessToken.set(jwtTokenUtil.generateAccessToken(user, null,
+                            response.getBody().getData().get(0).getIdCompany(),
+                            response.getBody().getData().get(0).getCompanyName()));
                     newRefreshToken.set(jwtTokenUtil.generateRefreshToken(String.valueOf(user.getId())));
                 }
             }
-
         }
+
         claims.put(Constant.PayloadResponseConstant.USERNAME, account.getUsername());
         claims.put(Constant.PayloadResponseConstant.ID_ROLE, account.getRole().id);
 
@@ -247,7 +264,6 @@ public class AccountService implements UserDetailsService, IAccountService {
         HttpHeaders responseHeaders = new HttpHeaders();
         deleteAccessTokenCookie(responseHeaders);
         deleteRefreshTokenCookie(responseHeaders);
-
         return responseHeaders;
     }
 
@@ -256,31 +272,31 @@ public class AccountService implements UserDetailsService, IAccountService {
         try {
             if (StringUtils.hasText(accessToken) && jwtTokenUtil.validateToken(accessToken)) {
                 HashMap<String, Object> payload = jwtTokenUtil.getAllPayloadJwt(accessToken);
-
                 payload.remove(Constant.PayloadResponseConstant.EXPIRED);
                 payload.remove(Constant.PayloadResponseConstant.ISSUED_AT);
-
                 return new VerifyResponse(HttpStatus.OK, payload, "Verify successfully", null, null);
-            }else{
+            } else {
                 RefreshResponse response = refresh(refreshToken);
-                return new VerifyResponse(HttpStatus.OK, response.getResponse(), "\"Verify successful.\"", response.getHeaders(), null);
+                return new VerifyResponse(HttpStatus.OK, response.getResponse(), "\"Verify successful.\"",
+                        response.getHeaders(), null);
             }
         } catch (ExpiredJwtException ex) {
             boolean refreshTokenValid = jwtTokenUtil.validateToken(refreshToken);
             if (!refreshTokenValid) {
                 return new VerifyResponse(HttpStatus.FOUND, null, "Refresh Token is invalid!", null, null);
             }
-
             RefreshResponse response = refresh(refreshToken);
-            return new VerifyResponse(HttpStatus.OK, response.getResponse(), "\"Verify successful.\"", response.getHeaders(), null);
+            return new VerifyResponse(HttpStatus.OK, response.getResponse(), "\"Verify successful.\"",
+                    response.getHeaders(), null);
         }
     }
 
     @Override
-    public RefreshResponse refresh(String refreshToken){
+    public RefreshResponse refresh(String refreshToken) {
         if (StringUtils.hasText(refreshToken) && jwtTokenUtil.validateToken(refreshToken)) {
             String id = jwtTokenUtil.getIdAccountFromToken(refreshToken);
-            Account account = accountRepository.findById(Integer.parseInt(id)).orElseThrow(() -> new IllegalStateException("ID not found"));
+            Account account = accountRepository.findById(Integer.parseInt(id))
+                    .orElseThrow(() -> new IllegalStateException("ID not found"));
 
             HttpHeaders responseHeaders = new HttpHeaders();
             CustomUserDetails user = new CustomUserDetails(account);
@@ -288,17 +304,18 @@ public class AccountService implements UserDetailsService, IAccountService {
             Token newAccessToken = jwtTokenUtil.generateAccessToken(user);
             Token newRefreshToken = jwtTokenUtil.generateRefreshToken(user.getUsername());
 
-            String cookie = "accessToken=" + newAccessToken.getTokenValue() + ";refreshToken=" + newRefreshToken.getTokenValue();
+            String cookie = "accessToken=" + newAccessToken.getTokenValue()
+                    + ";refreshToken=" + newRefreshToken.getTokenValue();
 
-            if(account.getRole() == ERole.COMMITTEE || account.getRole() == ERole.HEAD_STUDY_PROGRAM){
+            if (account.getRole() == ERole.COMMITTEE || account.getRole() == ERole.HEAD_STUDY_PROGRAM) {
                 Optional<Lecturer> lecturer = lecturerRepository.findByAccountId(account.getId());
-
-                if(lecturer.isPresent()){
-                    newAccessToken = (jwtTokenUtil.generateAccessToken(user, lecturer.get().getProdi().id, lecturer.get().getId(), lecturer.get().getName()));
-                }else{
+                if (lecturer.isPresent()) {
+                    newAccessToken = jwtTokenUtil.generateAccessToken(user,
+                            lecturer.get().getProdi().id, lecturer.get().getId(), lecturer.get().getName());
+                } else {
                     throw new IllegalStateException("COMMITTEE OR HEAD OF STUDY PROGRAM NOT HAVE DATA NAME");
                 }
-            }else if(account.getRole() == ERole.COMPANY){
+            } else if (account.getRole() == ERole.COMPANY) {
                 HttpHeaders headers = new HttpHeaders();
                 headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
                 headers.setContentType(MediaType.APPLICATION_JSON);
@@ -306,42 +323,49 @@ public class AccountService implements UserDetailsService, IAccountService {
                 JSONArray jsonArray = new JSONArray();
                 jsonArray.put(account.getId());
                 JSONObject jsonObject = new JSONObject();
-
                 jsonObject.put(Constant.PayloadResponseConstant.ID_ACCOUNT, jsonArray);
-                HttpEntity<String> req = new HttpEntity<>(jsonObject.toString(),headers);
-                ResponseEntity<ResponseList<CompanyResponse>> response = restTemplate.exchange("http://company-service/company/get-by-account", HttpMethod.POST, req, new ParameterizedTypeReference<>() {
-                });
-                if (response.getStatusCode().is3xxRedirection() || response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
+                HttpEntity<String> req = new HttpEntity<>(jsonObject.toString(), headers);
+
+                ResponseEntity<ResponseList<CompanyResponse>> response = restTemplate.exchange(
+                        "http://company-service/company/get-by-account",
+                        HttpMethod.POST, req, new ParameterizedTypeReference<>() {});
+                if (response.getStatusCode().is3xxRedirection()
+                        || response.getStatusCode().is4xxClientError()
+                        || response.getStatusCode().is5xxServerError()) {
                     throw new IllegalStateException("Error when update pic");
-                }else{
-                    if(!Objects.requireNonNull(response.getBody()).getData().isEmpty()){
-                        newAccessToken = (jwtTokenUtil.generateAccessToken(user, null, response.getBody().getData().get(0).getIdCompany(), response.getBody().getData().get(0).getCompanyName()));
+                } else {
+                    if (!Objects.requireNonNull(response.getBody()).getData().isEmpty()) {
+                        newAccessToken = jwtTokenUtil.generateAccessToken(user, null,
+                                response.getBody().getData().get(0).getIdCompany(),
+                                response.getBody().getData().get(0).getCompanyName());
                     }
                 }
-            }else if (account.getRole() == ERole.PARTICIPANT){
+            } else if (account.getRole() == ERole.PARTICIPANT) {
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
 
-
                 JSONArray jsonArray = new JSONArray();
                 jsonArray.put(account.getId());
-
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put(Constant.PayloadResponseConstant.ID_ACCOUNT, jsonArray);
-
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange("http://participant-service/participant/get-by-account", HttpMethod.POST, request, new ParameterizedTypeReference<>() {
-                });
+
+                ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange(
+                        "http://participant-service/participant/get-by-account",
+                        HttpMethod.POST, request, new ParameterizedTypeReference<>() {});
                 if (response.getStatusCode().value() == HttpStatus.OK.value()) {
-                    if(!Objects.requireNonNull(response.getBody()).getData().isEmpty()) {
-                        newAccessToken = (jwtTokenUtil.generateAccessToken(user, response.getBody().getData().get(0).getIdProdi(), response.getBody().getData().get(0).getIdParticipant(), response.getBody().getData().get(0).getName()));
+                    if (!Objects.requireNonNull(response.getBody()).getData().isEmpty()) {
+                        newAccessToken = jwtTokenUtil.generateAccessToken(user,
+                                response.getBody().getData().get(0).getIdProdi(),
+                                response.getBody().getData().get(0).getIdParticipant(),
+                                response.getBody().getData().get(0).getName());
                     }
                 }
             }
 
             HashMap<String, Object> payload = null;
-            if(newAccessToken != null) {
+            if (newAccessToken != null) {
                 addAccessTokenCookie(responseHeaders, newAccessToken);
                 payload = jwtTokenUtil.getAllPayloadJwt(newAccessToken.getTokenValue());
                 payload.remove(Constant.PayloadResponseConstant.EXPIRED);
@@ -367,7 +391,7 @@ public class AccountService implements UserDetailsService, IAccountService {
         Account newAccount = accountRepository.save(account);
         try {
             int idProdi = jwtTokenUtil.getProdiFromToken(accessToken).id;
-            if(account.getRole() == ERole.COMMITTEE || account.getRole() == ERole.HEAD_STUDY_PROGRAM){
+            if (account.getRole() == ERole.COMMITTEE || account.getRole() == ERole.HEAD_STUDY_PROGRAM) {
                 if (registerRequest.getName() != null) {
                     Lecturer lecturer = new Lecturer();
                     lecturer.setAccount(newAccount);
@@ -382,7 +406,6 @@ public class AccountService implements UserDetailsService, IAccountService {
         }
         return newAccount;
     }
-
 
     @Override
     public Account findAccountByUsername(String username) {
@@ -409,7 +432,8 @@ public class AccountService implements UserDetailsService, IAccountService {
 
     @Override
     public void updateAccount(UpdateAccountRequest updateAccountRequest) {
-        final Optional<Account> account = accountRepository.findById(Integer.parseInt(updateAccountRequest.getIdAccount()));
+        final Optional<Account> account = accountRepository.findById(
+                Integer.parseInt(updateAccountRequest.getIdAccount()));
 
         account.ifPresent(accountValue -> {
             if (!updateAccountRequest.getName().isEmpty()) {
@@ -430,16 +454,18 @@ public class AccountService implements UserDetailsService, IAccountService {
     public void deleteAccount(Account account, String cookie) {
         if (account.getRole().id == 0 || account.getRole().id == 3) {
             Optional<Lecturer> lecturer = lecturerRepository.findByAccountId(account.getId());
-
-            if(lecturer.isPresent()){
+            if (lecturer.isPresent()) {
                 HttpHeaders headers = new HttpHeaders();
                 headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
                 headers.setContentType(MediaType.APPLICATION_JSON);
-
                 HttpEntity<String> req = new HttpEntity<>(headers);
 
-                ResponseEntity<CompanyResponse> response = restTemplate.exchange("http://company-service/company/update-pic/"+lecturer.get().getId(), HttpMethod.PUT, req, CompanyResponse.class);
-                if (response.getStatusCode().is3xxRedirection() || response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
+                ResponseEntity<CompanyResponse> response = restTemplate.exchange(
+                        "http://company-service/company/update-pic/" + lecturer.get().getId(),
+                        HttpMethod.PUT, req, CompanyResponse.class);
+                if (response.getStatusCode().is3xxRedirection()
+                        || response.getStatusCode().is4xxClientError()
+                        || response.getStatusCode().is5xxServerError()) {
                     throw new IllegalStateException("Error when update pic");
                 }
                 lecturerRepository.delete(lecturer.get());
@@ -461,7 +487,6 @@ public class AccountService implements UserDetailsService, IAccountService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Account account = findAccountByUsername(username);
-
         if (account == null) {
             throw new UsernameNotFoundException("Account not found with username:" + username);
         }
@@ -469,11 +494,13 @@ public class AccountService implements UserDetailsService, IAccountService {
     }
 
     private void addAccessTokenCookie(HttpHeaders httpHeaders, Token token) {
-        httpHeaders.add(HttpHeaders.SET_COOKIE, cookieUtil.createAccessTokenCookie(token.getTokenValue(), token.getDuration()).toString());
+        httpHeaders.add(HttpHeaders.SET_COOKIE,
+                cookieUtil.createAccessTokenCookie(token.getTokenValue(), token.getDuration()).toString());
     }
 
     private void addRefreshTokenCookie(HttpHeaders httpHeaders, Token token) {
-        httpHeaders.add(HttpHeaders.SET_COOKIE, cookieUtil.createRefreshTokenCookie(token.getTokenValue(), token.getDuration()).toString());
+        httpHeaders.add(HttpHeaders.SET_COOKIE,
+                cookieUtil.createRefreshTokenCookie(token.getTokenValue(), token.getDuration()).toString());
     }
 
     private void deleteAccessTokenCookie(HttpHeaders httpHeaders) {
@@ -493,8 +520,6 @@ public class AccountService implements UserDetailsService, IAccountService {
         }
 
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-
-        // Hapus participant D3 dan D4 dengan kredensial committee masing-masing prodi.
         deleteParticipantsForProdi(jobD3Username, jobD3Password, currentYear);
         deleteParticipantsForProdi(jobD4Username, jobD4Password, currentYear);
     }
