@@ -15,7 +15,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -32,10 +31,12 @@ public class AccountController {
 
     @GetMapping(value = "/get-all")
     @PreAuthorize("hasAnyAuthority('COMMITTEE', 'HEAD_STUDY_PROGRAM')")
-    public ResponseEntity<Object> getAccounts(@ApiParam(hidden = true) @CookieValue(name = "accessToken", required = false) String accessToken, HttpServletRequest request) {
+    public ResponseEntity<Object> getAccounts(
+            @ApiParam(hidden = true) @CookieValue(name = "accessToken", required = false) String accessToken,
+            HttpServletRequest request) {
         try {
             String token = (String) request.getAttribute("accessToken");
-            if(token == null) {
+            if (token == null) {
                 token = accessToken;
             }
             ReadAccountsResponse accountResponses = service.readAccounts(token);
@@ -43,7 +44,7 @@ public class AccountController {
                 return ResponseHandler.generateResponse("Get all accounts successfully", HttpStatus.OK, accountResponses);
             }
             return ResponseHandler.generateResponse("Account not found", HttpStatus.OK);
-        } catch (HttpClientErrorException ex){
+        } catch (HttpClientErrorException ex) {
             return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -51,11 +52,14 @@ public class AccountController {
     }
 
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> login(@ApiParam(hidden = true) @CookieValue(name = "accessToken", required = false) String accessToken, @ApiParam(hidden = true) @CookieValue(name = "refreshToken", required = false) String refreshToken, @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<Object> login(
+            @ApiParam(hidden = true) @CookieValue(name = "accessToken", required = false) String accessToken,
+            @ApiParam(hidden = true) @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            @RequestBody LoginRequest loginRequest) {
         try {
             LoginResponse loginResponse = service.login(loginRequest, accessToken, refreshToken);
-
-            return ResponseHandler.generateResponse("Auth successful. Tokens created in cookie.", HttpStatus.OK, loginResponse.getResponse(), loginResponse.getHeaders());
+            return ResponseHandler.generateResponse("Auth successful. Tokens created in cookie.",
+                    HttpStatus.OK, loginResponse.getResponse(), loginResponse.getHeaders());
         } catch (Exception e) {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
@@ -63,29 +67,32 @@ public class AccountController {
 
     @PostMapping(value = "/logout")
     public ResponseEntity<Object> logout(HttpServletRequest request, HttpServletResponse response) {
-        Authentication authentication;
+        // [S2-T12] Hapus SecurityContextLogoutHandler — stateful relic.
+        // Dalam sistem stateless, logout cukup clear context lokal dan hapus cookie.
+        // Token di client menjadi tidak terpakai saat cookie dihapus.
         try {
-            authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null) {
-                return ResponseHandler.generateResponse("User not authenticated!", HttpStatus.OK);
-            }
-            new SecurityContextLogoutHandler().logout(request, response, authentication);
+            SecurityContextHolder.clearContext();
             HttpHeaders httpHeaders = service.logout();
-            return ResponseHandler.generateResponse("\"Logout successful. Tokens deleted in cookie.\"", HttpStatus.OK, null, httpHeaders);
-
+            return ResponseHandler.generateResponse(
+                    "Logout successful. Tokens deleted in cookie.",
+                    HttpStatus.OK, null, httpHeaders);
         } catch (Exception e) {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<Object> verify(@CookieValue(name = "accessToken", required = false) String accessToken, @CookieValue(name = "refreshToken", required = false) String refreshToken) {
+    public ResponseEntity<Object> verify(
+            @CookieValue(name = "accessToken", required = false) String accessToken,
+            @CookieValue(name = "refreshToken", required = false) String refreshToken) {
         try {
             VerifyResponse verifyResponse = service.verify(accessToken, refreshToken);
             if (verifyResponse.getHttpStatus().is3xxRedirection()) {
-                return ResponseHandler.generateResponse("Redirect to login!", verifyResponse.getHttpStatus(), verifyResponse.getResponse(), verifyResponse.getHeaders());
+                return ResponseHandler.generateResponse("Redirect to login!",
+                        verifyResponse.getHttpStatus(), verifyResponse.getResponse(), verifyResponse.getHeaders());
             } else {
-                return ResponseHandler.generateResponse("Verify successfully!", verifyResponse.getHttpStatus(), verifyResponse.getResponse(), verifyResponse.getHeaders());
+                return ResponseHandler.generateResponse("Verify successfully!",
+                        verifyResponse.getHttpStatus(), verifyResponse.getResponse(), verifyResponse.getHeaders());
             }
         } catch (Exception e) {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.FOUND);
@@ -94,10 +101,13 @@ public class AccountController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAnyAuthority('COMMITTEE', 'HEAD_STUDY_PROGRAM')")
-    public ResponseEntity<Object> createAccount(@CookieValue(name = "accessToken", required = false) String accessToken, @RequestBody @Valid RegisterRequest registerRequest, HttpServletRequest request) {
+    public ResponseEntity<Object> createAccount(
+            @CookieValue(name = "accessToken", required = false) String accessToken,
+            @RequestBody @Valid RegisterRequest registerRequest,
+            HttpServletRequest request) {
         try {
             String token = (String) request.getAttribute("accessToken");
-            if(token == null) {
+            if (token == null) {
                 token = accessToken;
             }
             Account account = service.saveAccount(registerRequest, token);
@@ -121,7 +131,9 @@ public class AccountController {
     @PostMapping("/change-password")
     public ResponseEntity<Object> changePassword(@Valid @RequestBody NewPasswordRequest newPasswordRequest) {
         if (!newPasswordRequest.getNewPassword().equals(newPasswordRequest.getConfirmNewPassword())) {
-            return ResponseHandler.generateResponse("New password is not the same as the confirmation of new password", HttpStatus.BAD_REQUEST);
+            return ResponseHandler.generateResponse(
+                    "New password is not the same as the confirmation of new password",
+                    HttpStatus.BAD_REQUEST);
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -129,7 +141,8 @@ public class AccountController {
         final Account account = service.findAccountByUsername(username);
 
         if (account == null) {
-            return ResponseHandler.generateResponse("No account found with name " + username, HttpStatus.BAD_REQUEST);
+            return ResponseHandler.generateResponse(
+                    "No account found with name " + username, HttpStatus.BAD_REQUEST);
         }
 
         if (Boolean.FALSE.equals(service.checkIfValidOldPassword(account, newPasswordRequest.getOldPassword()))) {
@@ -144,14 +157,19 @@ public class AccountController {
 
     @PostMapping("/committee-change-password")
     @PreAuthorize("hasAnyAuthority('COMMITTEE', 'HEAD_STUDY_PROGRAM')")
-    public ResponseEntity<Object> committeeChangePassword(@RequestBody @Valid CommitteePasswordRequest committeePasswordRequest) {
+    public ResponseEntity<Object> committeeChangePassword(
+            @RequestBody @Valid CommitteePasswordRequest committeePasswordRequest) {
         if (!committeePasswordRequest.getNewPassword().equals(committeePasswordRequest.getConfirmNewPassword())) {
-            return ResponseHandler.generateResponse("New password is not the same as the confirmation of new password", HttpStatus.BAD_REQUEST);
+            return ResponseHandler.generateResponse(
+                    "New password is not the same as the confirmation of new password",
+                    HttpStatus.BAD_REQUEST);
         }
 
         final Account account = service.findAccountById(committeePasswordRequest.getIdAccount());
         if (account == null) {
-            return ResponseHandler.generateResponse("No account found with id " + committeePasswordRequest.getIdAccount(), HttpStatus.BAD_REQUEST);
+            return ResponseHandler.generateResponse(
+                    "No account found with id " + committeePasswordRequest.getIdAccount(),
+                    HttpStatus.BAD_REQUEST);
         }
         try {
             service.updatePassword(account, committeePasswordRequest.getNewPassword());
@@ -161,14 +179,16 @@ public class AccountController {
         }
     }
 
-
     @PostMapping("/delete")
     @PreAuthorize("hasAnyAuthority('COMMITTEE', 'HEAD_STUDY_PROGRAM')")
-    public ResponseEntity<Object> deleteAccount(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+    public ResponseEntity<Object> deleteAccount(
+            @RequestBody DeleteRequest deleteRequest,
+            HttpServletRequest request) {
         final Account account = service.findAccountById(deleteRequest.getIdAccount());
 
         if (account == null) {
-            return ResponseHandler.generateResponse("No account found with id " + deleteRequest.getIdAccount(), HttpStatus.BAD_REQUEST);
+            return ResponseHandler.generateResponse(
+                    "No account found with id " + deleteRequest.getIdAccount(), HttpStatus.BAD_REQUEST);
         }
 
         try {
@@ -176,24 +196,25 @@ public class AccountController {
             return ResponseHandler.generateResponse("Account deleted successfully", HttpStatus.OK);
         } catch (HttpServerErrorException ex) {
             return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (HttpClientErrorException ex){
+        } catch (HttpClientErrorException ex) {
             return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
     }
 
     @GetMapping("/get-committee")
-    public ResponseEntity<Object>  getCommitteeById(@RequestParam(value = "id", required = false) Integer id) {
+    public ResponseEntity<Object> getCommitteeById(
+            @RequestParam(value = "id", required = false) Integer id) {
         try {
-            if(id == null) {
-                return ResponseHandler.generateResponse("Get all committee succeed", HttpStatus.OK, service.getCommittee());
+            if (id == null) {
+                return ResponseHandler.generateResponse("Get all committee succeed",
+                        HttpStatus.OK, service.getCommittee());
             }
-            return ResponseHandler.generateResponse("Get committee succeed", HttpStatus.OK, service.getCommittee(id));
+            return ResponseHandler.generateResponse("Get committee succeed",
+                    HttpStatus.OK, service.getCommittee(id));
         } catch (Exception e) {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
-
 }
