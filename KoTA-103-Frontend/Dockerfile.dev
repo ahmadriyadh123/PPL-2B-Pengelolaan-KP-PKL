@@ -1,0 +1,18 @@
+FROM node:18-bullseye
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+
+RUN apt-get update && apt-get install -y python3 make g++ build-essential --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
+RUN npm install --legacy-peer-deps
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]

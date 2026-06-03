@@ -1,0 +1,27 @@
+FROM node:18-bullseye AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+
+RUN apt-get update && apt-get install -y python3 make g++ build-essential --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install dependencies allowing legacy peer deps resolution
+RUN npm install --legacy-peer-deps
+
+COPY . .
+
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
+RUN npm run build
+
+FROM nginx:stable-alpine
+
+COPY --from=builder /app/build /usr/share/nginx/html
+EXPOSE 80
+
+RUN rm /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/
+
+CMD ["nginx", "-g", "daemon off;"]
