@@ -12,6 +12,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import moment from 'moment';
+import dayjs from 'dayjs';
 import { useParams } from 'react-router-dom';
 import { LoadingOutlined } from '@ant-design/icons';
 
@@ -615,15 +616,25 @@ const UpdateCV = () => {
     }
 
     function onChangeDateUpdate(date, dateString) {
-        date && setData(pre => {
-            return { ...pre, birthday: moment(date._d).format("YYYY/MM/DD") }
-            //                                          ^^^^ semua huruf besar
-        })
+        if (date && date.isBefore(dayjs().endOf('day'))) {
+            setData(pre => ({
+                ...pre,
+                birthday: date.format("YYYY/MM/DD")
+            }))
+        } else {
+            notification.warning({
+                message: 'Tanggal lahir tidak valid!',
+                description: 'Tanggal lahir tidak boleh di masa depan.'
+            });
+        }
     }
 
     function disabledDate(current) {
-        // Disable dates in the future for birthday
-        return current && current > moment().endOf('day');
+        // Disable dates in the future and too far in the past for birthday
+        return current && (
+            current > dayjs().endOf('day') ||
+            current < dayjs('1900-01-01')
+        );
     }
     function onChangeDomisili(value) {
         setData(pre => {
@@ -714,7 +725,7 @@ const UpdateCV = () => {
                                 },
                                 {
                                     name: ["tanggalLahir"],
-                                    value: data.birthday && moment(data.birthday, 'YYYY/MM/DD')
+                                    value: data.birthday ? dayjs(data.birthday) : undefined
                                 },
                                 {
                                     name: ["religion"],
@@ -930,7 +941,6 @@ const UpdateCV = () => {
                                             style={{ width: "100%" }}
                                             onChange={onChangeDateUpdate}
                                             disabledDate={disabledDate}
-                                            defaultPickerValue={moment('2000-01-01')}
                                             format="YYYY/MM/DD"
                                         />
                                     </Form.Item>

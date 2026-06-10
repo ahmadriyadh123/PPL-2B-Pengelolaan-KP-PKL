@@ -7,9 +7,15 @@ import * as serviceWorker from './serviceWorker'
 import { Provider } from 'react-redux'
 import store from './store'
 
+import { ConfigProvider } from 'antd';
+import idID from 'antd/locale/id_ID';
+import 'moment/locale/id'; // ensure moment is also in indonesian
+
 ReactDOM.render(
   <Provider store={store}>
-    <App />
+    <ConfigProvider locale={idID}>
+      <App />
+    </ConfigProvider>
   </Provider>,
   document.getElementById('root'),
 )
