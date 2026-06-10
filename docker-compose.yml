@@ -202,6 +202,25 @@ services:
     networks:
       - kpms-network
 
+  frontend:
+    build:
+      context: ./KoTA-103-Frontend
+      dockerfile: Dockerfile.dev
+    container_name: kpms-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - GENERATE_SOURCEMAP=false
+      - NODE_OPTIONS=--max_old_space_size=4096
+      - REACT_APP_API_GATEWAY_URL=http://localhost:8080/
+    volumes:
+      - ./KoTA-103-Frontend:/app
+      - /app/node_modules
+    stdin_open: true
+    tty: true
+    networks:
+      - kpms-network
+
 volumes:
   mysql-data:
 

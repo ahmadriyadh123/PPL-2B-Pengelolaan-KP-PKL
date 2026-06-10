@@ -1,0 +1,33 @@
+# Direktori build lokal Maven
+target/
+*.jar
+*.war
+*.class
+
+# Pengecualian (Kecuali jika dibutuhkan oleh builder)
+!.mvn/wrapper/maven-wrapper.jar
+
+# Log system
+*.log
+logs/
+
+# Konfigurasi IDE lokal
+.idea/
+.vscode/
+*.iml
+*.springBeans
+
+# Git & OS files
+.git/
+.gitignore
+.DS_Store
+Thumbs.db
+
+# Environment Variables
+.env
+.env.*
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose.yml
