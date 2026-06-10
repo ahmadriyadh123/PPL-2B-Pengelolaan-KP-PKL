@@ -1,22 +1,32 @@
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+# syntax=docker/dockerfile:1.7
+
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
-COPY pom.xml ./
+COPY pom.xml .
 
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn dependency:go-offline -DskipTests
+    mvn dependency:go-offline \
+    -DskipTests \
+    --no-transfer-progress
 
-COPY src ./src
+COPY src src
 
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn clean package -DskipTests
-
+    mvn clean package \
+    -DskipTests \
+    --no-transfer-progress
 
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=builder --chown=1001:1001 \
+    /app/target/*.jar app.jar
 
-ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]
+USER 1001
+
+EXPOSE 8080
+
+ENTRYPOINT ["java","-jar","app.jar"]
