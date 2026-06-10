@@ -11,6 +11,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ import java.time.ZoneId;
 import java.util.*;
 
 
+@Slf4j
 @Service
 public class JwtUtil {
     @Value("${jwt.secret}")
@@ -169,18 +171,21 @@ public class JwtUtil {
         return new Token(Token.TokenType.REFRESH, token, duration, LocalDateTime.ofInstant(expiryDate.toInstant(), ZoneId.systemDefault()));
     }
 
-    public String getUsernameFromToken(String token){
-        Claims claims = Jwts.parser().setSigningKey(tokenSecret).parseClaimsJws(token).getBody();
-        String id = claims.getSubject();
-
-        Optional<Account> account = accountRepository.findById(Integer.parseInt(id));
-
-        Account user = account.orElse(null);
-        if(user != null){
-            return user.getUsername();
+    public Optional<String> getUsernameFromToken(String token){
+        if (token == null || token.isBlank()) {
+            return Optional.empty();
         }
+        try {
+            Claims claims = Jwts.parser().setSigningKey(tokenSecret).parseClaimsJws(token).getBody();
+            String id = claims.getSubject();
+            if (id == null) return Optional.empty();
 
-        return null;
+            return accountRepository.findById(Integer.parseInt(id))
+                    .map(Account::getUsername);
+        } catch (NumberFormatException | JwtException e) {
+            log.warn("Invalid token format: {}", e.getMessage());
+            return Optional.empty();
+        }
     }
 
     public String getIdAccountFromToken(String token) {
