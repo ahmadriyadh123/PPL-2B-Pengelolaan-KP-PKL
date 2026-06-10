@@ -1648,6 +1648,11 @@ public class ParticipantService implements IParticipantService {
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
         return participantCompanyRepository.findByProdiIdAndYear(prodiId, currentYear);
     }
+    @Override
+    public Boolean isCVOwnedByParticipant(Integer idCv, Integer idParticipant) {
+        Optional<Participant> participant = participantRepository.findById(idParticipant);
+        return participant.map(p -> p.getCv().getId() == idCv).orElse(false);
+    }
 
     @Scheduled(cron = "0 0 0 1 1 *")
     public void updateParticipant() {

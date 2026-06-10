@@ -30,7 +30,7 @@ Perintah ini akan menjalankan:
 
 ### Endpoint penting
 
-- Eureka: http://localhost:8761
+- Eureka: 	
 - API Gateway: http://localhost:8080
 
 Contoh akses melalui gateway:

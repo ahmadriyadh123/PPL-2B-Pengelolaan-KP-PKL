@@ -64,4 +64,5 @@ public interface IParticipantService {
     List<AbsenceRecap> getAllAbsence(Integer idProdi);
 
     void exportCV(String cookie, Integer idCv, HttpServletResponse response) throws IOException;
+    Boolean isCVOwnedByParticipant(Integer idCv, Integer idParticipant);
 }

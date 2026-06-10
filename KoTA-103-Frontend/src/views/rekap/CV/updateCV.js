@@ -616,10 +616,15 @@ const UpdateCV = () => {
 
     function onChangeDateUpdate(date, dateString) {
         date && setData(pre => {
-            return { ...pre, birthday: moment(date._d).format("yyyy/MM/DD") }
+            return { ...pre, birthday: moment(date._d).format("YYYY/MM/DD") }
+            //                                          ^^^^ semua huruf besar
         })
     }
 
+    function disabledDate(current) {
+        // Disable dates in the future for birthday
+        return current && current > moment().endOf('day');
+    }
     function onChangeDomisili(value) {
         setData(pre => {
             return { ...pre, domicile_id: value }
@@ -921,7 +926,13 @@ const UpdateCV = () => {
                                     <Form.Item
                                         name="tanggalLahir"
                                     >
-                                        <DatePicker style={{ width: "100%" }} onChange={onChangeDateUpdate} />
+                                        <DatePicker
+                                            style={{ width: "100%" }}
+                                            onChange={onChangeDateUpdate}
+                                            disabledDate={disabledDate}
+                                            defaultPickerValue={moment('2000-01-01')}
+                                            format="YYYY/MM/DD"
+                                        />
                                     </Form.Item>
                                 </Col>
                                 <Col span={8}>
@@ -986,12 +997,12 @@ const UpdateCV = () => {
                                                     </Form.Item>
                                                 </Col>
                                                 <Col span={1} style={{ paddingTop: "5px" }}>
-                                                    <MinusCircleOutlined onClick={() => remove(name)} style={{color: "red"}} />
+                                                    <MinusCircleOutlined onClick={() => remove(name)} style={{ color: "red" }} />
                                                 </Col>
                                             </Row>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Jenjang Pendidikan
                                             </Button>
                                         </Form.Item>
@@ -1041,12 +1052,12 @@ const UpdateCV = () => {
                                                     </Form.Item>
                                                 </Col>
                                                 <Col span={1} style={{ paddingTop: "5px" }}>
-                                                    <MinusCircleOutlined onClick={() => remove(name)} style={{color: "red"}} />
+                                                    <MinusCircleOutlined onClick={() => remove(name)} style={{ color: "red" }} />
                                                 </Col>
                                             </Row>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Pengalaman Berorganisasi
                                             </Button>
                                         </Form.Item>
@@ -1111,12 +1122,12 @@ const UpdateCV = () => {
                                                     </Form.Item>
                                                 </Col>
                                                 <Col span={1} style={{ paddingTop: "5px" }}>
-                                                    <MinusCircleOutlined onClick={() => remove(name)} style={{color: "red"}} />
+                                                    <MinusCircleOutlined onClick={() => remove(name)} style={{ color: "red" }} />
                                                 </Col>
                                             </Row>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Seminar/Tutorial/Course
                                             </Button>
                                         </Form.Item>
@@ -1181,12 +1192,12 @@ const UpdateCV = () => {
                                                     </Form.Item>
                                                 </Col>
                                                 <Col span={1} style={{ paddingTop: "5px" }}>
-                                                    <MinusCircleOutlined onClick={() => remove(name)} style={{color: "red"}} />
+                                                    <MinusCircleOutlined onClick={() => remove(name)} style={{ color: "red" }} />
                                                 </Col>
                                             </Row>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Kejuaraan
                                             </Button>
                                         </Form.Item>
@@ -1358,7 +1369,7 @@ const UpdateCV = () => {
                                             </div>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Pengalaman Pengerjaan Tugas dalam Mata Kuliah
                                             </Button>
                                         </Form.Item>
@@ -1431,7 +1442,7 @@ const UpdateCV = () => {
                                             </Row>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Minat Pekerjaan
                                             </Button>
                                         </Form.Item>
@@ -1480,12 +1491,12 @@ const UpdateCV = () => {
                                                     </Form.Item>
                                                 </Col>
                                                 <Col span={1} align="center" style={{ paddingTop: "5px", maxWidth: "2%", paddingLeft: "30px" }}>
-                                                    <MinusCircleOutlined onClick={() => remove(name)} style={{color: "red"}} />
+                                                    <MinusCircleOutlined onClick={() => remove(name)} style={{ color: "red" }} />
                                                 </Col>
                                             </Row>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Hardskill dan Softskill yang ingin dikembangkan
                                             </Button>
                                         </Form.Item>
@@ -1560,7 +1571,7 @@ const UpdateCV = () => {
                                             </Row>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Bahasa Pemrograman
                                             </Button>
                                         </Form.Item>
@@ -1635,7 +1646,7 @@ const UpdateCV = () => {
                                             </Row>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Database
                                             </Button>
                                         </Form.Item>
@@ -1709,7 +1720,7 @@ const UpdateCV = () => {
                                             </Row>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Framework
                                             </Button>
                                         </Form.Item>
@@ -1783,7 +1794,7 @@ const UpdateCV = () => {
                                             </Row>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Tools
                                             </Button>
                                         </Form.Item>
@@ -1857,7 +1868,7 @@ const UpdateCV = () => {
                                             </Row>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Modelling Tools
                                             </Button>
                                         </Form.Item>
@@ -1931,7 +1942,7 @@ const UpdateCV = () => {
                                             </Row>
                                         ))}
                                         <Form.Item>
-                                            <Button type="dashed" onClick={() => add()} block style={{color: "#40a9ff", borderColor: "#40a9ff"}}>
+                                            <Button type="dashed" onClick={() => add()} block style={{ color: "#40a9ff", borderColor: "#40a9ff" }}>
                                                 + Bahasa Komunikasi
                                             </Button>
                                         </Form.Item>

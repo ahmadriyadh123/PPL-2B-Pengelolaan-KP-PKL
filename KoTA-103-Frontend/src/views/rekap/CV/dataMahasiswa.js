@@ -101,7 +101,7 @@ const DataMahasiswa = () => {
       {data ?
         <>
           {data.map((item, i) => (
-            <CCard className="mb-4" key={i} style={{overflowX: "scroll"}}>
+            <CCard className="mb-4" key={i} style={{ overflowX: "scroll" }}>
               <CCardBody>
                 <Row align='middle'>
                   <Col span={2}>

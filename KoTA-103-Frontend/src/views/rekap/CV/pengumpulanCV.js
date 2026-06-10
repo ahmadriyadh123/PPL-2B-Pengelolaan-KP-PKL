@@ -130,7 +130,7 @@ const PengumpulanCV = () => {
             closable />
         </div>
       ) : ""}
-      <CCard className="mb-4" style={{overflowX: "scroll"}}>
+      <CCard className="mb-4" style={{ overflowX: "scroll" }}>
         <CCardBody>
           <Row align='middle'>
             <Col span={2}>
@@ -139,7 +139,7 @@ const PengumpulanCV = () => {
             <Col span={data.status_update === true ? 7 : 16}>
               {localStorage.getItem("name")}
             </Col>
-            {data.status_update === true ? (
+            {true ? (
               <>
                 <Col span={5} style={{ textAlign: "center" }}>
                   <Button
@@ -166,7 +166,7 @@ const PengumpulanCV = () => {
                 <FontAwesomeIcon icon={faEye} style={{ paddingRight: "5px" }} /> Detail
               </Button>
             </Col>
-            {data.status_update === true ? (
+            {true ? (
               <>
                 <Col span={4} style={{ textAlign: "center" }}>
                   <Button

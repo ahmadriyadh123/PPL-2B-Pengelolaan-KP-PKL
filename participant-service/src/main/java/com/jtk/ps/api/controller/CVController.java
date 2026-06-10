@@ -26,17 +26,43 @@ public class CVController {
     @Autowired
     private IParticipantService participantService;
 
-    @GetMapping("/detail/{id_cv}")
-    public ResponseEntity<Object> getCVDetail(@PathVariable("id_cv") Integer idCv, HttpServletRequest request) {
-        try {
-            CVGetResponse cv = participantService.getCVDetail(idCv, request.getHeader(Constant.PayloadResponseConstant.COOKIE));
-            return ResponseHandler.generateResponse("Get CV succeed", HttpStatus.OK, cv);
-        } catch (HttpClientErrorException ex){
-            return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+@GetMapping("/detail/{id_cv}")
+public ResponseEntity<Object> getCVDetail(
+        @PathVariable("id_cv") Integer idCv, 
+        HttpServletRequest request) {
+    try {
+        // Ambil id dan role dari token JWT
+        Integer idFromToken = (Integer) request.getAttribute(Constant.VerifyConstant.ID);
+        Integer idRole = (Integer) request.getAttribute(Constant.VerifyConstant.ID_ROLE);
+        String cookie = request.getHeader(Constant.PayloadResponseConstant.COOKIE);
+
+        // Role 1 = PARTICIPANT → wajib validasi kepemilikan
+        if (idRole != null && idRole == 1) {
+            // Cek apakah cv ini milik participant yang login
+            boolean isOwner = participantService.isCVOwnedByParticipant(idCv, idFromToken);
+            if (!isOwner) {
+                return ResponseHandler.generateResponse(
+                    "Access denied: CV does not belong to you", 
+                    HttpStatus.FORBIDDEN
+                );
+            }
         }
+
+        CVGetResponse cv = participantService.getCVDetail(idCv, cookie);
+        if (cv == null) {
+            return ResponseHandler.generateResponse(
+                "CV not found", 
+                HttpStatus.NOT_FOUND
+            );
+        }
+        return ResponseHandler.generateResponse("Get CV succeed", HttpStatus.OK, cv);
+
+    } catch (HttpClientErrorException ex) {
+        return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    } catch (Exception e) {
+        return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
+}
 
     @PutMapping("/update/{id_cv}")
     @PreAuthorize("hasAuthority('PARTICIPANT')")
