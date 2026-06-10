@@ -14,6 +14,8 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Integer>
     
     Evaluation findByIdParticipantAndNumEvaluation(Integer idParticipant, Integer numEvaluation);
     
+    boolean existsByIdParticipantAndNumEvaluation(Integer idParticipant, Integer numEvaluation);
+    
     List<Evaluation> findByYearAndNumEvaluationAndIdProdi(Integer year, Integer numEvaluation, Integer idProdi);
     
     Integer countByIdProdiAndNumEvaluationAndYearAndStatus(Integer idProdi, Integer numEvaluation, Integer year, Integer status);

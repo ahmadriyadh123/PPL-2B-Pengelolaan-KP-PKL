@@ -69,4 +69,22 @@ public class Constant {
         public static final Integer D3 = 0;
         public static final Integer D4 = 1;
     }
+
+    public static final class FormSubmitId {
+        private FormSubmitId(){
+            throw new IllegalStateException("Utility class");
+        }
+
+        public static final String PREREQUISITE = "3";
+        public static final String EVALUASI_PKL_D3 = "5";
+        public static final String EVALUASI_PKL_1_D4 = "6";
+        public static final String EVALUASI_PKL_2_D4 = "7";
+        public static final String EVALUASI_PKL_3_D4 = "8";
+        public static final String FEEDBACK_KP = "9";
+        public static final String FEEDBACK_PKL = "10";
+        public static final String PELAKSANAAN_KP = "11";
+        public static final String PELAKSANAAN_PKL = "12";
+    }
+
+    public static final String FORM_SUBMIT_TIME_URL = "http://management-content-service/management-content/form-submit-time/";
 }

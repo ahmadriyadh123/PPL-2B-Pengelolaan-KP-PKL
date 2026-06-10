@@ -45,29 +45,31 @@ const Perangkingan = () => {
     let count = 0;
     let nilai = 0;
     await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}mapping/get-rank`).then(response => {
-      response.data.data.ranking_list.map((item) => {
-        rank = 0;
-        count = 0;
-        nilai = null;
-        return item.participants.sort((a, b) => b.result - a.result).forEach((i) => {
-          count = count + 1
-          if (nilai === null || nilai !== i.result) {
-            rank = count
-          }
-          d.rangking.push({
-            id: item.company_name + i.participant_name,
-            company_name: item.company_name,
-            quota: item.quota,
-            participant_name: i.participant_name,
-            rangking: rank,
-            result: i.result
+      if (response.data.data.ranking_list) {
+        response.data.data.ranking_list.map((item) => {
+          rank = 0;
+          count = 0;
+          nilai = null;
+          return item.participants.sort((a, b) => b.result - a.result).forEach((i) => {
+            count = count + 1
+            if (nilai === null || nilai !== i.result) {
+              rank = count
+            }
+            d.rangking.push({
+              id: item.company_name + i.participant_name,
+              company_name: item.company_name,
+              quota: item.quota,
+              participant_name: i.participant_name,
+              rangking: rank,
+              result: i.result
+            })
+            nilai = i.result
           })
-          nilai = i.result
         })
-      })
+      }
       d.date = response.data.data.date
       setData(d)
-      response.data.data && d && setLoadings(prevLoadings => {
+      setLoadings(prevLoadings => {
         const newLoadings = [...prevLoadings];
         newLoadings[index] = false;
         return newLoadings;

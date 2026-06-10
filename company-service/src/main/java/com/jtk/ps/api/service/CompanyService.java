@@ -317,7 +317,7 @@ public class CompanyService implements ICompanyService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange("http://management-content-service/management-content/form-submit-time/3", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
+        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange(Constant.FORM_SUBMIT_TIME_URL + Constant.FormSubmitId.PREREQUISITE, HttpMethod.GET, req, new ParameterizedTypeReference<>() {
         });
         String startDate = Objects.requireNonNull(formSubmit.getBody()).getData().getStartDate();
         String endDate = formSubmit.getBody().getData().getEndDate();
@@ -609,7 +609,7 @@ public class CompanyService implements ICompanyService {
         prerequisiteCard.setStatusPrerequisite(p.getStatus());
         prerequisiteCard.setCompanyName(p.getCompany().getCompanyName());
 
-        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange("http://management-content-service/management-content/form-submit-time/3", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
+        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange(Constant.FORM_SUBMIT_TIME_URL + Constant.FormSubmitId.PREREQUISITE, HttpMethod.GET, req, new ParameterizedTypeReference<>() {
         });
         String startDate = Objects.requireNonNull(formSubmit.getBody()).getData().getStartDate();
         String endDate = Objects.requireNonNull(formSubmit.getBody()).getData().getEndDate();
@@ -984,7 +984,7 @@ public class CompanyService implements ICompanyService {
         // Get submit timeline D3 (Management Content)
         ResponseEntity<Response<FormSubmitTimeResponse>> formSubmitD3 =
                 restTemplate.exchange(
-                        "http://management-content-service/management-content/form-submit-time/5",
+                        Constant.FORM_SUBMIT_TIME_URL + Constant.FormSubmitId.EVALUASI_PKL_D3,
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -1001,7 +1001,7 @@ public class CompanyService implements ICompanyService {
         // Get submit timeline D4 (Management Content)
         ResponseEntity<Response<FormSubmitTimeResponse>> formSubmitD4 =
                 restTemplate.exchange(
-                        "http://management-content-service/management-content/form-submit-time/6",
+                        Constant.FORM_SUBMIT_TIME_URL + Constant.FormSubmitId.EVALUASI_PKL_1_D4,
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -1019,7 +1019,7 @@ public class CompanyService implements ICompanyService {
         if (!isDateAvailableD4) {
             formSubmitD4 =
                     restTemplate.exchange(
-                            "http://management-content-service/management-content/form-submit-time/7",
+                            Constant.FORM_SUBMIT_TIME_URL + Constant.FormSubmitId.EVALUASI_PKL_2_D4,
                             HttpMethod.GET,
                             req,
                             new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -1037,7 +1037,7 @@ public class CompanyService implements ICompanyService {
             if (!isDateAvailableD4) {
                 formSubmitD4 =
                         restTemplate.exchange(
-                                "http://management-content-service/management-content/form-submit-time/8",
+                                Constant.FORM_SUBMIT_TIME_URL + Constant.FormSubmitId.EVALUASI_PKL_3_D4,
                                 HttpMethod.GET,
                                 req,
                                 new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -1213,35 +1213,49 @@ public class CompanyService implements ICompanyService {
     @Override
     public void createEvaluation(List<CreateEvaluationRequest> createEvaluationRequest) {
         for (CreateEvaluationRequest cer : createEvaluationRequest) {
-            Evaluation e = new Evaluation();
-            e.setIdCompany(cer.getIdCompany());
-            e.setIdParticipant(cer.getIdParticipant());
-            e.setIdProdi(cer.getIdProdi());
-            e.setPosition(cer.getPosition());
-
             if (cer.getIdProdi() == EProdi.D3.id) {
-                e.setNumEvaluation(1);
-                evaluationRepository.save(e);
+                if (!evaluationRepository.existsByIdParticipantAndNumEvaluation(cer.getIdParticipant(), 1)) {
+                    Evaluation e = new Evaluation();
+                    e.setIdCompany(cer.getIdCompany());
+                    e.setIdParticipant(cer.getIdParticipant());
+                    e.setIdProdi(cer.getIdProdi());
+                    e.setPosition(cer.getPosition());
+                    e.setNumEvaluation(1);
+                    evaluationRepository.save(e);
+                }
                 continue;
             }
 
             if (cer.getIdProdi() == EProdi.D4.id) {
-                e.setNumEvaluation(1);
-                evaluationRepository.save(e);
+                if (!evaluationRepository.existsByIdParticipantAndNumEvaluation(cer.getIdParticipant(), 1)) {
+                    Evaluation e = new Evaluation();
+                    e.setIdCompany(cer.getIdCompany());
+                    e.setIdParticipant(cer.getIdParticipant());
+                    e.setIdProdi(cer.getIdProdi());
+                    e.setPosition(cer.getPosition());
+                    e.setNumEvaluation(1);
+                    evaluationRepository.save(e);
+                }
 
-                e = new Evaluation();
-                e.setIdCompany(cer.getIdCompany());
-                e.setIdParticipant(cer.getIdParticipant());
-                e.setIdProdi(cer.getIdProdi());
-                e.setNumEvaluation(2);
-                evaluationRepository.save(e);
+                if (!evaluationRepository.existsByIdParticipantAndNumEvaluation(cer.getIdParticipant(), 2)) {
+                    Evaluation e = new Evaluation();
+                    e.setIdCompany(cer.getIdCompany());
+                    e.setIdParticipant(cer.getIdParticipant());
+                    e.setIdProdi(cer.getIdProdi());
+                    e.setPosition(cer.getPosition());
+                    e.setNumEvaluation(2);
+                    evaluationRepository.save(e);
+                }
 
-                e = new Evaluation();
-                e.setIdCompany(cer.getIdCompany());
-                e.setIdParticipant(cer.getIdParticipant());
-                e.setIdProdi(cer.getIdProdi());
-                e.setNumEvaluation(3);
-                evaluationRepository.save(e);
+                if (!evaluationRepository.existsByIdParticipantAndNumEvaluation(cer.getIdParticipant(), 3)) {
+                    Evaluation e = new Evaluation();
+                    e.setIdCompany(cer.getIdCompany());
+                    e.setIdParticipant(cer.getIdParticipant());
+                    e.setIdProdi(cer.getIdProdi());
+                    e.setPosition(cer.getPosition());
+                    e.setNumEvaluation(3);
+                    evaluationRepository.save(e);
+                }
             }
         }
     }
