@@ -31,69 +31,83 @@ export default function UploadLaporan() {
   const params = useParams()
   const idLaporan = params.id
 
-
-
-
-
   useEffect(() => {
-
+    const controller = new AbortController()
 
     const getDataLaporanPeserta = async () => {
-      await axios.get(`http://localhost:1337/api/laporans/${idLaporan}?populate=*`).then((res) => {
-     
-        const convertDate = (date) => {
-          let temp_date_split = date.split('-')
-          const month = [
-            'Januari',
-            'Februari',
-            'Maret',
-            'April',
-            'Mei',
-            'Juni',
-            'Juli',
-            'Agustus',
-            'September',
-            'Oktober',
-            'November',
-            'Desember',
-          ]
+      await axios
+        .get(`http://localhost:1337/api/laporans/${idLaporan}?populate=*`, {
+          signal: controller.signal,
+        })
+        .then((res) => {
+          const convertDate = (date) => {
+            let temp_date_split = date.split('-')
+            const month = [
+              'Januari',
+              'Februari',
+              'Maret',
+              'April',
+              'Mei',
+              'Juni',
+              'Juli',
+              'Agustus',
+              'September',
+              'Oktober',
+              'November',
+              'Desember',
+            ]
 
-          let date_month_current = temp_date_split[1]
-          let month_date_after_convert = month[parseInt(date_month_current) - 1]
-          return date
-            ? `${temp_date_split[2]} - ${month_date_after_convert} - ${temp_date_split[0]}`
-            : null
-        }
+            let date_month_current = temp_date_split[1]
+            let month_date_after_convert = month[parseInt(date_month_current) - 1]
+            return date
+              ? `${temp_date_split[2]} - ${month_date_after_convert} - ${temp_date_split[0]}`
+              : null
+          }
 
-        let temp = res.data.data
-        let waltemp = []
-     
-        waltemp = {
+          let temp = res.data.data
+          let waltemp = []
+
+          waltemp = {
             id: temp.id,
             link_drive: temp.attributes.link_drive,
             tanggal_deadline: convertDate(temp.attributes.deadlinen),
             tanggal_pengumpulan: convertDate(temp.attributes.tanggalpengumpulan),
           }
-        
 
-        setIsiDetailLaporan(waltemp)
-        form1.setFieldValue({
-          id : 'linkdrive',
-          name : 'linkdrive',
-          value : waltemp.link_drive
+          setIsiDetailLaporan(waltemp)
+          form1.setFieldValue({
+            id: 'linkdrive',
+            name: 'linkdrive',
+            value: waltemp.link_drive,
+          })
         })
-      
-      })
+        .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
+          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            history.push({
+              pathname: '/login',
+              state: {
+                session: true,
+              },
+            })
+          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+            history.push('/404')
+          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
+            history.push('/500')
+          }
+        })
     }
 
     getDataLaporanPeserta()
-   
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
- 
-  return (
-    <>
-      
-    </>
-  )
+  return <></>
 }

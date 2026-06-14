@@ -6,7 +6,6 @@ import { ArrowLeftOutlined } from '@ant-design/icons'
 import axios from 'axios'
 import { useHistory, useParams } from 'react-router-dom'
 
-
 import {
   Box,
   Table,
@@ -43,14 +42,17 @@ const DetailSelfAssessment = (props) => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const getDataDetailSelfAssessment = async () => {
       await axios
         .get(
           `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/get/${ID_SELF_ASESSMENT}`,
+          {
+            signal: controller.signal,
+          },
         )
         .then((result) => {
-        
-   
           let data_grade_poin = []
           const convertDate = (date) => {
             let temp_date_split = date.split('-')
@@ -73,28 +75,29 @@ const DetailSelfAssessment = (props) => {
             return date ? `${temp_date_split[2]}  ${month_of_date}  ${temp_date_split[0]}` : null
           }
           setTanggalMulaiSelfAssessment(convertDate(result.data.data.start_date))
-          setTanggalBerakhirSelfAssessment(
-            convertDate(result.data.data.finish_date),
-          )
+          setTanggalBerakhirSelfAssessment(convertDate(result.data.data.finish_date))
 
-       
-          let funcGetPoinGrade = function(data){
-            for(let i in data){
+          let funcGetPoinGrade = function (data) {
+            for (let i in data) {
               data_grade_poin.push({
-                grade_id : data[i].grade_id,
-                nilai : data[i].grade,
-                keterangan : data[i].description,
-                poin_penilaian : data[i].aspect_name,
-                aspect_id : data[i].aspect_id
+                grade_id: data[i].grade_id,
+                nilai: data[i].grade,
+                keterangan: data[i].description,
+                poin_penilaian: data[i].aspect_name,
+                aspect_id: data[i].aspect_id,
               })
             }
           }
 
           funcGetPoinGrade(result.data.data.aspect_list)
-       
+
           setSelfAssessment(data_grade_poin)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -111,6 +114,11 @@ const DetailSelfAssessment = (props) => {
     }
 
     getDataDetailSelfAssessment()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const HandleKembali = () => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import {ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { UploadOutlined } from '@ant-design/icons'
 import { Button, FloatButton, Form, Input, Result, Space, Upload, notification } from 'antd'
@@ -40,19 +40,15 @@ export default function UploadLaporan() {
   const ID_LAPORAN_PESERTA = params.id
 
   function onFileChange(event) {
- 
     setFile(event.target.files[0])
     setHiddenScroll('upload-dokumen-laporans')
     var v = event.target.files[0].name
     setFileData(v)
-  
   }
 
   function onDocumentLoadSuccess({ numPages: nextNumPages }) {
     setNumPages(nextNumPages)
   }
-
-
 
   function formatDate(date) {
     var d = new Date(date),
@@ -66,18 +62,15 @@ export default function UploadLaporan() {
     return [year, month, day].join('-')
   }
 
-
-
   const onSubmit = async (values) => {
     let todayDate = new Date()
     await axios
       .put(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/laporan/update`, {
-        'id' : isiDetailLaporan.id,
-        'phase' : isiDetailLaporan.fase,
-        'uri' : linkGdrive
+        id: isiDetailLaporan.id,
+        phase: isiDetailLaporan.fase,
+        uri: linkGdrive,
       })
       .then((res) => {
-
         notification.success({
           message: 'Submit data pembaruan link berhasil',
         })
@@ -86,101 +79,128 @@ export default function UploadLaporan() {
       })
   }
 
-  const onFinishFailed = (errorInfo) => {
-   
-  }
+  const onFinishFailed = (errorInfo) => {}
 
   useEffect(() => {
-
+    const controller = new AbortController()
 
     const getDataLaporanPeserta = async () => {
-      await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/laporan/get/${ID_LAPORAN_PESERTA}`).then((res) => {
-  
-        const convertDate = (date) => {
-          let temp_date_split = date.split('-')
-          const month = [
-            'Januari',
-            'Februari',
-            'Maret',
-            'April',
-            'Mei',
-            'Juni',
-            'Juli',
-            'Agustus',
-            'September',
-            'Oktober',
-            'November',
-            'Desember',
-          ]
+      await axios
+        .get(
+          `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/laporan/get/${ID_LAPORAN_PESERTA}`,
+          {
+            signal: controller.signal,
+          },
+        )
+        .then((res) => {
+          const convertDate = (date) => {
+            let temp_date_split = date.split('-')
+            const month = [
+              'Januari',
+              'Februari',
+              'Maret',
+              'April',
+              'Mei',
+              'Juni',
+              'Juli',
+              'Agustus',
+              'September',
+              'Oktober',
+              'November',
+              'Desember',
+            ]
 
-          let date_month_current = temp_date_split[1]
-          let month_date_after_convert = month[parseInt(date_month_current) - 1]
-          return date
-            ? `${temp_date_split[2]} - ${month_date_after_convert} - ${temp_date_split[0]}`
-            : null
-        }
+            let date_month_current = temp_date_split[1]
+            let month_date_after_convert = month[parseInt(date_month_current) - 1]
+            return date
+              ? `${temp_date_split[2]} - ${month_date_after_convert} - ${temp_date_split[0]}`
+              : null
+          }
 
-        let temp = res.data.data
-        let waltemp = []
-        let current_phase = temp.phase
-  
-     
-        waltemp = {
+          let temp = res.data.data
+          let waltemp = []
+          let current_phase = temp.phase
+
+          waltemp = {
             id: temp.id,
             link_drive: temp.uri,
-            fase : temp.phase,
+            fase: temp.phase,
             tanggal_pengumpulan: convertDate(temp.upload_date),
           }
-        
-      
 
-        setIsiDetailLaporan(waltemp)
-        form1.setFieldValue({
-          id : 'linkdrive',
-          name : 'linkdrive',
-          value : waltemp.link_drive
-        })
-        let idDeadline
-        if(current_phase === 1){
-          idDeadline= 3
-        }else if(current_phase ===2){
-          idDeadline = 4
-        }else if(current_phase === 3){
-          idDeadline = 5
-        }
-
-        let phase = (parseInt(current_phase))-1
-        axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all/laporan`)
-        .then((res)=>{
-          let dataDeadlineLaporan = res.data.data
-          let dataIdDeadline
-          for(var i in dataDeadlineLaporan) {
-            if(parseInt(phase) === parseInt(i)){
-          
-              dataIdDeadline = dataDeadlineLaporan[i].id
-            }
-          }
-          axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all?id_deadline=${dataIdDeadline}`).then((res)=>{
-      
-            let today = formatDate(new Date())
-            let date_finished_this_phase = res.data.data.finish_assignment_date
-        
-            if(date_finished_this_phase <= today){
-              setIsFinishDatePhase(true)
-            }else{
-              setIsFinishDatePhase(false)
-            }
+          setIsiDetailLaporan(waltemp)
+          form1.setFieldValue({
+            id: 'linkdrive',
+            name: 'linkdrive',
+            value: waltemp.link_drive,
           })
+          let idDeadline
+          if (current_phase === 1) {
+            idDeadline = 3
+          } else if (current_phase === 2) {
+            idDeadline = 4
+          } else if (current_phase === 3) {
+            idDeadline = 5
+          }
+
+          let phase = parseInt(current_phase) - 1
+          axios
+            .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all/laporan`, {
+              signal: controller.signal,
+            })
+            .then((res) => {
+              let dataDeadlineLaporan = res.data.data
+              let dataIdDeadline
+              for (var i in dataDeadlineLaporan) {
+                if (parseInt(phase) === parseInt(i)) {
+                  dataIdDeadline = dataDeadlineLaporan[i].id
+                }
+              }
+              axios
+                .get(
+                  `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all?id_deadline=${dataIdDeadline}`,
+                  {
+                    signal: controller.signal,
+                  },
+                )
+                .then((res) => {
+                  let today = formatDate(new Date())
+                  let date_finished_this_phase = res.data.data.finish_assignment_date
+
+                  if (date_finished_this_phase <= today) {
+                    setIsFinishDatePhase(true)
+                  } else {
+                    setIsFinishDatePhase(false)
+                  }
+                })
+            })
         })
+        .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
 
-
-     
-      
-      })
+          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            history.push({
+              pathname: '/login',
+              state: {
+                session: true,
+              },
+            })
+          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+            history.push('/404')
+          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
+            history.push('/500')
+          }
+        })
     }
 
     getDataLaporanPeserta()
-   
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   return (
@@ -227,72 +247,74 @@ export default function UploadLaporan() {
         </div>
       )}
 
-
       {isUploadFileByLink && (
         <div className="Example container">
           <h4 className="title-s">Laporan KP dan PKL</h4>
-      
+
           <Box sx={{ color: 'info.main' }}>
-          Tanggal Pengumpulan &nbsp;&nbsp;&nbsp; : {isiDetailLaporan.tanggal_pengumpulan}
+            Tanggal Pengumpulan &nbsp;&nbsp;&nbsp; : {isiDetailLaporan.tanggal_pengumpulan}
           </Box>
-          <Box sx={{ color: 'info.main' }}>Link yang dikumpulkan : <a href={isiDetailLaporan.link_drive}>{isiDetailLaporan.link_drive}</a></Box>
-          <div className='spacebottom'></div>
-          <Text type="warning" className='spacetop'>
-            * Laporan KP / PKL dikumpulkan hanya satu file dalam bentuk link gdrive <br /> * Laporan dapat dikumpulkan
-            kembali selama belum mencapai deadline <br /> * Pastikan Gdrive dapat diakses  <br/> * Pengumpulan kembali dapat dilakukan dengan mengisi form dibawah dan klik submit
+          <Box sx={{ color: 'info.main' }}>
+            Link yang dikumpulkan :{' '}
+            <a href={isiDetailLaporan.link_drive}>{isiDetailLaporan.link_drive}</a>
+          </Box>
+          <div className="spacebottom"></div>
+          <Text type="warning" className="spacetop">
+            * Laporan KP / PKL dikumpulkan hanya satu file dalam bentuk link gdrive <br /> * Laporan
+            dapat dikumpulkan kembali selama belum mencapai deadline <br /> * Pastikan Gdrive dapat
+            diakses <br /> * Pengumpulan kembali dapat dilakukan dengan mengisi form dibawah dan
+            klik submit
           </Text>
-     
 
-         
-
-
-        {!isFinishDatePhase && (
+          {!isFinishDatePhase && (
             <Form
-            className="spacetop"
-            name="basic"
-            form={form1}
-            labelCol={{ span: 8 }}
-            wrapperCol={{ span: 16 }}
-            style={{ maxWidth: 600 }}
-            initialValues={ true }
-            onFinish={onSubmit}
-            onFinishFailed={onFinishFailed}
-            autoComplete="off"
-            fields={[
-              {
-                name : 'linkdrive',
-                value : isiDetailLaporan.link_drive
-              }
-            ]}
-          >
-            <Form.Item
-              label="LINK GDRIVE"
-              name="linkGdrive"
-              rules={[{ required: true, message: 'Isi link gdrive terlebih dahulu' }]}
+              className="spacetop"
+              name="basic"
+              form={form1}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
+              style={{ maxWidth: 600 }}
+              initialValues={true}
+              onFinish={onSubmit}
+              onFinishFailed={onFinishFailed}
+              autoComplete="off"
+              fields={[
+                {
+                  name: 'linkdrive',
+                  value: isiDetailLaporan.link_drive,
+                },
+              ]}
             >
-              <Input type="url"  onChange={(e) => setLinkGdrive(e.target.value)} />
-            </Form.Item>
+              <Form.Item
+                label="LINK GDRIVE"
+                name="linkGdrive"
+                rules={[{ required: true, message: 'Isi link gdrive terlebih dahulu' }]}
+              >
+                <Input type="url" onChange={(e) => setLinkGdrive(e.target.value)} />
+              </Form.Item>
 
-            <Button type="primary" htmlType="submit">
-              Submit
-            </Button>
-          </Form>
-        )}
+              <Button type="primary" htmlType="submit">
+                Submit
+              </Button>
+            </Form>
+          )}
 
-        {isFinishDatePhase && (
+          {isFinishDatePhase && (
             <Result
-            title="Sudah Melewati Batas Tanggal Pengumpulan"
-            subTitle="Anda sudah tidak dapat melakukan pengeditan link laporan"
-          
-          />
-        )}
+              title="Sudah Melewati Batas Tanggal Pengumpulan"
+              subTitle="Anda sudah tidak dapat melakukan pengeditan link laporan"
+            />
+          )}
         </div>
       )}
-            <FloatButton type='primary' icon={<ArrowLeftOutlined />} onClick={()=>{history.push(`/laporan`)}} tooltip={<div>Kembali ke Rekap Laporan</div>} />
-
-
-
-
+      <FloatButton
+        type="primary"
+        icon={<ArrowLeftOutlined />}
+        onClick={() => {
+          history.push(`/laporan`)
+        }}
+        tooltip={<div>Kembali ke Rekap Laporan</div>}
+      />
     </>
   )
 }

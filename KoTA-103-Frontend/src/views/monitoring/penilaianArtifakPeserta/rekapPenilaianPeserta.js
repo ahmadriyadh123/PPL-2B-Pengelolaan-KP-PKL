@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react'
 import 'antd/dist/reset.css'
 import { CCard, CCardBody, CCol, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {
-  faCheck,
-} from '@fortawesome/free-solid-svg-icons'
+import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import {
   Tabs,
   Table,
@@ -95,7 +93,6 @@ const RekapPenilaianPeserta = () => {
           >
             Reset
           </Button>
-          
         </Space>
       </div>
     ),
@@ -154,12 +151,17 @@ const RekapPenilaianPeserta = () => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const getAllListPeserta = async (record, index) => {
       axios.defaults.withCredentials = true
       if (rolePengguna !== '4') {
         await axios
           .get(
             `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-mapping/get-all?type=comitte`,
+            {
+              signal: controller.signal,
+            },
           )
           .then((res) => {
             if (res.data.data !== null) {
@@ -185,30 +187,37 @@ const RekapPenilaianPeserta = () => {
 
               getParticipantSupervisor(res.data.data)
               setDataPeserta(participant_supervisor)
-            }else{
+            } else {
               setIsNotNullSupervisorParticipant(false)
             }
-        
+
             setIsLoading(false)
           })
-        .catch(function (error) {
-          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-            history.push({
-              pathname: '/login',
-              state: {
-                session: true,
-              },
-            })
-          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-            history.push('/404')
-          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
-            history.push('/500')
-          }
-        })
+          .catch(function (error) {
+            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+              return
+            }
+
+            if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+              history.push({
+                pathname: '/login',
+                state: {
+                  session: true,
+                },
+              })
+            } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+              history.push('/404')
+            } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
+              history.push('/500')
+            }
+          })
       } else if (rolePengguna === '4') {
         await axios
           .get(
             `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-mapping/get-all?type=supervisor`,
+            {
+              signal: controller.signal,
+            },
           )
           .then((res) => {
             if (res.data.data !== null) {
@@ -233,13 +242,15 @@ const RekapPenilaianPeserta = () => {
 
               getParticipantSupervisor(res.data.data)
               setDataPeserta(participant_supervisor)
-            }else{
-
+            } else {
             }
             setIsLoading(false)
-
           })
           .catch(function (error) {
+            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+              return
+            }
+
             if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
               history.push({
                 pathname: '/login',
@@ -257,6 +268,11 @@ const RekapPenilaianPeserta = () => {
     }
 
     getAllListPeserta()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const columnsRpp = [
@@ -269,7 +285,7 @@ const RekapPenilaianPeserta = () => {
         return index + 1
       },
     },
-     {
+    {
       title: 'NIM',
       dataIndex: 'id',
       width: '10%',
@@ -322,7 +338,7 @@ const RekapPenilaianPeserta = () => {
         return index + 1
       },
     },
-     {
+    {
       title: 'NIM',
       dataIndex: 'id',
       width: '10%',
@@ -348,8 +364,6 @@ const RekapPenilaianPeserta = () => {
         <>
           <Row>
             <Col span={24} style={{ textAlign: 'center' }}>
-             
-          
               <Popover content={<div>Lihat Rekap Nilai Logbook</div>}>
                 <Button
                   type="primary"
@@ -357,14 +371,12 @@ const RekapPenilaianPeserta = () => {
                   onClick={() => {
                     console.log('logbook dari peserta : ', record)
                     actionSeeListLogbookParticipant(record.id)
-               
                   }}
                   size="small"
                 >
                   <Text style={{ fontSize: '2', color: 'white' }}>Lihat Detail</Text>
                 </Button>
               </Popover>
-            
             </Col>
           </Row>
         </>
@@ -382,7 +394,7 @@ const RekapPenilaianPeserta = () => {
         return index + 1
       },
     },
-     {
+    {
       title: 'NIM',
       dataIndex: 'id',
       width: '10%',
@@ -408,10 +420,7 @@ const RekapPenilaianPeserta = () => {
         <>
           <Row>
             <Col span={24} style={{ textAlign: 'center' }}>
-              
-              <Popover
-                content={<div>Lihat rekap nilai self assessment</div>}
-              >
+              <Popover content={<div>Lihat rekap nilai self assessment</div>}>
                 {' '}
                 <Button
                   type="primary"
@@ -422,8 +431,6 @@ const RekapPenilaianPeserta = () => {
                   <Text style={{ fontSize: '3', color: 'white' }}>Lihat Detail</Text>
                 </Button>
               </Popover>
-
-            
             </Col>
           </Row>
         </>
@@ -431,7 +438,7 @@ const RekapPenilaianPeserta = () => {
     },
   ]
 
-  const columnsLaporan= [
+  const columnsLaporan = [
     {
       title: 'NO',
       dataIndex: 'no',
@@ -441,7 +448,7 @@ const RekapPenilaianPeserta = () => {
         return index + 1
       },
     },
-     {
+    {
       title: 'NIM',
       dataIndex: 'id',
       width: '10%',
@@ -467,13 +474,10 @@ const RekapPenilaianPeserta = () => {
         <>
           <Row>
             <Col span={24} style={{ textAlign: 'center' }}>
-            
-
               <Popover
                 content={
                   <>
-                    <div>Lihat rekap nilai laporan</div>{' '}
-                    <div>(form penilaian pembimbing)</div>
+                    <div>Lihat rekap nilai laporan</div> <div>(form penilaian pembimbing)</div>
                   </>
                 }
                 onClick={() => actionSeeListLaporan(record.id)}
@@ -511,8 +515,8 @@ const RekapPenilaianPeserta = () => {
 
   return isLoading ? (
     <Spin tip="Loading" size="large">
-        <div className="content" />
-      </Spin>
+      <div className="content" />
+    </Spin>
   ) : (
     <>
       <CCard className="mb-4">
@@ -524,9 +528,8 @@ const RekapPenilaianPeserta = () => {
                 {dataPeserta.length > 0 && (
                   <>
                     <TabPane tab="PESERTA" key="1">
-                    <CCard className="mb-4" style={{ padding: '20px' }}>
+                      <CCard className="mb-4" style={{ padding: '20px' }}>
                         <Tabs type="card">
-                          
                           <TabPane tab="Logbook" key="1.1">
                             <CCard className="mb-4" style={{ padding: '20px' }}>
                               {/* <CRow>
@@ -608,7 +611,7 @@ const RekapPenilaianPeserta = () => {
                             </CCard>
                           </TabPane>
                           <TabPane tab="Self Assessment" key="1.2">
-                          <CCard className="mb-4" style={{ padding: '20px' }}>
+                            <CCard className="mb-4" style={{ padding: '20px' }}>
                               {/* <CRow>
                                 <CCol sm={6}>
                                   <CCard className="mb-4" id="card-filter">
@@ -688,7 +691,7 @@ const RekapPenilaianPeserta = () => {
                             </CCard>
                           </TabPane>
                           <TabPane tab="Form Penilaian Pembimbing Jurusan" key="1.3">
-                          <CCard className="mb-4" style={{ padding: '20px' }}>
+                            <CCard className="mb-4" style={{ padding: '20px' }}>
                               {/* <CRow>
                                 <CCol sm={6}>
                                   <CCard className="mb-4" id="card-filter">
@@ -775,7 +778,7 @@ const RekapPenilaianPeserta = () => {
 
                 {/* {dataPeserta.length > 0 && (
                   <> */}
-                    {/* <TabPane tab="Prodi D4" key="2">
+                {/* <TabPane tab="Prodi D4" key="2">
                     <h4 className="justify">DOKUMEN PESERTA D4 - PRAKTIK KERJA LAPANGAN (PKL)</h4>
                       <div className="spacebottom"></div>
                       <hr />
@@ -787,10 +790,10 @@ const RekapPenilaianPeserta = () => {
                         bordered
                       />
                     </TabPane> */}
-                    {/* <TabPane tab="Prodi D4" key="2">
+                {/* <TabPane tab="Prodi D4" key="2">
                       <CCard className="mb-4" style={{ padding: '20px' }}>
                         <Tabs type="card">
-                          
+
                           <TabPane tab="Logbook" key="2.1">
                             <CCard className="mb-4" style={{ padding: '20px' }}>
                               <CRow>
@@ -1034,7 +1037,7 @@ const RekapPenilaianPeserta = () => {
                         </Tabs>
                       </CCard>
                     </TabPane> */}
-                  {/* </>
+                {/* </>
                 )} */}
               </Tabs>
             </CCol>

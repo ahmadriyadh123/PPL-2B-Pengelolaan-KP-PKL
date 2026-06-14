@@ -52,10 +52,14 @@ const FormEditLogbook = (props) => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const getDataLogbook = async (index) => {
       enterLoading(index)
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/get/${ID_LOGBOOK}`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/get/${ID_LOGBOOK}`, {
+          signal: controller.signal,
+        })
         .then((response) => {
           dataLogbook = response.data.data
 
@@ -76,6 +80,10 @@ const FormEditLogbook = (props) => {
           getTempRes(temp)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -92,6 +100,11 @@ const FormEditLogbook = (props) => {
     }
 
     getDataLogbook()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const putLogbookParticipantChanged = async (index) => {
