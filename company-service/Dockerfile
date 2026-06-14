@@ -27,6 +27,6 @@ COPY --from=builder --chown=1001:1001 \
 
 USER 1001
 
-EXPOSE 8080
+EXPOSE 8083
 
 ENTRYPOINT ["java","-jar","app.jar"]

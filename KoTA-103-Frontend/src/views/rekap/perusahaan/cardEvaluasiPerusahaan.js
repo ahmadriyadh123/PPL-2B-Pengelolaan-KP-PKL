@@ -72,6 +72,8 @@ const CardEvaluasiPerusahaan = () => {
       controller.abort()
     }
   }, [history])
+
+
   return isLoading ? (
     <Spin indicator={antIcon} />
   ) : (
