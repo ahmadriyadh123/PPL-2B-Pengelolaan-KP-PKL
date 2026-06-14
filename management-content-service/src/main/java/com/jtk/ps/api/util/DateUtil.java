@@ -1,9 +1,12 @@
 package com.jtk.ps.api.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+@Slf4j
 public class DateUtil {
 
     private DateUtil(){throw new IllegalStateException("Utility class");}
@@ -18,6 +21,7 @@ public class DateUtil {
         try {
             return dateFormat.parse(date);
         } catch (Exception e) {
+            log.warn("[DateUtil] stringToDate() gagal memparse tanggal '{}': {}", date, e.getMessage());
             return null;
         }
     }
