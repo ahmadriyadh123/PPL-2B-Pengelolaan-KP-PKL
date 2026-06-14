@@ -307,6 +307,10 @@ public class CompanyService implements ICompanyService {
         Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
         Prerequisite prerequisite = prerequisiteRepository.findByCompanyIdAndYear(idCompany, currentYear);
 
+        if (prerequisite == null) {
+            return null;
+        }
+
         PrerequisiteCard prerequisiteCard = new PrerequisiteCard();
         prerequisiteCard.setIdPrerequisite(prerequisite.getId());
         prerequisiteCard.setStatusPrerequisite(prerequisite.getStatus());
@@ -599,6 +603,11 @@ public class CompanyService implements ICompanyService {
     public PrerequisiteCard getCardPrerequisiteByCommittee(String cookie, Integer idCompany) {
         Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
         Prerequisite p = prerequisiteRepository.findByCompanyIdAndYear(idCompany, currentYear);
+        
+        if (p == null) {
+            return null;
+        }
+        
         HttpHeaders headers = new HttpHeaders();
         headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -1947,7 +1956,7 @@ public class CompanyService implements ICompanyService {
         AtomicReference<Boolean> isSuccess = new AtomicReference<>(false);
 
         companyRepository.findById(idCompany).ifPresent(c -> {
-            if (!c.getStatus() == Boolean.TRUE.equals(Boolean.TRUE)) {
+            if (Boolean.FALSE.equals(c.getStatus())) {
                 Prerequisite prerequisite = prerequisiteRepository.findByCompanyIdAndYear(idCompany, currentYear);
                 if (prerequisite == null) {
                     Prerequisite pr = new Prerequisite();
@@ -1957,7 +1966,7 @@ public class CompanyService implements ICompanyService {
                     prerequisiteRepository.save(pr);
                 }
                 isSuccess.set(true);
-            } else if (!c.getStatus() == Boolean.TRUE.equals(Boolean.FALSE)) {
+            } else if (Boolean.TRUE.equals(c.getStatus())) {
                 ResponseEntity<Response<FormSubmitTimeResponse>> deleteCompany =
                         restTemplate.exchange(
                                 "http://mapping-service/mapping/final/delete-company/" + idCompany,
