@@ -43,7 +43,7 @@ const RekapPenilaianLogbook = () => {
       </>
     )
   }
-  
+
   const convertDate = (date) => {
     let temp_date_split = date.split('-')
     const month = [
@@ -67,16 +67,27 @@ const RekapPenilaianLogbook = () => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const GetDataInfoPeserta = async () => {
       await axios
-        .post(`${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`, {
-          id: [NIM_PESERTA],
-        })
+        .post(
+          `${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`,
+          {
+            id: [NIM_PESERTA],
+          },
+          {
+            signal: controller.signal,
+          },
+        )
         .then((result) => {
           setDataPeserta(result.data.data[0])
-       
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -95,37 +106,47 @@ const RekapPenilaianLogbook = () => {
       await axios
         .get(
           `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor/grade/get-all/${NIM_PESERTA}`,
+          {
+            signal: controller.signal,
+          },
         )
         .then((res) => {
           console.log('data nilai', res.data.data)
           let rekap_laporan = res.data.data
           let dataHasilRekapLaporanGrade = []
           let rata_rata_nilai_keseluruhan = 0
-          let ubahListDataGradeLaporan = function(data){
-            for(var i in data){
-              let nilai_total = data[i].grade_list[0].grade + data[i].grade_list[1].grade + data[i].grade_list[2].grade
+          let ubahListDataGradeLaporan = function (data) {
+            for (var i in data) {
+              let nilai_total =
+                data[i].grade_list[0].grade +
+                data[i].grade_list[1].grade +
+                data[i].grade_list[2].grade
               dataHasilRekapLaporanGrade.push({
-                id : data[i].id,
-                phase : data[i].phase,
-                date : convertDate(data[i].date),
-                penilaian_satu_grade : data[i].grade_list[0].grade,
-                penilaian_dua_grade : data[i].grade_list[1].grade,
-                penilaian_tiga_grade : data[i].grade_list[2].grade,
-                nilai_total : nilai_total
+                id: data[i].id,
+                phase: data[i].phase,
+                date: convertDate(data[i].date),
+                penilaian_satu_grade: data[i].grade_list[0].grade,
+                penilaian_dua_grade: data[i].grade_list[1].grade,
+                penilaian_tiga_grade: data[i].grade_list[2].grade,
+                nilai_total: nilai_total,
               })
               rata_rata_nilai_keseluruhan = rata_rata_nilai_keseluruhan + nilai_total
             }
           }
           ubahListDataGradeLaporan(res.data.data)
           let banyakPenilaian = rekap_laporan.length
-          let hasilAkhirNilai = rata_rata_nilai_keseluruhan/banyakPenilaian
+          let hasilAkhirNilai = rata_rata_nilai_keseluruhan / banyakPenilaian
 
           setAverageGrade(Math.ceil(hasilAkhirNilai))
           setDataNilaiLaporanPeserta(dataHasilRekapLaporanGrade)
-         
+
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -142,12 +163,17 @@ const RekapPenilaianLogbook = () => {
     }
     GetDataPenilaianLaporanPeserta()
     GetDataInfoPeserta()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   return isLoading ? (
     <Spin tip="Loading" size="large">
-    <div className="content" />
-  </Spin>
+      <div className="content" />
+    </Spin>
   ) : (
     <>
       <Space
@@ -190,7 +216,7 @@ const RekapPenilaianLogbook = () => {
           <thead>
             <tr>
               <th scope="col">FASE</th>
-              <th scope='col'>TANGGAL</th>
+              <th scope="col">TANGGAL</th>
               <th scope="col">NILAI PROSES BIMBINGAN</th>
               <th scope="col">NILAI LAPORAN</th>
               <th scope="col">NILAI LAINNYA</th>
@@ -212,7 +238,7 @@ const RekapPenilaianLogbook = () => {
             })}
           </tbody>
           <tfoot>
-            <tr style={{padding:15}}>
+            <tr style={{ padding: 15 }}>
               <td colSpan={4}>
                 <b>NILAI RATA-RATA</b>
               </td>

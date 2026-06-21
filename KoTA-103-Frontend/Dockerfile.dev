@@ -1,13 +1,12 @@
-FROM node:18-bullseye
+FROM node:16-alpine
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
+ENV CHOKIDAR_USEPOLLING=true
 
-RUN apt-get update && apt-get install -y python3 make g++ build-essential --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+COPY package*.json ./
 
-ENV NODE_OPTIONS=--openssl-legacy-provider
+RUN apk add --no-cache python3 make g++
 
 RUN npm install --legacy-peer-deps
 

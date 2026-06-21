@@ -6,7 +6,7 @@ import axios from 'axios'
 import { useHistory } from 'react-router-dom'
 import { SearchOutlined } from '@ant-design/icons'
 import Highlighter from 'react-highlight-words'
-import { SmileOutlined} from '@ant-design/icons'
+import { SmileOutlined } from '@ant-design/icons'
 
 const DaftarPeserta = () => {
   let searchInput
@@ -19,8 +19,6 @@ const DaftarPeserta = () => {
   const [peserta, setPeserta] = useState([])
   const rolePengguna = localStorage.id_role
   const [isNotNullParticipantSupervisor, setIsNotNullParticipantSupervisor] = useState()
-
-
 
   const getColumnSearchProps = (dataIndex, name) => ({
     filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
@@ -129,9 +127,8 @@ const DaftarPeserta = () => {
                 let data_company = data[iterate_data].company_name
                 let data_supervisor = data[iterate_data].lecturer_name
                 let participant = data[iterate_data].participant
-                
-            
-               if(participant !== null){
+
+                if (participant !== null) {
                   for (let iterate_participant in participant) {
                     participant_supervisor.push({
                       idx: parseInt(index_data),
@@ -143,9 +140,9 @@ const DaftarPeserta = () => {
                     index_data++
                   }
                   setIsNotNullParticipantSupervisor(true)
-                }else{
+                } else {
                   setIsNotNullParticipantSupervisor(false)
-               }
+                }
               }
             }
 
@@ -154,20 +151,20 @@ const DaftarPeserta = () => {
           }
           setIsLoading(false)
         })
-      .catch(function (error) {
-        if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-          history.push({
-            pathname: '/login',
-            state: {
-              session: true,
-            },
-          })
-        } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-          history.push('/404')
-        } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
-          history.push('/500')
-        }
-      })
+        .catch(function (error) {
+          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            history.push({
+              pathname: '/login',
+              state: {
+                session: true,
+              },
+            })
+          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+            history.push('/404')
+          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
+            history.push('/500')
+          }
+        })
     } else if (rolePengguna === '4') {
       await axios
         .get(
@@ -183,7 +180,7 @@ const DaftarPeserta = () => {
                 let data_company = data[iterate_data].company_name
                 let data_supervisor = data[iterate_data].lecturer_name
                 let participant = data[iterate_data].participant
-                if(participant !== null){
+                if (participant !== null) {
                   for (let iterate_participant in participant) {
                     participant_supervisor.push({
                       idx: parseInt(index_data),
@@ -195,7 +192,7 @@ const DaftarPeserta = () => {
                     index_data++
                   }
                   setIsNotNullParticipantSupervisor(true)
-                }else{
+                } else {
                   setIsNotNullParticipantSupervisor(false)
                 }
               }
@@ -205,7 +202,6 @@ const DaftarPeserta = () => {
             setPeserta(participant_supervisor)
           }
           setIsLoading(false)
-
         })
         .catch(function (error) {
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
@@ -231,69 +227,15 @@ const DaftarPeserta = () => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const getAllParticipant = async () => {
       axios.defaults.withCredentials = true
       if (rolePengguna !== '4') {
         await axios
-          .get(
-            `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-mapping/get-all`,
-          )
-          .then((res) => {
-            if (res.data.data !== null) {
-              let participant_supervisor = []
-              let index_data = 0
-
-              let getParticipantSupervisor = function (data) {
-                for (let iterate_data in data) {
-                  let data_company = data[iterate_data].company_name
-                  let data_supervisor = data[iterate_data].lecturer_name
-                  let participant = data[iterate_data].participant
-                
-                  
-              
-                 if(participant !== null){
-                    for (let iterate_participant in participant) {
-
-                      participant_supervisor.push({
-                        idx: parseInt(index_data),
-                        id: participant[iterate_participant].id,
-                        name: participant[iterate_participant].name,
-                        supervisor: data_supervisor,
-                        company: data_company,
-                      })
-                    index_data++
-                    }
-                    setIsNotNullParticipantSupervisor(true)
-                  }else{
-                    setIsNotNullParticipantSupervisor(false)
-                 }
-                }
-              }
-
-              getParticipantSupervisor(res.data.data)
-              setPeserta(participant_supervisor)
-            }
-            setIsLoading(false)
+          .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-mapping/get-all`, {
+            signal: controller.signal,
           })
-        .catch(function (error) {
-          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-            history.push({
-              pathname: '/login',
-              state: {
-                session: true,
-              },
-            })
-          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-            history.push('/404')
-          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
-            history.push('/500')
-          }
-        })
-      } else if (rolePengguna === '4') {
-        await axios
-          .get(
-            `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-mapping/get-all?type=supervisor`,
-          )
           .then((res) => {
             if (res.data.data !== null) {
               let participant_supervisor = []
@@ -304,7 +246,8 @@ const DaftarPeserta = () => {
                   let data_company = data[iterate_data].company_name
                   let data_supervisor = data[iterate_data].lecturer_name
                   let participant = data[iterate_data].participant
-                  if(participant !== null){
+
+                  if (participant !== null) {
                     for (let iterate_participant in participant) {
                       participant_supervisor.push({
                         idx: parseInt(index_data),
@@ -316,7 +259,7 @@ const DaftarPeserta = () => {
                       index_data++
                     }
                     setIsNotNullParticipantSupervisor(true)
-                  }else{
+                  } else {
                     setIsNotNullParticipantSupervisor(false)
                   }
                 }
@@ -326,9 +269,71 @@ const DaftarPeserta = () => {
               setPeserta(participant_supervisor)
             }
             setIsLoading(false)
-
           })
           .catch(function (error) {
+            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+              return
+            }
+
+            if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+              history.push({
+                pathname: '/login',
+                state: {
+                  session: true,
+                },
+              })
+            } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+              history.push('/404')
+            } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
+              history.push('/500')
+            }
+          })
+      } else if (rolePengguna === '4') {
+        await axios
+          .get(
+            `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-mapping/get-all?type=supervisor`,
+            {
+              signal: controller.signal,
+            },
+          )
+          .then((res) => {
+            if (res.data.data !== null) {
+              let participant_supervisor = []
+              let index_data = 0
+
+              let getParticipantSupervisor = function (data) {
+                for (let iterate_data in data) {
+                  let data_company = data[iterate_data].company_name
+                  let data_supervisor = data[iterate_data].lecturer_name
+                  let participant = data[iterate_data].participant
+                  if (participant !== null) {
+                    for (let iterate_participant in participant) {
+                      participant_supervisor.push({
+                        idx: parseInt(index_data),
+                        id: participant[iterate_participant].id,
+                        name: participant[iterate_participant].name,
+                        supervisor: data_supervisor,
+                        company: data_company,
+                      })
+                      index_data++
+                    }
+                    setIsNotNullParticipantSupervisor(true)
+                  } else {
+                    setIsNotNullParticipantSupervisor(false)
+                  }
+                }
+              }
+
+              getParticipantSupervisor(res.data.data)
+              setPeserta(participant_supervisor)
+            }
+            setIsLoading(false)
+          })
+          .catch(function (error) {
+            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+              return
+            }
+
             if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
               history.push({
                 pathname: '/login',
@@ -346,6 +351,11 @@ const DaftarPeserta = () => {
     }
 
     getAllParticipant()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const columns = [
@@ -355,7 +365,7 @@ const DaftarPeserta = () => {
       width: '5%',
       align: 'center',
       render: (value, item, index) => {
-        return value+1
+        return value + 1
       },
     },
     {
@@ -394,9 +404,7 @@ const DaftarPeserta = () => {
                 <Button
                   type="primary"
                   size="small"
-                  onClick={() =>
-                    history.push(`/daftarPeserta/dashboardPeserta/${record.id}`)
-                  }
+                  onClick={() => history.push(`/daftarPeserta/dashboardPeserta/${record.id}`)}
                 >
                   Dashboard Peserta
                 </Button>
@@ -448,9 +456,7 @@ const DaftarPeserta = () => {
                 <Button
                   type="primary"
                   size="small"
-                  onClick={() =>
-               history.push(`/daftarPeserta/dashboardPeserta/${record.id}`)
-                  }
+                  onClick={() => history.push(`/daftarPeserta/dashboardPeserta/${record.id}`)}
                 >
                   Dashboard Peserta
                 </Button>
@@ -461,7 +467,6 @@ const DaftarPeserta = () => {
       ),
     },
   ]
-
 
   const title = (judul) => {
     return (
@@ -489,38 +494,36 @@ const DaftarPeserta = () => {
         {rolePengguna === '4' && <>{title('LIST DASHBOARD PESERTA BIMBINGAN')}</>}
         {rolePengguna !== '4' && <>{title('LIST DASHBOARD  PESERTA KP dan PKL')}</>}
         <CCardBody>
-          <div className='spacebottom'></div>
+          <div className="spacebottom"></div>
           <CRow>
             <CCol sm={12}>
               {rolePengguna !== '4' && (
-                 <Table
-                 scroll={{ x: 'max-content' }}
-                 columns={columns}
-                 dataSource={peserta}
-                 rowKey={peserta.id}
-                 bordered
-                 pagination={true}
-               />
+                <Table
+                  scroll={{ x: 'max-content' }}
+                  columns={columns}
+                  dataSource={peserta}
+                  rowKey={peserta.id}
+                  bordered
+                  pagination={true}
+                />
               )}
 
-              {(rolePengguna === '4'  && isNotNullParticipantSupervisor)&& (
-               <Table
-               scroll={{ x: 'max-content' }}
-               columns={supervisor_columns}
-               dataSource={peserta}
-               rowKey={peserta.id}
-               bordered
-               pagination={true}
-             />
-
+              {rolePengguna === '4' && isNotNullParticipantSupervisor && (
+                <Table
+                  scroll={{ x: 'max-content' }}
+                  columns={supervisor_columns}
+                  dataSource={peserta}
+                  rowKey={peserta.id}
+                  bordered
+                  pagination={true}
+                />
               )}
 
-              {(rolePengguna === '4' && !isNotNullParticipantSupervisor)&&(
-                  <Result
+              {rolePengguna === '4' && !isNotNullParticipantSupervisor && (
+                <Result
                   icon={<SmileOutlined />}
                   title="Maaf Akses Untuk Halaman Ini Belum Dibuka"
                   subTitle="Anda belum memiliki peserta bimbingan"
-                
                 />
               )}
             </CCol>

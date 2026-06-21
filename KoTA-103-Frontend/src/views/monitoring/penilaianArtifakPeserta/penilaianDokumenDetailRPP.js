@@ -4,7 +4,7 @@ import '../pengisianDokumen/rpp/rpp.css'
 import { Col, Row } from 'react-bootstrap'
 import axios from 'axios'
 import { Route, Router, useHistory, useParams } from 'react-router-dom'
-import {ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined } from '@ant-design/icons'
 import routes from 'src/routes'
 import {
   Box,
@@ -47,24 +47,25 @@ const PenilaianDokumenDetailRPP = (props) => {
   }
 
   useEffect(() => {
-    
-    
-    function getCurrUrl () {
-        let url = window.location.href
-        let getSplit = url.split('/')
-        if(getSplit[4] === 'selfAssessmentPeserta'){
-            setIsSelfAssessmentLink(true)
-        }else{
-            setIsSelfAssessmentLink(false)
-        }
-       
+    const controller = new AbortController()
+
+    function getCurrUrl() {
+      let url = window.location.href
+      let getSplit = url.split('/')
+      if (getSplit[4] === 'selfAssessmentPeserta') {
+        setIsSelfAssessmentLink(true)
+      } else {
+        setIsSelfAssessmentLink(false)
       }
-  
-      getCurrUrl()
+    }
+
+    getCurrUrl()
 
     const getRPPDetailPeserta = async (index) => {
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/rpp/get/${RPP_ID}`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/rpp/get/${RPP_ID}`, {
+          signal: controller.signal,
+        })
         .then((response) => {
           console.log(response.data.data)
 
@@ -97,23 +98,23 @@ const PenilaianDokumenDetailRPP = (props) => {
             task_description: response.data.data.task_description,
           })
 
-              /**SET DATA DELIVERABLES */
-              let temp_del = []
-              let temp_del1 = []
-              temp_del = response.data.data.deliverables
-              let temp_deliverables = function (obj) {
-                for (var i in obj) {
-                  temp_del1.push({
-                    id: obj[i].id,
-                    due_date: convertDate(obj[i].due_date),
-                    deliverables: obj[i].deliverables,
-                  })
-                }
-              }
-    
-              temp_deliverables(temp_del)
-              setDataDeliverables(temp_del1)
-              console.log('deliverables', temp_del1)
+          /**SET DATA DELIVERABLES */
+          let temp_del = []
+          let temp_del1 = []
+          temp_del = response.data.data.deliverables
+          let temp_deliverables = function (obj) {
+            for (var i in obj) {
+              temp_del1.push({
+                id: obj[i].id,
+                due_date: convertDate(obj[i].due_date),
+                deliverables: obj[i].deliverables,
+              })
+            }
+          }
+
+          temp_deliverables(temp_del)
+          setDataDeliverables(temp_del1)
+          console.log('deliverables', temp_del1)
 
           /** SET DATA MILESTONES */
           let temp_mil = []
@@ -133,8 +134,6 @@ const PenilaianDokumenDetailRPP = (props) => {
           temp_milestone(temp_mil)
           setDataMilestones(temp_mil1)
           console.log('milestones', temp_mil1)
-
-      
 
           /**SET DATA RENCANA CAPAIAN MINGGUAN */
           let temp_rcm = []
@@ -178,6 +177,10 @@ const PenilaianDokumenDetailRPP = (props) => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -194,33 +197,36 @@ const PenilaianDokumenDetailRPP = (props) => {
     }
 
     getRPPDetailPeserta()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const HandleKembali = () => {
- isSelfAssessmentLink? history.push(`/rekapDokumenPeserta/selfAssessmentPeserta/${NIM_PESERTA}/penilaian/${ID_SA}`): history.push(`/rekapDokumenPeserta/logbookPeserta/${NIM_PESERTA}/nilai/${ID_LOGBOOK}`)
+    isSelfAssessmentLink
+      ? history.push(`/rekapDokumenPeserta/selfAssessmentPeserta/${NIM_PESERTA}/penilaian/${ID_SA}`)
+      : history.push(`/rekapDokumenPeserta/logbookPeserta/${NIM_PESERTA}/nilai/${ID_LOGBOOK}`)
   }
 
-
-  return isLoading?( <Spin tip="Loading" size="large">
-  <div className="content" />
-</Spin>): (
+  return isLoading ? (
+    <Spin tip="Loading" size="large">
+      <div className="content" />
+    </Spin>
+  ) : (
     <>
       <div className="container2">
-      <React.Fragment>
-      <Space wrap className="title-s">
-       
-     
-        </Space>
+        <React.Fragment>
+          <Space wrap className="title-s"></Space>
         </React.Fragment>
         <h1 className="justify">RENCANA PENYELESAIAN PROYEK</h1>
         <div className="spacebottom"></div>
         <Box sx={{ color: 'primary.main' }}>
           Tanggal RPP : {dataRPP.start_date} &nbsp;&nbsp;s/d&nbsp;&nbsp; {dataRPP.finish_date}
         </Box>
-=
-        <div className="spacebottom"></div>
-
-        <TableContainer component={Paper} style={{padding:20}}>
+        =<div className="spacebottom"></div>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Topik/Tema/Judul Pekerjaan</b>
             <TableRow>
@@ -231,8 +237,7 @@ const PenilaianDokumenDetailRPP = (props) => {
           </Table>
         </TableContainer>
         <div className="spacebottom"></div>
-
-        <TableContainer component={Paper} style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Peran Kelompok Dalam Pekerjaan</b>
             <TableRow>
@@ -243,8 +248,7 @@ const PenilaianDokumenDetailRPP = (props) => {
           </Table>
         </TableContainer>
         <div className="spacebottom"></div>
-
-        <TableContainer component={Paper} style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Deskripsi Pekerjaan</b>
             <TableRow>
@@ -254,9 +258,8 @@ const PenilaianDokumenDetailRPP = (props) => {
             </TableRow>
           </Table>
         </TableContainer>
-
         <div className="spacebottom"></div>
-        <TableContainer component={Paper}  style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Deliverables</b>
             <TableRow>
@@ -275,9 +278,8 @@ const PenilaianDokumenDetailRPP = (props) => {
             })}
           </Table>
         </TableContainer>
-
         <div className="spacebottom"></div>
-        <TableContainer component={Paper}  style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Milestones</b>
             <TableRow>
@@ -298,9 +300,8 @@ const PenilaianDokumenDetailRPP = (props) => {
             })}
           </Table>
         </TableContainer>
-
         <div className="spacebottom"></div>
-        <TableContainer component={Paper}  style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Rencana Capaian PerMinggu</b>
             <TableRow>
@@ -308,7 +309,7 @@ const PenilaianDokumenDetailRPP = (props) => {
               <TableCell>TANGGAL MULAI</TableCell>
               <TableCell>TANGGAL SELESAI</TableCell>
               <TableCell>RENCANA CAPAIAN</TableCell>
-              <TableCell/>
+              <TableCell />
             </TableRow>
             {dataCapaianMingguan.map((capaian, index) => {
               return (
@@ -317,15 +318,14 @@ const PenilaianDokumenDetailRPP = (props) => {
                   <TableCell>{capaian.start_date}</TableCell>
                   <TableCell>{capaian.finish_date}</TableCell>
                   <TableCell>{capaian.achievement_plan}</TableCell>
-                  <TableCell/>
+                  <TableCell />
                 </TableRow>
               )
             })}
           </Table>
         </TableContainer>
-
         <div className="spacebottom"></div>
-        <TableContainer component={Paper}  style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Jadwal Penyelesaian Keseluruhan</b>
             <TableRow>
@@ -334,7 +334,7 @@ const PenilaianDokumenDetailRPP = (props) => {
               <TableCell>TANGGAL SELESAI</TableCell>
               <TableCell>JENIS PEKERJAAN</TableCell>
               <TableCell>BUTIR PEKERJAAN</TableCell>
-              <TableCell/>
+              <TableCell />
             </TableRow>
             {dataJadwalPenyelesaianKeseluruhan.map((keseluruhan, index) => {
               return (
@@ -344,21 +344,20 @@ const PenilaianDokumenDetailRPP = (props) => {
                   <TableCell>{keseluruhan.finish_date}</TableCell>
                   <TableCell>{keseluruhan.task_type}</TableCell>
                   <TableCell>{keseluruhan.task_name}</TableCell>
-                  <TableCell/>
+                  <TableCell />
                 </TableRow>
               )
             })}
           </Table>
         </TableContainer>
       </div>
-           
-                 <FloatButton type='primary' onClick={HandleKembali} icon={<ArrowLeftOutlined />} tooltip={<div>Kembali ke Rekap RPP</div>} />
-                 
-        
 
-
-
-
+      <FloatButton
+        type="primary"
+        onClick={HandleKembali}
+        icon={<ArrowLeftOutlined />}
+        tooltip={<div>Kembali ke Rekap RPP</div>}
+      />
     </>
   )
 }

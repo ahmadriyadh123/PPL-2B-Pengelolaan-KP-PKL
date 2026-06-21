@@ -1,21 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/reset.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {  faPencil } from '@fortawesome/free-solid-svg-icons'
-import {
-  Table,
-  Button,
-  Row,
-  Col,
-  Form,
-  Input,
-  Modal,
-
-  notification,
-  Spin,
-
-  DatePicker,
-} from 'antd'
+import { faPencil } from '@fortawesome/free-solid-svg-icons'
+import { Table, Button, Row, Col, Form, Input, Modal, notification, Spin, DatePicker } from 'antd'
 import axios from 'axios'
 import { useHistory } from 'react-router-dom'
 
@@ -25,7 +12,6 @@ import { Box, Typography } from '@mui/material'
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 dayjs.extend(customParseFormat)
-
 
 const PengelolaanDeadline = () => {
   axios.defaults.withCredentials = true
@@ -48,9 +34,6 @@ const PengelolaanDeadline = () => {
   const [startAssignmentDateDeadlineNew, setStartAssignmentDateDeadlineNew] = useState()
   const [finishAssignmentDateDeadlineNew, setFinishAssignmentDateDeadlineNew] = useState()
   const [isLaporanEdit, setIsLaporanEdit] = useState()
-
-
-
 
   const convertDate = (date) => {
     let temp_date_split = date.split('-')
@@ -75,38 +58,40 @@ const PengelolaanDeadline = () => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     async function getDataDeadline() {
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all`, {
+          signal: controller.signal,
+        })
         .then((result) => {
-          const getDayRangeStatus = (range) =>{
-            return range===0?'-': range
+          const getDayRangeStatus = (range) => {
+            return range === 0 ? '-' : range
           }
 
-        
-          const isLaporan = (name) =>{
+          const isLaporan = (name) => {
             let res = name.includes('laporan')
-            if(res){
+            if (res) {
               return 1
-            }else{
+            } else {
               return 0
             }
           }
-       
-  
+
           let data_deadline_res_convert_date = []
-          let get_data_deadline_with_convert_date = function(data){
-            for(var i in data){
+          let get_data_deadline_with_convert_date = function (data) {
+            for (var i in data) {
               data_deadline_res_convert_date.push({
-                day_range : data[i].day_range,
-                day_range_in_list : getDayRangeStatus(data[i].day_range), 
-                finish_assignment_date : data[i].finish_assignment_date,
-                finish_assignment_date_convert : convertDate(data[i].finish_assignment_date),
-                id : data[i].id,
-                name : data[i].name,
-                is_laporan : isLaporan((data[i].name).toLowerCase()),
-                start_assignment_date : data[i].start_assignment_date,
-                start_assignment_date_convert : convertDate(data[i].start_assignment_date)
+                day_range: data[i].day_range,
+                day_range_in_list: getDayRangeStatus(data[i].day_range),
+                finish_assignment_date: data[i].finish_assignment_date,
+                finish_assignment_date_convert: convertDate(data[i].finish_assignment_date),
+                id: data[i].id,
+                name: data[i].name,
+                is_laporan: isLaporan(data[i].name.toLowerCase()),
+                start_assignment_date: data[i].start_assignment_date,
+                start_assignment_date_convert: convertDate(data[i].start_assignment_date),
               })
             }
           }
@@ -115,6 +100,10 @@ const PengelolaanDeadline = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -130,38 +119,43 @@ const PengelolaanDeadline = () => {
         })
     }
     getDataDeadline()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const refreshData = async (index) => {
     await axios
       .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all`)
       .then((result) => {
-        const getDayRangeStatus = (range) =>{
-          return range===0?'-': range
+        const getDayRangeStatus = (range) => {
+          return range === 0 ? '-' : range
         }
 
-        const isLaporan = (name) =>{
+        const isLaporan = (name) => {
           let res = name.includes('laporan')
-          if(res){
+          if (res) {
             return 1
-          }else{
+          } else {
             return 0
           }
         }
-     
+
         let data_deadline_res_convert_date = []
-        let data_deadline_with_convert_date = function(data){
-          for(var i in data){
+        let data_deadline_with_convert_date = function (data) {
+          for (var i in data) {
             data_deadline_res_convert_date.push({
-              day_range : data[i].day_range,
-              day_range_in_list : getDayRangeStatus(data[i].day_range), 
-              finish_assignment_date : data[i].finish_assignment_date,
-              finish_assignment_date_convert : convertDate(data[i].finish_assignment_date),
-              id : data[i].id,
-              is_laporan : isLaporan((data[i].name).toLowerCase()),
-              name : data[i].name,
-              start_assignment_date : data[i].start_assignment_date,
-              start_assignment_date_convert : convertDate(data[i].start_assignment_date)
+              day_range: data[i].day_range,
+              day_range_in_list: getDayRangeStatus(data[i].day_range),
+              finish_assignment_date: data[i].finish_assignment_date,
+              finish_assignment_date_convert: convertDate(data[i].finish_assignment_date),
+              id: data[i].id,
+              is_laporan: isLaporan(data[i].name.toLowerCase()),
+              name: data[i].name,
+              start_assignment_date: data[i].start_assignment_date,
+              start_assignment_date_convert: convertDate(data[i].start_assignment_date),
             })
           }
         }
@@ -206,7 +200,6 @@ const PengelolaanDeadline = () => {
     setStartAssignmentDateDeadlineEdit(undefined)
     setIdDeadlineEdit(undefined)
     setFinishAssignmentDateDeadlineEdit(undefined)
-   
 
     refreshData()
   }
@@ -227,42 +220,44 @@ const PengelolaanDeadline = () => {
     setIsModalCreateNewVisible(false)
   }
 
-
-  const handleCreateNewDeadline = async (data_name, dayrange,finishDate,startDate) => {
+  const handleCreateNewDeadline = async (data_name, dayrange, finishDate, startDate) => {
     let name = data_name.toLowerCase()
     //dayRangeDeadlineNew
     let isLaporan = name.includes('laporan')
-    if(isLaporan){
-      await axios.post(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/create`,
-      {
-        "day_range": 0,
-        "finish_assignment_date": startAssignmentDateDeadlineNew,
-        "name": nameDeadlineNew,
-        "start_assignment_date": finishAssignmentDateDeadlineNew
-      }
-      ).then((res)=>{
-        handleCancelCreateNew()
-        notification.success({message:'Data Deadline berhasil ditambahkan'})
-        form.resetFields()
-        refreshData()
-      }).catch(function (error) {
-        if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-          history.push({
-            pathname: '/login',
-            state: {
-              session: true,
-            },
-          })
-        } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-          history.push('/404')
-        } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
-          history.push('/500')
-        }
+    if (isLaporan) {
+      await axios
+        .post(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/create`, {
+          day_range: 0,
+          finish_assignment_date: startAssignmentDateDeadlineNew,
+          name: nameDeadlineNew,
+          start_assignment_date: finishAssignmentDateDeadlineNew,
+        })
+        .then((res) => {
+          handleCancelCreateNew()
+          notification.success({ message: 'Data Deadline berhasil ditambahkan' })
+          form.resetFields()
+          refreshData()
+        })
+        .catch(function (error) {
+          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            history.push({
+              pathname: '/login',
+              state: {
+                session: true,
+              },
+            })
+          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+            history.push('/404')
+          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
+            history.push('/500')
+          }
+        })
+    } else {
+      notification.warning({
+        message:
+          'Hanya data dengan nama yang mengandung kata "laporan" yang dapat dilakukan penambahan deadline',
       })
-    }else{
-      notification.warning({message:'Hanya data dengan nama yang mengandung kata "laporan" yang dapat dilakukan penambahan deadline'})
     }
-
   }
 
   const columns = [
@@ -313,7 +308,6 @@ const PengelolaanDeadline = () => {
                   setFinishAssignmentDateDeadlineEdit(record.finish_assignment_date)
                   setIsLaporanEdit(record.is_laporan)
                   showModalEdit(record)
-                  
                 }}
               >
                 <FontAwesomeIcon icon={faPencil} style={{ color: 'black' }} />
@@ -332,15 +326,22 @@ const PengelolaanDeadline = () => {
   ) : (
     <>
       <div className="container2">
-        <h4 className="justify spacebottom">
-          PENGATURAN DEADLINE DOKUMEN PESERTA
-        </h4>
+        <h4 className="justify spacebottom">PENGATURAN DEADLINE DOKUMEN PESERTA</h4>
         <Typography component="div" variant="body1" className="spacebottom">
           <Box sx={{ color: 'info.main' }}>
             <ul style={{ fontSize: 14 }}>
-            <li style={{padding:10}}><b>RENTANG BATAS PENGUMPULAN LOGBOOK</b> : Batas toleransi pengumpulan logbook, jika melewati batas hari, maka status pengumpulan akan berubah menjadi terlambat</li>
-            <li style={{padding:10}}><b>RENTANG BATAS PENGUMPULAN SELF ASSESSEMENT</b> : Batas toleransi pengumpulan self assessment, jika melewati batas hari, maka pengumpulan dokumen tidak diterima</li>
-            <li style={{padding:10}}><b>TANGGAL PENGUMPULAN DITUTUP</b> : batas akses pengumpulan dokumen ( kecuali logbook, akan tetap menerima pengumpulan ) </li>
+              <li style={{ padding: 10 }}>
+                <b>RENTANG BATAS PENGUMPULAN LOGBOOK</b> : Batas toleransi pengumpulan logbook, jika
+                melewati batas hari, maka status pengumpulan akan berubah menjadi terlambat
+              </li>
+              <li style={{ padding: 10 }}>
+                <b>RENTANG BATAS PENGUMPULAN SELF ASSESSEMENT</b> : Batas toleransi pengumpulan self
+                assessment, jika melewati batas hari, maka pengumpulan dokumen tidak diterima
+              </li>
+              <li style={{ padding: 10 }}>
+                <b>TANGGAL PENGUMPULAN DITUTUP</b> : batas akses pengumpulan dokumen ( kecuali
+                logbook, akan tetap menerima pengumpulan ){' '}
+              </li>
             </ul>
           </Box>
         </Typography>
@@ -392,11 +393,14 @@ const PengelolaanDeadline = () => {
             name="basic"
             wrapperCol={{ span: 24 }}
             onFinish={() =>
-             handleCreateNewDeadline(nameDeadlineNew, dayRangeDeadlineNew,startAssignmentDateDeadlineNew,finishAssignmentDateDeadlineNew)
-             
+              handleCreateNewDeadline(
+                nameDeadlineNew,
+                dayRangeDeadlineNew,
+                startAssignmentDateDeadlineNew,
+                finishAssignmentDateDeadlineNew,
+              )
             }
             autoComplete="off"
-           
           >
             <hr />
             <Form.Item
@@ -404,62 +408,55 @@ const PengelolaanDeadline = () => {
               name="namaDeadline"
               rules={[{ required: true, message: 'Nama Deadline tidak boleh kosong!' }]}
             >
-              <Input
-                type="text"
-                onChange={(e) => setNameDeadlineNew(e.target.value)}
-              />
+              <Input type="text" onChange={(e) => setNameDeadlineNew(e.target.value)} />
             </Form.Item>
             <Form.Item
               label="Rentang Hari"
               name="rentangHari"
               rules={[{ required: true, message: 'Rentang Hari tidak boleh kosong!' }]}
             >
-              <Input
-                type="number"
-                onChange={(e) => setDayRangeDeadlineNew(e.target.value)}
-              />
+              <Input type="number" onChange={(e) => setDayRangeDeadlineNew(e.target.value)} />
             </Form.Item>
 
             <Form.Item
-                name="tanggal_pengumpulan_dibuka"
-                label="Tanggal Pengumpulan Dibuka"
-                rules={[
-                  {
-                    required: true,
-                    message : 'Masukkan tanggal pengumpulan dibuka !'
-                  },
-                  {
-                    type: 'date',
-                    warningOnly: true,
-                  },
-                ]}
-              >
+              name="tanggal_pengumpulan_dibuka"
+              label="Tanggal Pengumpulan Dibuka"
+              rules={[
+                {
+                  required: true,
+                  message: 'Masukkan tanggal pengumpulan dibuka !',
+                },
+                {
+                  type: 'date',
+                  warningOnly: true,
+                },
+              ]}
+            >
               <DatePicker
                 onChange={(date, datestring) => setStartAssignmentDateDeadlineNew(datestring)}
               />
             </Form.Item>
 
             <Form.Item
-                name="tanggal_pengumpulan_ditutup"
-                label="Tanggal Pengumpulan Ditutup"
-                rules={[
-                  {
-                    required: true,
-                    message : 'Masukkan tanggal pengumpulan ditutup !'
-                  },
-                  {
-                    type: 'date',
-                    warningOnly: true,
-                  },
-                ]}
-              >
+              name="tanggal_pengumpulan_ditutup"
+              label="Tanggal Pengumpulan Ditutup"
+              rules={[
+                {
+                  required: true,
+                  message: 'Masukkan tanggal pengumpulan ditutup !',
+                },
+                {
+                  type: 'date',
+                  warningOnly: true,
+                },
+              ]}
+            >
               <DatePicker
                 onChange={(date, datestring) => setFinishAssignmentDateDeadlineNew(datestring)}
               />
             </Form.Item>
           </Form>
         </Modal>
-
 
         <Modal
           title="Ubah Data Deadline"
@@ -534,16 +531,14 @@ const PengelolaanDeadline = () => {
               />
             </Form.Item>
 
-       
             {isLaporanEdit === 1 && (
-                <Form.Item label="Tanggal Pengumpulan Ditutup">
+              <Form.Item label="Tanggal Pengumpulan Ditutup">
                 <DatePicker
                   defaultValue={dayjs(finishAssignmentDateDeadlineEdit, dateFormat)}
                   onChange={(date, datestring) => setFinishAssignmentDateDeadlineEdit(datestring)}
                 />
               </Form.Item>
             )}
-          
           </Form>
         </Modal>
       </div>

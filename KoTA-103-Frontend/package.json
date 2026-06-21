@@ -97,10 +97,14 @@
     "eslint-plugin-prettier": "^4.0.0",
     "prettier": "2.4.1",
     "react-scripts": "^4.0.3",
-    "sass": "^1.43.2"
+    "sass": "1.43.2"
   },
   "overrides": {
     "cheerio": "0.22.0"
+  },
+  "resolutions": {
+    "cheerio": "0.22.0",
+    "sass": "1.43.2"
   },
   "engines": {
     "node": ">=10",

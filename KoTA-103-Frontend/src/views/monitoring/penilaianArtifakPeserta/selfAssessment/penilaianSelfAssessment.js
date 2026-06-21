@@ -54,9 +54,8 @@ const PenilaianSelfAssessment = () => {
   const [currentPage, setCurrentPage] = useState(1)
   let rolePengguna = localStorage.id_role
   const [idPengguna, setIdPengguna] = useState(localStorage.username)
- 
 
-  const [idDataRPP,setIdDataRPP] = useState()
+  const [idDataRPP, setIdDataRPP] = useState()
   const [form1] = Form.useForm()
   const [form2] = Form.useForm()
   const [isModaleditVisible, setIsModalEditVisible] = useState(false)
@@ -116,8 +115,6 @@ const PenilaianSelfAssessment = () => {
     console.log('nilai self assessment', nilaiSelfAssessment)
   }, [nilaiSelfAssessment])
 
-
-
   /** HANDLE CANCEL EDIT MODAL */
   const handleCancelEdit = () => {
     setIsModalEditVisible(false)
@@ -145,7 +142,6 @@ const PenilaianSelfAssessment = () => {
     //   setPenilaianBefore(record.nilai)
     // }
   }
-
 
   /** POST DATA PENILAIAN LOGBOOK PESERTA */
   const penilaianLogbookPeserta = async (idLogbook, index) => {
@@ -205,10 +201,15 @@ const PenilaianSelfAssessment = () => {
 
   /** USE EFFECT */
   useEffect(() => {
+    const controller = new AbortController()
+
     const getDataBasedOnSelfAssessment = async () => {
       await axios
         .get(
           `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/associated/self-assessment?participant_id=${NIM_PESERTA}&self_assessment_id=${ID_SELFASSESSMENT}`,
+          {
+            signal: controller.signal,
+          },
         )
         .then((response) => {
           const data_rpp = response.data.data.rpp
@@ -223,7 +224,7 @@ const PenilaianSelfAssessment = () => {
             setIsRppAvailable(true)
           }
 
-          if (data_logbook === null || data_logbook.length<1) {
+          if (data_logbook === null || data_logbook.length < 1) {
             setIsLogbookAvailable(false)
           } else {
             setIsLogbookAvailable(true)
@@ -262,6 +263,10 @@ const PenilaianSelfAssessment = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -277,7 +282,7 @@ const PenilaianSelfAssessment = () => {
         })
     }
 
-    function getCurrUrl () {
+    function getCurrUrl() {
       let url = window.location.href
       let getSplit = url.split('/')
       console.log('hasil split', getSplit)
@@ -287,6 +292,11 @@ const PenilaianSelfAssessment = () => {
     getCurrUrl()
 
     getDataBasedOnSelfAssessment()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   /** HANDLING TIMELINE */
@@ -452,7 +462,9 @@ const PenilaianSelfAssessment = () => {
   }
 
   const lihatIsiDetailRPP = () => {
-    history.push(`/rekapDokumenPeserta/selfAssessmentPeserta/${NIM_PESERTA}/penilaian/${ID_SELFASSESSMENT}/detailRPP/${idDataRPP}`)
+    history.push(
+      `/rekapDokumenPeserta/selfAssessmentPeserta/${NIM_PESERTA}/penilaian/${ID_SELFASSESSMENT}/detailRPP/${idDataRPP}`,
+    )
   }
 
   return isLoading ? (
@@ -466,47 +478,51 @@ const PenilaianSelfAssessment = () => {
 
         {isRppAvailable && (
           <>
-          <div style={{ padding: 10 }}>
-            <div style={{ background: '#fff', padding: 24 }}>
-              <div style={{ overflowX: 'scroll' }}>
-                <Chart
-                  id="chart"
-                  dataSource={getData(timeline)}
-                  barGroupPadding={0}
-                  barPadding={0}
-                  rotated={true}
-                >
-                  <ArgumentAxis>
-                    <Tick visible={false} />
-                  </ArgumentAxis>
-                  <ValueAxis></ValueAxis>
-                  <Title
-                    horizontalAlignment={'left'}
-                    text="Timeline Rencana Pengerjaan Proyek Peserta"
-                  />
-                  <CommonSeriesSettings
-                    type="rangeBar"
-                    argumentField="name"
-                    rangeValue1Field="end_date"
-                    rangeValue2Field="start_date"
-                    barOverlapGroup="description"
-                    barWidth="25"
+            <div style={{ padding: 10 }}>
+              <div style={{ background: '#fff', padding: 24 }}>
+                <div style={{ overflowX: 'scroll' }}>
+                  <Chart
+                    id="chart"
+                    dataSource={getData(timeline)}
+                    barGroupPadding={0}
                     barPadding={0}
-                  />
-                  <Legend
-                    visible={false}
-                    orientation="horizontal"
-                    verticalAlignment="bottom"
-                    horizontalAlignment="left"
-                  />
-                  <Tooltip enabled={true} customizeTooltip={customizeTooltip} />
-                  <SeriesTemplate nameField="name" />
-                  <Animation enabled={true} />
-                </Chart>
+                    rotated={true}
+                  >
+                    <ArgumentAxis>
+                      <Tick visible={false} />
+                    </ArgumentAxis>
+                    <ValueAxis></ValueAxis>
+                    <Title
+                      horizontalAlignment={'left'}
+                      text="Timeline Rencana Pengerjaan Proyek Peserta"
+                    />
+                    <CommonSeriesSettings
+                      type="rangeBar"
+                      argumentField="name"
+                      rangeValue1Field="end_date"
+                      rangeValue2Field="start_date"
+                      barOverlapGroup="description"
+                      barWidth="25"
+                      barPadding={0}
+                    />
+                    <Legend
+                      visible={false}
+                      orientation="horizontal"
+                      verticalAlignment="bottom"
+                      horizontalAlignment="left"
+                    />
+                    <Tooltip enabled={true} customizeTooltip={customizeTooltip} />
+                    <SeriesTemplate nameField="name" />
+                    <Animation enabled={true} />
+                  </Chart>
+                </div>
               </div>
             </div>
-          </div>
-          <div className='spacetop'><Button type='primary' onClick={lihatIsiDetailRPP}>Lihat Detail RPP</Button></div>
+            <div className="spacetop">
+              <Button type="primary" onClick={lihatIsiDetailRPP}>
+                Lihat Detail RPP
+              </Button>
+            </div>
           </>
         )}
 
@@ -515,7 +531,7 @@ const PenilaianSelfAssessment = () => {
         <div style={{ marginTop: 150 }}>
           {title('SELF ASSESSMENT')}
 
-          {(isSelfAssessmentAvailable && rolePengguna === '4') && (
+          {isSelfAssessmentAvailable && rolePengguna === '4' && (
             <ul className="list-group mb-4">
               <div>
                 <div>
@@ -559,44 +575,43 @@ const PenilaianSelfAssessment = () => {
                             <td width={'10%'}>
                               {data.description !== '-' && (
                                 <Input
-                                onChange={(e) =>
-                                  handleChangeNilaiSelfAssessment(
-                                    index,
-                                    'grade',
-                                    e.target.value,
-                                    data.description,
-                                    data.aspect_id,
-                                    data.grade_id,
-                                  )
-                                }
-                                // defaultValue={data.grade}
+                                  onChange={(e) =>
+                                    handleChangeNilaiSelfAssessment(
+                                      index,
+                                      'grade',
+                                      e.target.value,
+                                      data.description,
+                                      data.aspect_id,
+                                      data.grade_id,
+                                    )
+                                  }
+                                  // defaultValue={data.grade}
                                   defaultValue={data.grade}
-                                type="number"
-                                placeholder="Input a number"
-                                maxLength={2}
-                              ></Input>
-                             )} 
+                                  type="number"
+                                  placeholder="Input a number"
+                                  maxLength={2}
+                                ></Input>
+                              )}
                               {data.description === '-' && (
                                 <Input
-                                disabled
-                                onChange={(e) =>
-                                  handleChangeNilaiSelfAssessment(
-                                    index,
-                                    'grade',
-                                    e.target.value,
-                                    data.description,
-                                    data.aspect_id,
-                                    data.grade_id,
-                                  )
-                                }
-                                // defaultValue={data.grade}
+                                  disabled
+                                  onChange={(e) =>
+                                    handleChangeNilaiSelfAssessment(
+                                      index,
+                                      'grade',
+                                      e.target.value,
+                                      data.description,
+                                      data.aspect_id,
+                                      data.grade_id,
+                                    )
+                                  }
+                                  // defaultValue={data.grade}
                                   defaultValue={data.grade}
-                                type="number"
-                                placeholder="Input a number"
-                                maxLength={2}
-                              ></Input>
-                             )} 
-                              
+                                  type="number"
+                                  placeholder="Input a number"
+                                  maxLength={2}
+                                ></Input>
+                              )}
                             </td>
                             <td>{data.description}</td>
                           </tr>
@@ -605,17 +620,16 @@ const PenilaianSelfAssessment = () => {
                     </tbody>
                   </Table>
                 </div>
-             
-                  <Button type="primary" onClick={SimpanPenilaianSelfAssessment} variant="contained">
+
+                <Button type="primary" onClick={SimpanPenilaianSelfAssessment} variant="contained">
                   Simpan Nilai
                 </Button>
-              
               </div>
               <br />
             </ul>
           )}
 
-{(isSelfAssessmentAvailable && rolePengguna !== '4') && (
+          {isSelfAssessmentAvailable && rolePengguna !== '4' && (
             <ul className="list-group mb-4">
               <div>
                 <div>
@@ -658,7 +672,7 @@ const PenilaianSelfAssessment = () => {
                             <td>{data.aspect_name}</td>
                             <td width={'10%'}>
                               <Input
-                              disabled
+                                disabled
                                 onChange={(e) =>
                                   handleChangeNilaiSelfAssessment(
                                     index,
@@ -682,8 +696,6 @@ const PenilaianSelfAssessment = () => {
                     </tbody>
                   </Table>
                 </div>
-             
-              
               </div>
               <br />
             </ul>
@@ -787,14 +799,14 @@ const PenilaianSelfAssessment = () => {
                       </Table>
                       <br />
                       <br />
-                     {rolePengguna === '4' && (
-                       <Button
-                       type="primary"
-                       onClick={() => showModalEdit(logbookPeserta[currentLogbook])}
-                     >
-                        Penilaian
-                     </Button>
-                     )}
+                      {rolePengguna === '4' && (
+                        <Button
+                          type="primary"
+                          onClick={() => showModalEdit(logbookPeserta[currentLogbook])}
+                        >
+                          Penilaian
+                        </Button>
+                      )}
                       <br />
                       <br />
                       <Pagination
