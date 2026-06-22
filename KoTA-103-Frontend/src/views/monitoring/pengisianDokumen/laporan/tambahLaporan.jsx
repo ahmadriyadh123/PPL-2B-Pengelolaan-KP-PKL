@@ -39,12 +39,10 @@ export default function TambahLaporan() {
   const [currentLaporanPhase, setCurrentLaporanPhase] = useState()
 
   function onFileChange(event) {
-
     setFile(event.target.files[0])
     setHiddenScroll('upload-dokumen-laporans')
     var v = event.target.files[0].name
     setFileData(v)
-
   }
 
   function onDocumentLoadSuccess({ numPages: nextNumPages }) {
@@ -70,7 +68,6 @@ export default function TambahLaporan() {
         uri: linkGdrive,
       })
       .then((res) => {
-      
         notification.success({
           message: 'Submit data laporan berhasil',
         })
@@ -79,20 +76,25 @@ export default function TambahLaporan() {
       })
   }
 
-  const onFinishFailed = (errorInfo) => {
-
-  }
+  const onFinishFailed = (errorInfo) => {}
 
   useEffect(() => {
+    const controller = new AbortController()
+
     async function getCurrentPhase() {
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/laporan/get-phase`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/laporan/get-phase`, {
+          signal: controller.signal,
+        })
         .then((response) => {
           setCurrentLaporanPhase(response.data.data)
           let phase = response.data.data
           axios
             .get(
               `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/laporan/get-all/${NIM_PESERTA}`,
+              {
+                signal: controller.signal,
+              },
             )
             .then((response) => {
               let dataLaporan = response.data.data
@@ -103,7 +105,6 @@ export default function TambahLaporan() {
                     if (phase === parseInt(data[i].phase)) {
                       setIsThisPhaseHavingLaporan(true)
                     }
-               
                   }
                 }
 
@@ -114,6 +115,10 @@ export default function TambahLaporan() {
             })
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -129,8 +134,12 @@ export default function TambahLaporan() {
         })
     }
 
-  
     getCurrentPhase()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   return (

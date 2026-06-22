@@ -12,7 +12,7 @@ import { useEffect } from 'react'
 import { useLayoutEffect } from 'react'
 
 const DashboardPembimbing = () => {
-  const [isLoading,setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [isOpenCollapseRPPMingguan, setIsOpenCollapseRPPMingguan] = useState(false)
   const [isModalRppMingguanOpen, setIsModalRppMingguanOpen] = useState(false)
   const [isModalLogbookMingguanOpen, setIsModalLogbookMingguanOpen] = useState(false)
@@ -114,21 +114,26 @@ const DashboardPembimbing = () => {
   ]
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const getDataDashboard = async (index) => {
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/dashboard`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/dashboard`, {
+          signal: controller.signal,
+        })
         .then((result) => {
           let data = result.data.data
           let listPesertaAllRPPMissing = result.data.data.all.rpp_missing
           let listPesertaAllRPPMissingIdx = []
           let listPesertaLogbookMingguanMissing = result.data.data.weekly.logbook_missing
           let listPesertaLogbookMingguanMissingIdx = []
-          let listPesertaSelfAssessmentMingguanMissing = result.data.data.weekly.self_assessment_missing 
+          let listPesertaSelfAssessmentMingguanMissing =
+            result.data.data.weekly.self_assessment_missing
           let listPesertaSelfAssessmentMingguanMissingIdx = []
           let listPesertaLaporanMingguanMissing = result.data.data.weekly.laporan_missing
           let listPesertaLaporanMingguanMissingIdx = []
           let listPesertaLogbookAllMissing = result.data.data.all.logbook_missing
-          let listPesertaLogbookAllMissingIdx = [] 
+          let listPesertaLogbookAllMissingIdx = []
           let listPesertaLaporanAllMissing = result.data.data.all.laporan_missing
           let listPesertaLaporanAllMissingIdx = []
           setTotalParticipantMappingDone(data.supervisor_mapping_done)
@@ -137,106 +142,115 @@ const DashboardPembimbing = () => {
           setDataDashboard(result.data.data)
           setTotalProgressPesertaKeseluruhan(result.data.data.all)
           setTotalPesertaProgresMingguan(result.data.data.weekly)
-   
-          if(listPesertaAllRPPMissing != null){
-            for(let iterateListPesertaAllRPPMissing in listPesertaAllRPPMissing){
+
+          if (listPesertaAllRPPMissing != null) {
+            for (let iterateListPesertaAllRPPMissing in listPesertaAllRPPMissing) {
               listPesertaAllRPPMissingIdx.push({
-                'nim' : listPesertaAllRPPMissing[iterateListPesertaAllRPPMissing].nim,
-                'name' : listPesertaAllRPPMissing[iterateListPesertaAllRPPMissing].name,
-                'company' : listPesertaAllRPPMissing[iterateListPesertaAllRPPMissing].company,
-                'idx' : parseInt(iterateListPesertaAllRPPMissing)
+                nim: listPesertaAllRPPMissing[iterateListPesertaAllRPPMissing].nim,
+                name: listPesertaAllRPPMissing[iterateListPesertaAllRPPMissing].name,
+                company: listPesertaAllRPPMissing[iterateListPesertaAllRPPMissing].company,
+                idx: parseInt(iterateListPesertaAllRPPMissing),
               })
-              
             }
             setListPesertaAllRPPMissing(listPesertaAllRPPMissingIdx)
-          }else{
+          } else {
             setListPesertaAllRPPMissing(result.data.data.all.rpp_missing)
           }
-          
-    
-          if(listPesertaLogbookMingguanMissing != null){
-            for(let iterateListPesertaLogbookMingguanMissing in listPesertaLogbookMingguanMissing){
+
+          if (listPesertaLogbookMingguanMissing != null) {
+            for (let iterateListPesertaLogbookMingguanMissing in listPesertaLogbookMingguanMissing) {
               listPesertaLogbookMingguanMissingIdx.push({
-                'nim' : listPesertaLogbookMingguanMissing[iterateListPesertaLogbookMingguanMissing].nim,
-                'name' : listPesertaLogbookMingguanMissing[iterateListPesertaLogbookMingguanMissing].name,
-                'company' : listPesertaLogbookMingguanMissing[iterateListPesertaLogbookMingguanMissing].company,
-                'idx' : parseInt(iterateListPesertaLogbookMingguanMissing)
+                nim: listPesertaLogbookMingguanMissing[iterateListPesertaLogbookMingguanMissing]
+                  .nim,
+                name: listPesertaLogbookMingguanMissing[iterateListPesertaLogbookMingguanMissing]
+                  .name,
+                company:
+                  listPesertaLogbookMingguanMissing[iterateListPesertaLogbookMingguanMissing]
+                    .company,
+                idx: parseInt(iterateListPesertaLogbookMingguanMissing),
               })
-              
             }
-            setListPesertaLogbookMingguanMissing(   listPesertaLogbookMingguanMissingIdx)
-          }else{
+            setListPesertaLogbookMingguanMissing(listPesertaLogbookMingguanMissingIdx)
+          } else {
             setListPesertaLogbookMingguanMissing(result.data.data.weekly.logbook_missing)
           }
 
-          if(listPesertaSelfAssessmentMingguanMissing != null){
-            for(let iterateListPesertaSelfAssessmentMingguanMissing in listPesertaSelfAssessmentMingguanMissing){
+          if (listPesertaSelfAssessmentMingguanMissing != null) {
+            for (let iterateListPesertaSelfAssessmentMingguanMissing in listPesertaSelfAssessmentMingguanMissing) {
               listPesertaSelfAssessmentMingguanMissingIdx.push({
-                'nim' : listPesertaSelfAssessmentMingguanMissing[iterateListPesertaSelfAssessmentMingguanMissing].nim,
-                'name' : listPesertaSelfAssessmentMingguanMissing[iterateListPesertaSelfAssessmentMingguanMissing].name,
-                'company' : listPesertaSelfAssessmentMingguanMissing[iterateListPesertaSelfAssessmentMingguanMissing].company,
-                'idx' : parseInt(iterateListPesertaSelfAssessmentMingguanMissing)
+                nim: listPesertaSelfAssessmentMingguanMissing[
+                  iterateListPesertaSelfAssessmentMingguanMissing
+                ].nim,
+                name: listPesertaSelfAssessmentMingguanMissing[
+                  iterateListPesertaSelfAssessmentMingguanMissing
+                ].name,
+                company:
+                  listPesertaSelfAssessmentMingguanMissing[
+                    iterateListPesertaSelfAssessmentMingguanMissing
+                  ].company,
+                idx: parseInt(iterateListPesertaSelfAssessmentMingguanMissing),
               })
-              
             }
             setListPesertaSelfAssessmentMingguanMissing(listPesertaSelfAssessmentMingguanMissingIdx)
-          }else{
-            setListPesertaSelfAssessmentMingguanMissing(result.data.data.weekly.self_assessment_missing)
+          } else {
+            setListPesertaSelfAssessmentMingguanMissing(
+              result.data.data.weekly.self_assessment_missing,
+            )
           }
-          
 
-  
-          if(listPesertaLaporanMingguanMissing != null){
-            for(let iterateListPesertaLaporanMingguanMissing in listPesertaLaporanMingguanMissing){
+          if (listPesertaLaporanMingguanMissing != null) {
+            for (let iterateListPesertaLaporanMingguanMissing in listPesertaLaporanMingguanMissing) {
               listPesertaLaporanMingguanMissingIdx.push({
-                'nim' : listPesertaLaporanMingguanMissing[iterateListPesertaLaporanMingguanMissing].nim,
-                'name' : listPesertaLaporanMingguanMissing[iterateListPesertaLaporanMingguanMissing].name,
-                'company' : listPesertaLaporanMingguanMissing[iterateListPesertaLaporanMingguanMissing].company,
-                'idx' : parseInt(iterateListPesertaLaporanMingguanMissing)
+                nim: listPesertaLaporanMingguanMissing[iterateListPesertaLaporanMingguanMissing]
+                  .nim,
+                name: listPesertaLaporanMingguanMissing[iterateListPesertaLaporanMingguanMissing]
+                  .name,
+                company:
+                  listPesertaLaporanMingguanMissing[iterateListPesertaLaporanMingguanMissing]
+                    .company,
+                idx: parseInt(iterateListPesertaLaporanMingguanMissing),
               })
-              
             }
             setListPesertaLaporanMingguanMissing(listPesertaLaporanMingguanMissingIdx)
-          }else{
+          } else {
             setListPesertaLaporanMingguanMissing(result.data.data.weekly.laporan_missing)
           }
 
-
-          if(listPesertaLogbookAllMissing != null){
-            for(let iterateListPesertaLogbookAllMissing in listPesertaLogbookAllMissing){
+          if (listPesertaLogbookAllMissing != null) {
+            for (let iterateListPesertaLogbookAllMissing in listPesertaLogbookAllMissing) {
               listPesertaLogbookAllMissingIdx.push({
-                'nim' : listPesertaLogbookAllMissing[iterateListPesertaLogbookAllMissing].nim,
-                'name' : listPesertaLogbookAllMissing[iterateListPesertaLogbookAllMissing].name,
-                'company' : listPesertaLogbookAllMissing[iterateListPesertaLogbookAllMissing].company,
-                'idx' : parseInt(iterateListPesertaLogbookAllMissing)
+                nim: listPesertaLogbookAllMissing[iterateListPesertaLogbookAllMissing].nim,
+                name: listPesertaLogbookAllMissing[iterateListPesertaLogbookAllMissing].name,
+                company: listPesertaLogbookAllMissing[iterateListPesertaLogbookAllMissing].company,
+                idx: parseInt(iterateListPesertaLogbookAllMissing),
               })
-              
             }
             setListPesertaLogbookAllMissing(listPesertaLogbookAllMissingIdx)
-          }else{
+          } else {
             setListPesertaLogbookAllMissing(result.data.data.all.logbook_missing)
           }
 
-      
-          if(listPesertaLaporanAllMissing != null){
-            for(let iterateListPesertaLaporanAllMissing in listPesertaLaporanAllMissing){
+          if (listPesertaLaporanAllMissing != null) {
+            for (let iterateListPesertaLaporanAllMissing in listPesertaLaporanAllMissing) {
               listPesertaLaporanAllMissingIdx.push({
-                'nim' : listPesertaLaporanAllMissing[iterateListPesertaLaporanAllMissing].nim,
-                'name' : listPesertaLaporanAllMissing[iterateListPesertaLaporanAllMissing].name,
-                'company' : listPesertaLaporanAllMissing[iterateListPesertaLaporanAllMissing].company,
-                'idx' : parseInt(iterateListPesertaLaporanAllMissing)
+                nim: listPesertaLaporanAllMissing[iterateListPesertaLaporanAllMissing].nim,
+                name: listPesertaLaporanAllMissing[iterateListPesertaLaporanAllMissing].name,
+                company: listPesertaLaporanAllMissing[iterateListPesertaLaporanAllMissing].company,
+                idx: parseInt(iterateListPesertaLaporanAllMissing),
               })
-              
             }
             setListPesertaLaporanAllMissing(listPesertaLaporanAllMissingIdx)
-          }else{
+          } else {
             setListPesertaLaporanAllMissing(result.data.data.all.laporan_missing)
           }
-   
+
           setIsLoading(false)
-      
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -252,6 +266,11 @@ const DashboardPembimbing = () => {
         })
     }
     getDataDashboard()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const title = (judul) => {
@@ -274,9 +293,8 @@ const DashboardPembimbing = () => {
     <Spin tip="Loading" size="large">
       <div className="content" />
     </Spin>
-  ): (
+  ) : (
     <>
-
       {title('INFORMASI PROGRES PENGUMPULAN DOKUMEN PESERTA ( MINGGU INI )')}
       <div className="container2">
         <div className="spacebottom spacetop">
@@ -417,7 +435,8 @@ const DashboardPembimbing = () => {
                 <Row style={{ padding: 10 }}>
                   <Col span={12}>
                     <b style={{ fontSize: 25 }}>
-                      {totalPesertaProgresMingguan.rpp_submitted} / {totalPesertaProgresMingguan.rpp_total}
+                      {totalPesertaProgresMingguan.rpp_submitted} /{' '}
+                      {totalPesertaProgresMingguan.rpp_total}
                     </b>
                   </Col>
                   <Col span={12}>
@@ -464,14 +483,7 @@ const DashboardPembimbing = () => {
                 </Row>
                 <Row style={{ paddingTop: 10 }}>
                   <Col>
-                    <Popover
-                      content={
-                        <div>
-                          Lihat Peserta Yang Belum Melengkapi Logbook
-                      
-                        </div>
-                      }
-                    >
+                    <Popover content={<div>Lihat Peserta Yang Belum Melengkapi Logbook</div>}>
                       <Button type="primary" onClick={showModalLogbookAllInfo}>
                         Lihat Detail
                       </Button>
@@ -509,8 +521,8 @@ const DashboardPembimbing = () => {
                     <Popover
                       content={
                         <div>
-                          Lihat Peserta Yang Belum Melengkapi <br/>Dokumen Laporan
-                      
+                          Lihat Peserta Yang Belum Melengkapi <br />
+                          Dokumen Laporan
                         </div>
                       }
                     >
@@ -576,7 +588,6 @@ const DashboardPembimbing = () => {
         <Table dataSource={listPesertaLogbookAllMissing} columns={columnListPeserta} />
       </Modal>
 
-      
       <Modal
         width={800}
         open={isModalLaporanAllOpen}

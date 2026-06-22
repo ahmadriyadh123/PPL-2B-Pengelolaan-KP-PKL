@@ -124,9 +124,13 @@ const PengelolaanPoinPenilaianSelfAssessment = () => {
     return [year, month, day].join('-')
   }
   useEffect(() => {
+    const controller = new AbortController()
+
     async function getDataPoinPenilaianSelfAssessment() {
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/aspect/get`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/aspect/get`, {
+          signal: controller.signal,
+        })
         .then((result) => {
           let dataPoinPenilaian = result.data.data
           // setPoinPenilaian(result.data.data)
@@ -152,6 +156,10 @@ const PengelolaanPoinPenilaianSelfAssessment = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -166,7 +174,13 @@ const PengelolaanPoinPenilaianSelfAssessment = () => {
           }
         })
     }
+
     getDataPoinPenilaianSelfAssessment()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const showModalCreate = () => {
@@ -501,7 +515,7 @@ const PengelolaanPoinPenilaianSelfAssessment = () => {
           >
             <Input onChange={(e) => setPoinName(e.target.value)} />
           </Form.Item>
-          {/* 
+          {/*
           <b>
             Tanggal Poin Dibuka <span style={{ color: 'red' }}> *</span>
           </b> */}
@@ -594,8 +608,8 @@ const PengelolaanPoinPenilaianSelfAssessment = () => {
             Tanggal Poin Penilaian<span style={{ color: 'red' }}> *</span>
           </b>
           <p>Tanggal Saat Ini : {coDate}</p>
-         
-         
+
+
             <DatePicker
               defaultValue={dayjs(ePoinTanggal, dateFormat)}
               onChange={

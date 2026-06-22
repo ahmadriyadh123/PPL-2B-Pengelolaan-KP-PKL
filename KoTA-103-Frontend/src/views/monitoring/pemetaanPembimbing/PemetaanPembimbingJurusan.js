@@ -161,7 +161,7 @@ const PemetaanPembimbingJurusan = () => {
           let get_hasil_pemetaan = function (data) {
             for (var i in data) {
               data_result.push({
-                idx : parseInt(i),
+                idx: parseInt(i),
                 date: handleAttributeNull(data[i].date),
                 participant: handleAttributeNull(data[i].participant),
                 company_id: data[i].company_id,
@@ -246,6 +246,8 @@ const PemetaanPembimbingJurusan = () => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     if (USER_ID_PRODI === '0') {
       setProdi('D3')
     } else {
@@ -254,9 +256,11 @@ const PemetaanPembimbingJurusan = () => {
 
     async function getDataPemetaanPerusahaan() {
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-mapping/get-all`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-mapping/get-all`, {
+          signal: controller.signal,
+        })
         .then((result) => {
-         // setDataHasilPemetaan(result.data.data)
+          // setDataHasilPemetaan(result.data.data)
 
           let data = result.data.data
           let data_result = []
@@ -267,7 +271,7 @@ const PemetaanPembimbingJurusan = () => {
             let get_hasil_pemetaan = function (data) {
               for (var i in data) {
                 data_result.push({
-                  idx : parseInt(i),
+                  idx: parseInt(i),
                   date: handleAttributeNull(data[i].date),
                   participant: handleAttributeNull(data[i].participant),
                   company_id: data[i].company_id,
@@ -286,6 +290,10 @@ const PemetaanPembimbingJurusan = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -321,6 +329,10 @@ const PemetaanPembimbingJurusan = () => {
           setOptPembimbing(data_res)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -339,6 +351,11 @@ const PemetaanPembimbingJurusan = () => {
 
     getAllPembimbingJurusan()
     getDataPemetaanPerusahaan()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const columns = [
@@ -348,7 +365,7 @@ const PemetaanPembimbingJurusan = () => {
       width: '5%',
       align: 'center',
       render: (value, item, index) => {
-        return  value+1
+        return value + 1
       },
     },
     {
@@ -452,9 +469,15 @@ const PemetaanPembimbingJurusan = () => {
                       {rec.participant.map((data, idx) => {
                         return (
                           <Row style={{ padding: 7 }} key={idx}>
-                            <Col style={{fontSize:11}} span={2}>{idx + 1}</Col>
-                            <Col style={{fontSize:11}} span={4}>{data.id}</Col>
-                            <Col style={{fontSize:11}} span={8}>{data.name}</Col>
+                            <Col style={{ fontSize: 11 }} span={2}>
+                              {idx + 1}
+                            </Col>
+                            <Col style={{ fontSize: 11 }} span={4}>
+                              {data.id}
+                            </Col>
+                            <Col style={{ fontSize: 11 }} span={8}>
+                              {data.name}
+                            </Col>
                           </Row>
                         )
                       })}
@@ -462,7 +485,7 @@ const PemetaanPembimbingJurusan = () => {
                   ),
                 }}
               />
-                {/* <Column
+              {/* <Column
                   title="Index"
                   key="index"
                   render={(value, item, index) => (page - 1) + (index+1)}

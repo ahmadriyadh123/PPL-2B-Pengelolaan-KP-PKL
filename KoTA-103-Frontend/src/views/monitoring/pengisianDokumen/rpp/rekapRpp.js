@@ -3,27 +3,15 @@ import 'antd/dist/reset.css'
 import { CCard, CCardBody, CCol, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faPencil } from '@fortawesome/free-solid-svg-icons'
-import { ArrowLeftOutlined,SmileOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, SmileOutlined } from '@ant-design/icons'
 import { Alert, FloatButton, Result } from 'antd'
-import {
-  Table,
-  Button,
-  Row,
-  Col,
-  Input,
-  Space,
-  Spin,
-  Popconfirm,
-  Popover,
-  Card,
-} from 'antd'
+import { Table, Button, Row, Col, Input, Space, Spin, Popconfirm, Popover, Card } from 'antd'
 import axios from 'axios'
 import { SearchOutlined } from '@ant-design/icons'
 import Highlighter from 'react-highlight-words'
 import { useHistory, useParams, Router } from 'react-router-dom'
 import { LoadingOutlined } from '@ant-design/icons'
 import './rpp.css'
-
 
 const antIcon = <LoadingOutlined style={{ fontSize: 40 }} spin />
 const RekapRPP = () => {
@@ -40,7 +28,8 @@ const RekapRPP = () => {
   let history = useHistory()
   const [loadings, setLoadings] = useState([])
   const [dataPeserta, setDataPeserta] = useState([])
-  const [isParticipantAllowedToAccessThisPage, setIsParticipantAllowedToAccessThisPage] = useState('load')
+  const [isParticipantAllowedToAccessThisPage, setIsParticipantAllowedToAccessThisPage] =
+    useState('load')
   const [dataDeadlineRPP, setDataDeadlineRPP] = useState([])
   const [isFinishDateToAssignRPP, setIsFinishDateToAssignRPP] = useState()
   const desc = '*edit RPP yang dipilih'
@@ -54,7 +43,7 @@ const RekapRPP = () => {
     })
   }
 
-  const refreshData = async(index) => {
+  const refreshData = async (index) => {
     let PESERTA
     if (rolePengguna === '1') {
       PESERTA = NIM_PESERTA_AS_USER
@@ -65,7 +54,6 @@ const RekapRPP = () => {
     await axios
       .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/rpp/get-all/${PESERTA}`)
       .then((result) => {
-      
         if (result.data.data.length > 0) {
           let temp = []
           let getDataTempRPP = function (obj) {
@@ -113,11 +101,13 @@ const RekapRPP = () => {
     ]
     let date_month = temp_date_split[1]
     let month_of_date = month[parseInt(date_month) - 1]
-   
+
     return `${temp_date_split[2]} - ${month_of_date} - ${temp_date_split[0]}`
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     async function GetRppPeserta(index) {
       let PESERTA
       if (rolePengguna === '1') {
@@ -127,12 +117,13 @@ const RekapRPP = () => {
       }
       enterLoading(index)
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/rpp/get-all/${PESERTA}`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/rpp/get-all/${PESERTA}`, {
+          signal: controller.signal,
+        })
         .then((result) => {
-       
           if (result.data.data.length > 0) {
             let temp = []
-          
+
             let getDataTempRPP = function (obj) {
               for (var i in obj) {
                 temp.push({
@@ -153,6 +144,10 @@ const RekapRPP = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -165,7 +160,7 @@ const RekapRPP = () => {
           } else if (error.toJSON().status > 500 && error.toJSON().status <= 599) {
             //history.push('/500')
             setRppPeserta(undefined)
-          } 
+          }
         })
     }
 
@@ -177,14 +172,24 @@ const RekapRPP = () => {
         PESERTA = parseInt(NIM_PESERTA_FROM_PARAMS)
       }
       await axios
-        .post(`${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`, {
-          id: [PESERTA],
-        })
+        .post(
+          `${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`,
+          {
+            id: [PESERTA],
+          },
+          {
+            signal: controller.signal,
+          },
+        )
         .then((result) => {
           setDataPeserta(result.data.data[0])
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -200,54 +205,76 @@ const RekapRPP = () => {
         })
     }
 
-    async function GetDataDeadlineAndPageOpened(){
-      
-      await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all?id_deadline=3`).then((response)=>{
-        function formatDate(date) {
-          var d = new Date(date),
-            month = '' + (d.getMonth() + 1),
-            day = '' + d.getDate(),
-            year = d.getFullYear()
-      
-          if (month.length < 2) month = '0' + month
-          if (day.length < 2) day = '0' + day
-      
-          return [year, month, day].join('-')
-        }
+    async function GetDataDeadlineAndPageOpened() {
+      await axios
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all?id_deadline=3`, {
+          signal: controller.signal,
+        })
+        .then((response) => {
+          function formatDate(date) {
+            var d = new Date(date),
+              month = '' + (d.getMonth() + 1),
+              day = '' + d.getDate(),
+              year = d.getFullYear()
 
-       let start_date = response.data.data.start_assignment_date
-       let finish_date = response.data.data.finish_assignment_date
-       let range = response.data.data.day_range
-       let data_deadline = {
-        start_date : convertDate(start_date),
-        finish_date : convertDate(finish_date),
-        day_range : range
-       }
+            if (month.length < 2) month = '0' + month
+            if (day.length < 2) day = '0' + day
 
+            return [year, month, day].join('-')
+          }
 
-       setDataDeadlineRPP(data_deadline)
+          let start_date = response.data.data.start_assignment_date
+          let finish_date = response.data.data.finish_assignment_date
+          let range = response.data.data.day_range
+          let data_deadline = {
+            start_date: convertDate(start_date),
+            finish_date: convertDate(finish_date),
+            day_range: range,
+          }
 
-       let today = formatDate(new Date())
-       if(start_date <= today ){
-        setIsParticipantAllowedToAccessThisPage(true)
-       }else{
-        setIsParticipantAllowedToAccessThisPage(false)
-       }
+          setDataDeadlineRPP(data_deadline)
 
-       
-       if(finish_date <= today){
-        setIsFinishDateToAssignRPP(true)
-       }else{
-        setIsFinishDateToAssignRPP(false)
-       }
+          let today = formatDate(new Date())
+          if (start_date <= today) {
+            setIsParticipantAllowedToAccessThisPage(true)
+          } else {
+            setIsParticipantAllowedToAccessThisPage(false)
+          }
 
+          if (finish_date <= today) {
+            setIsFinishDateToAssignRPP(true)
+          } else {
+            setIsFinishDateToAssignRPP(false)
+          }
+        })
+        .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
 
-      })
+          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            history.push({
+              pathname: '/login',
+              state: {
+                session: true,
+              },
+            })
+          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+            history.push('/404')
+          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
+            history.push('/500')
+          }
+        })
     }
 
     GetDataInfoPeserta()
     GetDataDeadlineAndPageOpened()
     GetRppPeserta()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   /** HANDLE FILTERING TABLE */
@@ -333,25 +360,19 @@ const RekapRPP = () => {
     handleSearch(selectedKeys, confirm, dataIndex, index)
   }
 
-
   const confirmToEdit = () => {
     history.push(`/rencanaPenyelesaianProyek/edit/${wannaEdit.rpp_id}`)
   }
-
-
 
   const handleCreateRPP = () => {
     history.push(`/rencanaPenyelesaianProyek/peserta/formPengisianRPP`)
   }
 
-
   const actionLihatRPPPeserta = (idRPP) => {
     history.push(`/rekapDokumenPeserta/rppPeserta/${NIM_PESERTA_FROM_PARAMS}/detail/${idRPP}`)
   }
 
-
   const hoverButtonLihatDetail = <div>Klik tombol, untuk melihat isi RPP peserta</div>
-
 
   const columnsPanitiaPembimbing = [
     {
@@ -405,7 +426,6 @@ const RekapRPP = () => {
               </Col>
             </Row>
           )}
-
         </>
       ),
     },
@@ -513,7 +533,7 @@ const RekapRPP = () => {
                   </Popover>
                 )}
 
-          {!isDisableButton && isFinishDateToAssignRPP && (
+                {!isDisableButton && isFinishDateToAssignRPP && (
                   <Popover content={<div>Pengeditan tidak diizinkan</div>}>
                     <Button
                       id="button-pencil"
@@ -530,31 +550,30 @@ const RekapRPP = () => {
                   </Popover>
                 )}
 
-                {!isDisableButton && !isFinishDateToAssignRPP &&(
-                <Popover content="Edit data RPP">
+                {!isDisableButton && !isFinishDateToAssignRPP && (
+                  <Popover content="Edit data RPP">
                     <Popconfirm
-                    placement="topRight"
-                    title="Yakin akan melakukan edit RPP?"
-                    description={desc}
-                    onConfirm={confirmToEdit}
-                    okText="Yes"
-                    cancelText="No"
-                  >
-                    <Button
-                      id="button-pencil"
-                      htmlType="submit"
-                      disabled={isDisableButton}
-                      shape="circle"
-                      style={{ backgroundColor: '#FCEE21', borderColor: '#FCEE21' }}
-                      onClick={() => {
-                        setWannaEdit(record)
-                   
-                      }}
+                      placement="topRight"
+                      title="Yakin akan melakukan edit RPP?"
+                      description={desc}
+                      onConfirm={confirmToEdit}
+                      okText="Yes"
+                      cancelText="No"
                     >
-                      <FontAwesomeIcon icon={faPencil} style={{ color: 'black' }} />
-                    </Button>
-                  </Popconfirm>
-                </Popover>
+                      <Button
+                        id="button-pencil"
+                        htmlType="submit"
+                        disabled={isDisableButton}
+                        shape="circle"
+                        style={{ backgroundColor: '#FCEE21', borderColor: '#FCEE21' }}
+                        onClick={() => {
+                          setWannaEdit(record)
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faPencil} style={{ color: 'black' }} />
+                      </Button>
+                    </Popconfirm>
+                  </Popover>
                 )}
               </Col>
               <Col span={12} style={{ textAlign: 'center' }}>
@@ -566,7 +585,6 @@ const RekapRPP = () => {
                     style={{ backgroundColor: '#bae0ff', borderColor: '#bae0ff' }}
                     onClick={() => {
                       history.push(`/rencanaPenyelesaianProyek/detail/${record.rpp_id}`)
-                    
                     }}
                   >
                     <FontAwesomeIcon icon={faEye} style={{ color: 'black' }} />
@@ -579,7 +597,6 @@ const RekapRPP = () => {
       },
     },
   ]
-
 
   const buttonKembaliKeListHandling = () => {
     history.push(`/rekapDokumenPeserta`)
@@ -607,64 +624,69 @@ const RekapRPP = () => {
 
   return (
     <>
-      
+      {rolePengguna !== '1' && (
+        <Space
+          className="spacebottom"
+          direction="vertical"
+          size="middle"
+          style={{
+            display: 'flex',
+          }}
+        >
+          <Card title="Informasi Peserta" size="small" style={{ padding: 30 }}>
+            <Row style={{ padding: 5 }}>
+              <Col span={4}>Nama Lengkap</Col>
+              <Col span={2}>:</Col>
+              <Col span={8}>{dataPeserta.name}</Col>
+            </Row>
+            <Row style={{ padding: 5 }}>
+              <Col span={4}>NIM</Col>
+              <Col span={2}>:</Col>
+              <Col span={8}>{dataPeserta.nim}</Col>
+            </Row>
+            <Row style={{ padding: 5 }}>
+              <Col span={4}>Sistem Kerja</Col>
+              <Col span={2}>:</Col>
+              <Col span={8}>{dataPeserta.work_system}</Col>
+            </Row>
+            <Row style={{ padding: 5 }}>
+              <Col span={4}>Angkatan</Col>
+              <Col span={2}>:</Col>
+              <Col span={8}>{dataPeserta.year}</Col>
+            </Row>
+          </Card>
+        </Space>
+      )}
 
-        {rolePengguna !== '1' && (
-          <Space
-            className="spacebottom"
-            direction="vertical"
-            size="middle"
-            style={{
-              display: 'flex',
-            }}
-          >
-            <Card title="Informasi Peserta" size="small" style={{ padding: 30 }}>
-              <Row style={{ padding: 5 }}>
-                <Col span={4}>Nama Lengkap</Col>
-                <Col span={2}>:</Col>
-                <Col span={8}>{dataPeserta.name}</Col>
-              </Row>
-              <Row style={{ padding: 5 }}>
-                <Col span={4}>NIM</Col>
-                <Col span={2}>:</Col>
-                <Col span={8}>{dataPeserta.nim}</Col>
-              </Row>
-              <Row style={{ padding: 5 }}>
-                <Col span={4}>Sistem Kerja</Col>
-                <Col span={2}>:</Col>
-                <Col span={8}>{dataPeserta.work_system}</Col>
-              </Row>
-              <Row style={{ padding: 5 }}>
-                <Col span={4}>Angkatan</Col>
-                <Col span={2}>:</Col>
-                <Col span={8}>{dataPeserta.year}</Col>
-              </Row>
-            </Card>
-          </Space>
-        )}
-
-      {rolePengguna === '1'&& (
+      {rolePengguna === '1' && (
         <Alert
-        className='spacebottom2'
-        message="Informasi Pengumpulan RPP"
-        description={
-          <div>
-          <ul>
-          <li>Akses Pengumpulan RPP dimulai dari tanggal &nbsp;&nbsp; <b>{dataDeadlineRPP.start_date}</b> &nbsp;&nbsp; dan akses akan ditutup pada tanggal &nbsp;&nbsp; <b>{dataDeadlineRPP.finish_date}</b></li>
-          <li>Peserta dapat melakukan pengeditan RPP selama tanggal yang sedang berlangsung belum memasuki minggu dari tanggal berakhir RPP</li>
-          <li>Isilah data RPP sedetail mungkin</li>
-          </ul>
-          </div>
-        }
-        type="info"
-        showIcon
-      />
+          className="spacebottom2"
+          message="Informasi Pengumpulan RPP"
+          description={
+            <div>
+              <ul>
+                <li>
+                  Akses Pengumpulan RPP dimulai dari tanggal &nbsp;&nbsp;{' '}
+                  <b>{dataDeadlineRPP.start_date}</b> &nbsp;&nbsp; dan akses akan ditutup pada
+                  tanggal &nbsp;&nbsp; <b>{dataDeadlineRPP.finish_date}</b>
+                </li>
+                <li>
+                  Peserta dapat melakukan pengeditan RPP selama tanggal yang sedang berlangsung
+                  belum memasuki minggu dari tanggal berakhir RPP
+                </li>
+                <li>Isilah data RPP sedetail mungkin</li>
+              </ul>
+            </div>
+          }
+          type="info"
+          showIcon
+        />
       )}
       <div>
         <CCard className="mb-4">
           {title('REKAP RENCANA PENYELESAIAN PROYEK PESERTA')}
-          {(rolePengguna === '1' && !isParticipantAllowedToAccessThisPage) && (
-              <Result
+          {rolePengguna === '1' && !isParticipantAllowedToAccessThisPage && (
+            <Result
               icon={<SmileOutlined />}
               title="Maaf Akses Untuk Halaman Ini Belum Dibuka"
               subTitle="Anda dapat melakukan akses setelah memasuki tanggal yang telah ditentukan"
@@ -672,42 +694,46 @@ const RekapRPP = () => {
             />
           )}
           <CCardBody>
-            {(rolePengguna === '1' && isParticipantAllowedToAccessThisPage && !isFinishDateToAssignRPP ) && (
-              <Row>
-                <Col span={24} style={{ textAlign: 'right' }}>
-                  <Button
-                    id="create-logbook"
-                    size="sm"
-                    shape="round"
-                    style={{ color: 'white', background: '#339900', marginBottom: 16 }}
-                    onClick={handleCreateRPP}
-                  >
-                    Tambahkan RPP Baru
-                  </Button>
-                </Col>
-              </Row>
-            )}
+            {rolePengguna === '1' &&
+              isParticipantAllowedToAccessThisPage &&
+              !isFinishDateToAssignRPP && (
+                <Row>
+                  <Col span={24} style={{ textAlign: 'right' }}>
+                    <Button
+                      id="create-logbook"
+                      size="sm"
+                      shape="round"
+                      style={{ color: 'white', background: '#339900', marginBottom: 16 }}
+                      onClick={handleCreateRPP}
+                    >
+                      Tambahkan RPP Baru
+                    </Button>
+                  </Col>
+                </Row>
+              )}
 
-{(rolePengguna === '1' && isParticipantAllowedToAccessThisPage && isFinishDateToAssignRPP ) && (
-              <Row>
-                <Col span={24} style={{ textAlign: 'right' }}>
-                 <Popover content={<div>Penambahan RPP Sudah Tidak Diizinkan</div>}>
-                 <Button
-                    id="create-logbook"
-                    size="sm"
-                    shape="round"
-                    disabled
-                    style={{ color: 'white', background: '#339900', marginBottom: 16 }}
-                    onClick={handleCreateRPP}
-                  >
-                    Tambahkan RPP Baru
-                  </Button>
-                 </Popover>
-                </Col>
-              </Row>
-            )}
+            {rolePengguna === '1' &&
+              isParticipantAllowedToAccessThisPage &&
+              isFinishDateToAssignRPP && (
+                <Row>
+                  <Col span={24} style={{ textAlign: 'right' }}>
+                    <Popover content={<div>Penambahan RPP Sudah Tidak Diizinkan</div>}>
+                      <Button
+                        id="create-logbook"
+                        size="sm"
+                        shape="round"
+                        disabled
+                        style={{ color: 'white', background: '#339900', marginBottom: 16 }}
+                        onClick={handleCreateRPP}
+                      >
+                        Tambahkan RPP Baru
+                      </Button>
+                    </Popover>
+                  </Col>
+                </Row>
+              )}
 
-            {(rolePengguna === '1' && isParticipantAllowedToAccessThisPage )&& (
+            {rolePengguna === '1' && isParticipantAllowedToAccessThisPage && (
               <CRow>
                 <CCol sm={12}>
                   <hr></hr>
