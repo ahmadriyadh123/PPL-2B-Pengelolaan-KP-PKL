@@ -40,37 +40,48 @@ const Perangkingan = () => {
     let count = 0
     let nilai = 0
     await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}mapping/get-rank`).then((response) => {
-      response.data.data.ranking_list.map((item) => {
-        rank = 0
-        count = 0
-        nilai = null
-        return item.participants
-          .sort((a, b) => b.result - a.result)
-          .forEach((i) => {
-            count = count + 1
-            if (nilai === null || nilai !== i.result) {
-              rank = count
-            }
-            d.rangking.push({
-              id: item.company_name + i.participant_name,
-              company_name: item.company_name,
-              quota: item.quota,
-              participant_name: i.participant_name,
-              rangking: rank,
-              result: i.result,
+      const rankingList = response.data && response.data.data && response.data.data.ranking_list;
+      if (rankingList) {
+        rankingList.map((item) => {
+          rank = 0
+          count = 0
+          nilai = null
+          return item.participants
+            .sort((a, b) => b.result - a.result)
+            .forEach((i) => {
+              count = count + 1
+              if (nilai === null || nilai !== i.result) {
+                rank = count
+              }
+              d.rangking.push({
+                id: item.company_name + i.participant_name,
+                company_name: item.company_name,
+                quota: item.quota,
+                participant_name: i.participant_name,
+                rangking: rank,
+                result: i.result,
+              })
+              nilai = i.result
             })
-            nilai = i.result
-          })
-      })
-      d.date = response.data.data.date
+        })
+      }
+      d.date = response.data && response.data.data && response.data.data.date
       setData(d)
-      response.data.data &&
+      response.data &&
+        response.data.data &&
         d &&
         setLoadings((prevLoadings) => {
           const newLoadings = [...prevLoadings]
           newLoadings[index] = false
           return newLoadings
         })
+    }).catch(function (error) {
+      console.error(error);
+      setLoadings((prevLoadings) => {
+        const newLoadings = [...prevLoadings]
+        newLoadings[index] = false
+        return newLoadings
+      })
     })
   }
 
@@ -144,31 +155,34 @@ const Perangkingan = () => {
           signal: controller.signal,
         })
         .then(function (response) {
-          response.data.data.ranking_list
-            ? response.data.data.ranking_list.map((item) => {
-                rank = 0
-                count = 0
-                nilai = null
-                return item.participants
-                  .sort((a, b) => b.result - a.result)
-                  .forEach((i) => {
-                    count = count + 1
-                    if (nilai === null || nilai !== i.result) {
-                      rank = count
-                    }
-                    d.rangking.push({
-                      id: item.company_name + i.participant_name,
-                      company_name: item.company_name,
-                      quota: item.quota,
-                      participant_name: i.participant_name,
-                      rangking: rank,
-                      result: i.result,
-                    })
-                    nilai = i.result
+          const rankingList = response.data && response.data.data && response.data.data.ranking_list;
+          if (rankingList) {
+            rankingList.map((item) => {
+              rank = 0
+              count = 0
+              nilai = null
+              return item.participants
+                .sort((a, b) => b.result - a.result)
+                .forEach((i) => {
+                  count = count + 1
+                  if (nilai === null || nilai !== i.result) {
+                    rank = count
+                  }
+                  d.rangking.push({
+                    id: item.company_name + i.participant_name,
+                    company_name: item.company_name,
+                    quota: item.quota,
+                    participant_name: i.participant_name,
+                    rangking: rank,
+                    result: i.result,
                   })
-              })
-            : (d.rangking = [])
-          d.date = response.data.data.date
+                  nilai = i.result
+                })
+            })
+          } else {
+            d.rangking = []
+          }
+          d.date = response.data && response.data.data && response.data.data.date
           setData(d)
           setIsLoading(false)
         })
@@ -177,17 +191,23 @@ const Perangkingan = () => {
             return
           }
 
-          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-            history.push({
-              pathname: '/login',
-              state: {
-                session: true,
-              },
-            })
-          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-            history.push('/404')
-          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
-            history.push('/500')
+          const status = error.response ? error.response.status : (error.toJSON && typeof error.toJSON === 'function' ? error.toJSON().status : null);
+          if (status) {
+            if (status >= 300 && status <= 399) {
+              history.push({
+                pathname: '/login',
+                state: {
+                  session: true,
+                },
+              })
+            } else if (status >= 400 && status <= 499) {
+              history.push('/404')
+            } else if (status >= 500 && status <= 599) {
+              history.push('/500')
+            }
+          } else {
+            console.error(error)
+            setIsLoading(false)
           }
         })
     }
@@ -277,39 +297,49 @@ const Perangkingan = () => {
     let nilai = 0
     axios.defaults.withCredentials = true
     axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}mapping/get-rank`).then(function (response) {
-      response.data.data.ranking_list
-        ? response.data.data.ranking_list.map((item) => {
-            rank = 0
-            count = 0
-            nilai = null
-            return item.participants
-              .sort((a, b) => b.result - a.result)
-              .forEach((i) => {
-                count = count + 1
-                if (nilai === null || nilai !== i.result) {
-                  rank = count
-                }
-                d.rangking.push({
-                  id: item.company_name + i.participant_name,
-                  company_name: item.company_name,
-                  quota: item.quota,
-                  participant_name: i.participant_name,
-                  rangking: rank,
-                  result: i.result,
-                })
-                nilai = i.result
+      const rankingList = response.data && response.data.data && response.data.data.ranking_list;
+      if (rankingList) {
+        rankingList.map((item) => {
+          rank = 0
+          count = 0
+          nilai = null
+          return item.participants
+            .sort((a, b) => b.result - a.result)
+            .forEach((i) => {
+              count = count + 1
+              if (nilai === null || nilai !== i.result) {
+                rank = count
+              }
+              d.rangking.push({
+                id: item.company_name + i.participant_name,
+                company_name: item.company_name,
+                quota: item.quota,
+                participant_name: i.participant_name,
+                rangking: rank,
+                result: i.result,
               })
-          })
-        : (d.rangking = [])
+              nilai = i.result
+            })
+        })
+      } else {
+        d.rangking = []
+      }
 
       if (selectedKeys[0] === undefined) {
-        d.date = response.data.data.date
+        d.date = response.data && response.data.data && response.data.data.date
         setData(d)
       } else {
-        d.date = response.data.data.date
+        d.date = response.data && response.data.data && response.data.data.date
         d.rangking = d.rangking.filter((item) => item.participant_name.includes(selectedKeys[0]))
         setData(d)
       }
+      setLoadings((prevLoadings) => {
+        const newLoadings = [...prevLoadings]
+        newLoadings[index] = false
+        return newLoadings
+      })
+    }).catch(function (error) {
+      console.error(error)
       setLoadings((prevLoadings) => {
         const newLoadings = [...prevLoadings]
         newLoadings[index] = false

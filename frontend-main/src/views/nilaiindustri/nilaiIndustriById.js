@@ -42,17 +42,23 @@ const NilaiIndustriById = () => {
         setIsLoading(false)
       })
       .catch(function (error) {
-        if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-          history.push({
-            pathname: '/login',
-            state: {
-              session: true,
-            },
-          })
-        } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-          history.push('/404')
-        } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
-          history.push('/500')
+        const status = error.response ? error.response.status : (error.toJSON && typeof error.toJSON === 'function' ? error.toJSON().status : null);
+        if (status) {
+          if (status >= 300 && status <= 399) {
+            history.push({
+              pathname: '/login',
+              state: {
+                session: true,
+              },
+            })
+          } else if (status >= 400 && status <= 499) {
+            history.push('/404')
+          } else if (status >= 500 && status <= 599) {
+            history.push('/500')
+          }
+        } else {
+          console.error(error)
+          setIsLoading(false)
         }
       })
   }

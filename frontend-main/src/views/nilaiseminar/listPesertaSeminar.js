@@ -21,7 +21,7 @@ const ListPesertaSeminar = () => {
   axios.defaults.withCredentials = true
 
   const pesertaSeminar = (id) => {
-    history.push(`/nilaiseminar/penilaianseminar/tambahnilaipeserta/${id}`)
+    history.push(`/nilaiSeminar/penilaianSeminar/tambahNilaiPeserta/${id}`)
   }
 
   useEffect(() => {

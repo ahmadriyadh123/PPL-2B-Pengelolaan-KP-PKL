@@ -72,7 +72,7 @@ const UbahMataKuliah = () => {
   //   console.log(data)
   // }, [data])
   const detailMataKuliah = (id) => {
-    history.push(`/matakuliah/listmatakuliah/detailmatakuliah/${id}`)
+    history.push(`/mataKuliah/listMatakuliah/detailMatakuliah/${id}`)
   }
 
   // const prodiJurusan = [

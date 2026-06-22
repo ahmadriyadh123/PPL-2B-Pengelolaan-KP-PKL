@@ -597,7 +597,7 @@ const IdentitasMataKuliah = (props) => {
   }
 
   const listmatakuliah = () => {
-    history.push(`/matakuliah/listmatakuliah`)
+    history.push(`/mataKuliah/listMatakuliah`)
   }
 
   const showModalDelete = () => {
