@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -43,7 +45,7 @@ import com.jtk.ps.api.service.Interface.ISeminarService;
 @Service
 public class SeminarService implements ISeminarService{
     
-    // private static final Logger LOGGER = LoggerFactory.getLogger(SeminarService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SeminarService.class);
 
     @Autowired
     @Lazy
@@ -88,7 +90,8 @@ public class SeminarService implements ISeminarService{
 
             eventStoreRepository.save(eventStore);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("Failed to store event for entityId: {}, eventType: {}", entityId, eventType, e);
+            throw new RuntimeException("Event store operation failed", e);
         }
     }
 
