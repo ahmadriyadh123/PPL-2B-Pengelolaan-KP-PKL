@@ -102,8 +102,6 @@ public class AccountService implements UserDetailsService, IAccountService {
         HttpEntity<String> req = new HttpEntity<>(headers);
 
         //Get all account Participant
-        // ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange("http://participant-service/participant/get-all?year=" + year,
-        //         HttpMethod.GET,req, new ParameterizedTypeReference<>() {});
         ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange(participantServiceUrl + "/participant/get-all?year=" + year,
                 HttpMethod.GET,req, new ParameterizedTypeReference<>() {});
         List<Participant> participantList = Objects.requireNonNull(response.getBody()).getData();
@@ -142,8 +140,6 @@ public class AccountService implements UserDetailsService, IAccountService {
 
 
         // Get all account Company
-        // ResponseEntity<ResponseList<CompanyResponse>> res = restTemplate.exchange("http://company-service/company/get-all",
-        //         HttpMethod.GET, req, new ParameterizedTypeReference<>() {});
         ResponseEntity<ResponseList<CompanyResponse>> res = restTemplate.exchange(companyServiceUrl + "/company/get-all",
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {});
         List<CompanyResponse> companyResponses = Objects.requireNonNull(res.getBody()).getData();
@@ -215,8 +211,6 @@ public class AccountService implements UserDetailsService, IAccountService {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put(Constant.PayloadResponseConstant.ID, jsonArray);
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                // ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange("http://participant-service/participant/get-by-account", HttpMethod.POST, request, new ParameterizedTypeReference<>() {
-                // });
                 ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange(participantServiceUrl + "/participant/get-by-account", HttpMethod.POST, request, new ParameterizedTypeReference<>() {
                 });
             if (response.getStatusCode().value() == HttpStatus.OK.value()) {
@@ -240,8 +234,6 @@ public class AccountService implements UserDetailsService, IAccountService {
             jsonObject.put(Constant.PayloadResponseConstant.ID_ACCOUNT, jsonArray);
             HttpEntity<String> req = new HttpEntity<>(jsonObject.toString(),headers);
             System.out.println("masuk");
-            // ResponseEntity<ResponseList<CompanyResponse>> response = restTemplate.exchange("http://company-service/company/get-by-account", HttpMethod.POST, req, new ParameterizedTypeReference<>() {
-            // });
             ResponseEntity<ResponseList<CompanyResponse>> response = restTemplate.exchange(companyServiceUrl + "/company/get-by-account", HttpMethod.POST, req, new ParameterizedTypeReference<>() {
             });
             if (response.getStatusCode().is3xxRedirection() || response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
@@ -331,8 +323,6 @@ public class AccountService implements UserDetailsService, IAccountService {
 
                 jsonObject.put(Constant.PayloadResponseConstant.ID_ACCOUNT, jsonArray);
                 HttpEntity<String> req = new HttpEntity<>(jsonObject.toString(),headers);
-                // ResponseEntity<ResponseList<CompanyResponse>> response = restTemplate.exchange("http://company-service/company/get-by-account", HttpMethod.POST, req, new ParameterizedTypeReference<>() {
-                // });
                 ResponseEntity<ResponseList<CompanyResponse>> response = restTemplate.exchange(companyServiceUrl + "/company/get-by-account", HttpMethod.POST, req, new ParameterizedTypeReference<>() {
                 });
                 if (response.getStatusCode().is3xxRedirection() || response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
@@ -355,8 +345,6 @@ public class AccountService implements UserDetailsService, IAccountService {
                 jsonObject.put(Constant.PayloadResponseConstant.ID_ACCOUNT, jsonArray);
 
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                // ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange("http://participant-service/participant/get-by-account", HttpMethod.POST, request, new ParameterizedTypeReference<>() {
-                // });
                 ResponseEntity<ResponseList<Participant>> response = restTemplate.exchange(participantServiceUrl + "/participant/get-by-account", HttpMethod.POST, request, new ParameterizedTypeReference<>() {
                 });
                 if (response.getStatusCode().value() == HttpStatus.OK.value()) {
@@ -464,7 +452,6 @@ public class AccountService implements UserDetailsService, IAccountService {
 
                 HttpEntity<String> req = new HttpEntity<>(headers);
 
-                // ResponseEntity<CompanyResponse> response = restTemplate.exchange("http://company-service/company/update-pic/"+lecturer.get().getId(), HttpMethod.PUT, req, CompanyResponse.class);
                 ResponseEntity<CompanyResponse> response = restTemplate.exchange(companyServiceUrl + "/company/update-pic/"+lecturer.get().getId(), HttpMethod.PUT, req, CompanyResponse.class);
                 if (response.getStatusCode().is3xxRedirection() || response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
                     throw new IllegalStateException("Error when update pic");
@@ -528,9 +515,6 @@ public class AccountService implements UserDetailsService, IAccountService {
         
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
         
-        // ResponseEntity<ResponseList<Participant>> response =
-        //         restTemplate.exchange("http://participant-service/participant/get-all?year=" + currentYear,
-        //         HttpMethod.GET,req, new ParameterizedTypeReference<>() {});
         ResponseEntity<ResponseList<Participant>> response =
                 restTemplate.exchange(participantServiceUrl + "/participant/get-all?year=" + currentYear,
                 HttpMethod.GET,req, new ParameterizedTypeReference<>() {});
@@ -557,8 +541,6 @@ public class AccountService implements UserDetailsService, IAccountService {
         headers.add(Constant.PayloadResponseConstant.COOKIE, accessToken);
         req = new HttpEntity<>(headers);
         
-        // response = restTemplate.exchange("http://participant-service/participant/get-all?year=" + currentYear,
-        //         HttpMethod.GET,req, new ParameterizedTypeReference<>() {});
         response = restTemplate.exchange(participantServiceUrl + "/participant/get-all?year=" + currentYear,
                 HttpMethod.GET,req, new ParameterizedTypeReference<>() {});
         participantList = Objects.requireNonNull(response.getBody()).getData();

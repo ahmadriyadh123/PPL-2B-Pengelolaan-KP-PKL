@@ -1,19 +1,23 @@
 package com.jtk.ps.api.service;
 
-import be.quodlibet.boxable.*;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jtk.ps.api.dto.*;
-import com.jtk.ps.api.dto.cv.*;
-import com.jtk.ps.api.dto.jsonpolban.CourseCodeValue;
-import com.jtk.ps.api.dto.jsonpolban.ParticipantJsonResponse;
-import com.jtk.ps.api.model.*;
-import com.jtk.ps.api.repository.*;
-import com.jtk.ps.api.util.Constant;
-import com.jtk.ps.api.util.DateUtil;
-import com.jtk.ps.api.util.PDFUtil;
+import java.awt.Color;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -23,22 +27,94 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
-import java.awt.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jtk.ps.api.dto.CVInterestResponse;
+import com.jtk.ps.api.dto.CompanyIdName;
+import com.jtk.ps.api.dto.CompanySelection;
+import com.jtk.ps.api.dto.CompanySelectionCard;
+import com.jtk.ps.api.dto.CompanySelectionDetail;
+import com.jtk.ps.api.dto.CompanySelectionRecap;
+import com.jtk.ps.api.dto.CompanySelectionResponse;
+import com.jtk.ps.api.dto.CompanySelectionUpdate;
+import com.jtk.ps.api.dto.CompetenceAndType;
+import com.jtk.ps.api.dto.CompetenceResponse;
+import com.jtk.ps.api.dto.CourseNameAndValue;
+import com.jtk.ps.api.dto.CreateAccountResponse;
+import com.jtk.ps.api.dto.FormSubmitTimeResponse;
+import com.jtk.ps.api.dto.JobScopeResponse;
+import com.jtk.ps.api.dto.LoginResponse;
+import com.jtk.ps.api.dto.ParticipantCompanyRecap;
+import com.jtk.ps.api.dto.ParticipantFinalMappingResponse;
+import com.jtk.ps.api.dto.ParticipantIdName;
+import com.jtk.ps.api.dto.ParticipantValueList;
+import com.jtk.ps.api.dto.ParticipantValueResponse;
+import com.jtk.ps.api.dto.QuotaResponse;
+import com.jtk.ps.api.dto.Response;
+import com.jtk.ps.api.dto.ResponseList;
+import com.jtk.ps.api.dto.cv.CVCommittee;
+import com.jtk.ps.api.dto.cv.CVCommitteeResponse;
+import com.jtk.ps.api.dto.cv.CVCompanyResponse;
+import com.jtk.ps.api.dto.cv.CVCompetenceAndType;
+import com.jtk.ps.api.dto.cv.CVCompetenceNameValue;
+import com.jtk.ps.api.dto.cv.CVCompetenceRecap;
+import com.jtk.ps.api.dto.cv.CVGetResponse;
+import com.jtk.ps.api.dto.cv.CVJobScopeRecap;
+import com.jtk.ps.api.dto.cv.CVParticipantResponse;
+import com.jtk.ps.api.dto.cv.CVRecap;
+import com.jtk.ps.api.dto.cv.CVUpdateRequest;
+import com.jtk.ps.api.dto.jsonpolban.CourseCodeValue;
+import com.jtk.ps.api.dto.jsonpolban.ParticipantJsonResponse;
+import com.jtk.ps.api.model.AbsenceRecap;
+import com.jtk.ps.api.model.CV;
+import com.jtk.ps.api.model.CVCompetence;
+import com.jtk.ps.api.model.CVJobScope;
+import com.jtk.ps.api.model.Championship;
+import com.jtk.ps.api.model.Course;
+import com.jtk.ps.api.model.CourseValue;
+import com.jtk.ps.api.model.EProdi;
+import com.jtk.ps.api.model.Education;
+import com.jtk.ps.api.model.Experience;
+import com.jtk.ps.api.model.Organization;
+import com.jtk.ps.api.model.Participant;
+import com.jtk.ps.api.model.ParticipantCompany;
+import com.jtk.ps.api.model.Seminar;
+import com.jtk.ps.api.model.Skill;
+import com.jtk.ps.api.repository.AbsenceRecapRepository;
+import com.jtk.ps.api.repository.CVCompetenceRepository;
+import com.jtk.ps.api.repository.CVJobScopeRepository;
+import com.jtk.ps.api.repository.CVRepository;
+import com.jtk.ps.api.repository.ChampionshipRepository;
+import com.jtk.ps.api.repository.CourseRepository;
+import com.jtk.ps.api.repository.CourseValueRepository;
+import com.jtk.ps.api.repository.EducationRepository;
+import com.jtk.ps.api.repository.ExperienceRepository;
+import com.jtk.ps.api.repository.OrganizationRepository;
+import com.jtk.ps.api.repository.ParticipantCompanyRepository;
+import com.jtk.ps.api.repository.ParticipantRepository;
+import com.jtk.ps.api.repository.SeminarRepository;
+import com.jtk.ps.api.repository.SkillRepository;
+import com.jtk.ps.api.util.Constant;
+import com.jtk.ps.api.util.DateUtil;
+import com.jtk.ps.api.util.PDFUtil;
+
+import be.quodlibet.boxable.BaseTable;
+import be.quodlibet.boxable.Cell;
+import be.quodlibet.boxable.HorizontalAlignment;
+import be.quodlibet.boxable.Row;
+import be.quodlibet.boxable.VerticalAlignment;
 
 @Service
 public class ParticipantService implements IParticipantService {
@@ -53,6 +129,18 @@ public class ParticipantService implements IParticipantService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Value("${app.api.url.account-service}")
+    private String accountServiceUrl;
+
+    @Value("${app.api.url.management-content-service}")
+    private String managementContentServiceUrl;
+
+    @Value("${app.api.url.mapping-service}")
+    private String mappingServiceUrl;
+
+    @Value("${app.api.url.participant-service}")
+    private String companyServiceUrl;
 
     @Autowired
     private EducationRepository educationRepository;
@@ -128,7 +216,7 @@ public class ParticipantService implements IParticipantService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange("http://management-content-service/management-content/form-submit-time/2", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
+        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange(managementContentServiceUrl + "/management-content/form-submit-time/2", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
         });
 
         String startDate = Objects.requireNonNull(formSubmit.getBody()).getData().getStartDate();
@@ -200,7 +288,7 @@ public class ParticipantService implements IParticipantService {
                 cvCompetenceAndType.setKnowledgeId(cvCompetence.getKnowledgeId());
                 cvCompetenceAndType.setCompetenceId(cvCompetence.getCompetenceId());
 
-                ResponseEntity<Response<Integer>> typeId = restTemplate.exchange("http://management-content-service/management-content/competence/get-type?id=" + cvCompetence.getCompetenceId(),
+                ResponseEntity<Response<Integer>> typeId = restTemplate.exchange(managementContentServiceUrl + "/management-content/competence/get-type?id=" + cvCompetence.getCompetenceId(),
                         HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                         });
 
@@ -363,7 +451,7 @@ public class ParticipantService implements IParticipantService {
         // Get is final mapping (Mapping)
         ResponseEntity<Response<Integer>> isFinalMappingD3Request =
                 restTemplate.exchange(
-                        "http://mapping-service/mapping/get-is-final/1",
+                        mappingServiceUrl + "/mapping/get-is-final/1",
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<Response<Integer>>() {
@@ -377,7 +465,7 @@ public class ParticipantService implements IParticipantService {
 
         ResponseEntity<Response<Integer>> isFinalMappingD4Request =
                 restTemplate.exchange(
-                        "http://mapping-service/mapping/get-is-final/2",
+                        mappingServiceUrl + "/mapping/get-is-final/2",
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<Response<Integer>>() {
@@ -395,7 +483,7 @@ public class ParticipantService implements IParticipantService {
 
         ResponseEntity<ResponseList<ParticipantFinalMappingResponse>> responseMapping =
                 restTemplate.exchange(
-                        "http://mapping-service/mapping/final/company/" + idCompany,
+                        mappingServiceUrl + "/mapping/final/company/" + idCompany,
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<ResponseList<ParticipantFinalMappingResponse>>() {
@@ -444,7 +532,7 @@ public class ParticipantService implements IParticipantService {
         headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        ResponseEntity<ResponseList<CompanyIdName>> responseCompany = restTemplate.exchange("http://company-service/company/get-name", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
+        ResponseEntity<ResponseList<CompanyIdName>> responseCompany = restTemplate.exchange(companyServiceUrl + "/company/get-name", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
         });
 
         List<CompanyIdName> companyIdNameList = Objects.requireNonNull(responseCompany.getBody()).getData();
@@ -494,7 +582,7 @@ public class ParticipantService implements IParticipantService {
         headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        ResponseEntity<Response<String>> region = restTemplate.exchange("http://management-content-service/management-content/domicile/" +
+        ResponseEntity<Response<String>> region = restTemplate.exchange(managementContentServiceUrl + "/management-content/domicile/" +
                 domicileId, HttpMethod.GET, req, new ParameterizedTypeReference<>() {
         });
 
@@ -512,7 +600,7 @@ public class ParticipantService implements IParticipantService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange("http://management-content-service/management-content/form-submit-time/4", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
+        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange(managementContentServiceUrl + "/management-content/form-submit-time/4", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
         });
 
         CompanySelectionCard companySelectionCard = new CompanySelectionCard();
@@ -613,11 +701,11 @@ public class ParticipantService implements IParticipantService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        ResponseEntity<ResponseList<JobScopeResponse>> jobsScopeList = restTemplate.exchange("http://management-content-service/management-content/jobscope/get-all/" + idProdi,
+        ResponseEntity<ResponseList<JobScopeResponse>> jobsScopeList = restTemplate.exchange(managementContentServiceUrl + "/management-content/jobscope/get-all/" + idProdi,
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                 });
 
-        ResponseEntity<ResponseList<CompetenceResponse>> competenceList = restTemplate.exchange("http://management-content-service/management-content/competence/get-all/" + idProdi,
+        ResponseEntity<ResponseList<CompetenceResponse>> competenceList = restTemplate.exchange(managementContentServiceUrl + "/management-content/competence/get-all/" + idProdi,
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                 });
 
@@ -667,12 +755,12 @@ public class ParticipantService implements IParticipantService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        ResponseEntity<ResponseList<CompanyIdName>> responseCompany = restTemplate.exchange("http://company-service/company/get-name", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
+        ResponseEntity<ResponseList<CompanyIdName>> responseCompany = restTemplate.exchange(companyServiceUrl + "/company/get-name", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
         });
 
         List<CompanyIdName> companyResponseList = Objects.requireNonNull(responseCompany.getBody()).getData();
 
-        ResponseEntity<ResponseList<QuotaResponse>> quotaResponse = restTemplate.exchange("http://company-service/company/prerequisite/quota", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
+        ResponseEntity<ResponseList<QuotaResponse>> quotaResponse = restTemplate.exchange(companyServiceUrl + "/company/prerequisite/quota", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
         });
 
         List<QuotaResponse> quotaResponseList = Objects.requireNonNull(quotaResponse.getBody()).getData();
@@ -777,7 +865,7 @@ public class ParticipantService implements IParticipantService {
 
         ResponseEntity<ResponseList<JobScopeResponse>> jobscopeResponse =
                 restTemplate.exchange(
-                        "http://management-content-service/management-content/jobscope/get-all/" + participant.getProdiId(),
+                        managementContentServiceUrl + "/management-content/jobscope/get-all/" + participant.getProdiId(),
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<>() {
@@ -785,7 +873,7 @@ public class ParticipantService implements IParticipantService {
         List<JobScopeResponse> jobScopeResponses = Objects.requireNonNull(jobscopeResponse.getBody()).getData();
 
         ResponseEntity<ResponseList<CompetenceResponse>> competenceList = restTemplate.exchange(
-                "http://management-content-service/management-content/competence/get-all/" + participant.getProdiId(),
+                managementContentServiceUrl + "/management-content/competence/get-all/" + participant.getProdiId(),
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                 });
         List<CompetenceResponse> competenceResponses = Objects.requireNonNull(competenceList.getBody()).getData();
@@ -1606,7 +1694,7 @@ public class ParticipantService implements IParticipantService {
         headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        ResponseEntity<ResponseList<CompetenceResponse>> competenceResponse = restTemplate.exchange("http://management-content-service/management-content/competence/get-all/" + idProdi,
+        ResponseEntity<ResponseList<CompetenceResponse>> competenceResponse = restTemplate.exchange(managementContentServiceUrl + "/management-content/competence/get-all/" + idProdi,
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                 });
 
@@ -1670,7 +1758,7 @@ public class ParticipantService implements IParticipantService {
 
             HttpEntity<String> req = new HttpEntity<>(jsonObject.toString(), headers);
 
-            ResponseEntity<Response<LoginResponse>> loginResponse = restTemplate.exchange("http://account-service/account/login",
+            ResponseEntity<Response<LoginResponse>> loginResponse = restTemplate.exchange(accountServiceUrl + "/account/login",
                     HttpMethod.POST, req, new ParameterizedTypeReference<>() {
                     });
 
@@ -1688,7 +1776,7 @@ public class ParticipantService implements IParticipantService {
 
 
                 try {
-                    ResponseEntity<Response<CreateAccountResponse>> createAccount = restTemplate.exchange("http://account-service/account/create",
+                    ResponseEntity<Response<CreateAccountResponse>> createAccount = restTemplate.exchange(accountServiceUrl + "/account/create",
                             HttpMethod.POST, req, new ParameterizedTypeReference<>() {
                             });
 
