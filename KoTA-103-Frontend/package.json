@@ -100,7 +100,8 @@
     "sass": "1.43.2"
   },
   "overrides": {
-    "cheerio": "0.22.0"
+    "cheerio": "0.22.0",
+    "node-sass": "npm:sass@^1.43.2"
   },
   "resolutions": {
     "cheerio": "0.22.0",

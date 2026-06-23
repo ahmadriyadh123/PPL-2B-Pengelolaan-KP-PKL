@@ -84,20 +84,11 @@ public class MappingService implements IMappingService {
             idPublish = 4;
         }
 
-        List<Integer> ar = new ArrayList<>();
-
-        utilityRepository.findById(id).ifPresent(u -> {
-            ar.add(u.getIsFinal());
-        });
-
-        int isFinal = ar.get(0);
+        int isFinal = utilityRepository.findById(id).map(Utility::getIsFinal).orElse(0);
         res.setIsFinal(isFinal);
 
-        utilityRepository.findById(idPublish).ifPresent(u -> {
-            ar.add(u.getIsFinal());
-        });
-
-        res.setIsPublish(ar.get(1));
+        int isPublish = utilityRepository.findById(idPublish).map(Utility::getIsFinal).orElse(0);
+        res.setIsPublish(isPublish);
 
         if (idRole == ERole.PARTICIPANT.id && isFinal == 0) {
             res.setFinalMapping(resList);
@@ -1038,13 +1029,7 @@ public class MappingService implements IMappingService {
 
     @Override
     public Integer getIsFinalMapping(Integer id) {
-        List<Integer> ar = new ArrayList<>();
-
-        utilityRepository.findById(id).ifPresent(u -> {
-            ar.add(u.getIsFinal());
-        });
-
-        return ar.get(0);
+        return utilityRepository.findById(id).map(Utility::getIsFinal).orElse(0);
     }
 
     @Override

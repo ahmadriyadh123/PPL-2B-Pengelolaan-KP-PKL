@@ -226,6 +226,26 @@ public class CompanyService implements ICompanyService {
 
     @Override
     public Company createCompany(CompanyRequest company, String cookie) {
+        return createCompanyInternal(company, cookie).company;
+    }
+
+    @Override
+    public CreateCompanyResponse createCompanyWithCredentials(CompanyRequest company, String cookie) {
+        CompanyCreationResult result = createCompanyInternal(company, cookie);
+        return new CreateCompanyResponse(
+                result.company.getId(),
+                result.company.getCompanyEmail(),
+                result.company.getCompanyEmail(),
+                result.password);
+    }
+
+    /**
+     * Logika inti pembuatan company. Mengembalikan entity Company yang
+     * tersimpan beserta password awal yang digenerate, agar pemanggil dapat
+     * memilih: hanya butuh entity (createCompany) atau butuh kredensial juga
+     * (createCompanyWithCredentials).
+     */
+    private CompanyCreationResult createCompanyInternal(CompanyRequest company, String cookie) {
         Company newCompany = new Company();
 
         newCompany.setCompanyEmail(company.getCompanyEmail());
@@ -249,8 +269,9 @@ public class CompanyService implements ICompanyService {
         headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
 
         JSONObject jsonObject = new JSONObject();
+        String generatedPassword = generateRandomPassword();
         jsonObject.put("username", company.getCompanyEmail());
-        jsonObject.put("password", "1234");
+        jsonObject.put("password", generatedPassword);
         jsonObject.put("id_role", 2);
 
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
@@ -270,8 +291,30 @@ public class CompanyService implements ICompanyService {
         prerequisite.setCompany(newCompany);
         prerequisiteRepository.save(prerequisite);
 
+        return new CompanyCreationResult(newCompany, generatedPassword);
+    }
 
-        return newCompany;
+    /**
+     * Holder sederhana untuk membawa entity Company dan password awal
+     * dari logika internal ke method publik.
+     */
+    private static class CompanyCreationResult {
+        private final Company company;
+        private final String password;
+
+        CompanyCreationResult(Company company, String password) {
+            this.company = company;
+            this.password = password;
+        }
+    }
+
+    /**
+     * Generate password acak yang unik untuk setiap akun company baru.
+     * Menggunakan UUID agar setiap company tidak berbagi password yang sama.
+     * Karakter '-' dihapus dan diambil 12 karakter pertama agar lebih ringkas.
+     */
+    private String generateRandomPassword() {
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }
 
     @Override
@@ -307,6 +350,10 @@ public class CompanyService implements ICompanyService {
         Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
         Prerequisite prerequisite = prerequisiteRepository.findByCompanyIdAndYear(idCompany, currentYear);
 
+        if (prerequisite == null) {
+            return null;
+        }
+
         PrerequisiteCard prerequisiteCard = new PrerequisiteCard();
         prerequisiteCard.setIdPrerequisite(prerequisite.getId());
         prerequisiteCard.setStatusPrerequisite(prerequisite.getStatus());
@@ -317,7 +364,7 @@ public class CompanyService implements ICompanyService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange("http://management-content-service/management-content/form-submit-time/3", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
+        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange(Constant.FORM_SUBMIT_TIME_URL + Constant.FormSubmitId.PREREQUISITE, HttpMethod.GET, req, new ParameterizedTypeReference<>() {
         });
         String startDate = Objects.requireNonNull(formSubmit.getBody()).getData().getStartDate();
         String endDate = formSubmit.getBody().getData().getEndDate();
@@ -599,6 +646,11 @@ public class CompanyService implements ICompanyService {
     public PrerequisiteCard getCardPrerequisiteByCommittee(String cookie, Integer idCompany) {
         Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
         Prerequisite p = prerequisiteRepository.findByCompanyIdAndYear(idCompany, currentYear);
+        
+        if (p == null) {
+            return null;
+        }
+        
         HttpHeaders headers = new HttpHeaders();
         headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -609,7 +661,7 @@ public class CompanyService implements ICompanyService {
         prerequisiteCard.setStatusPrerequisite(p.getStatus());
         prerequisiteCard.setCompanyName(p.getCompany().getCompanyName());
 
-        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange("http://management-content-service/management-content/form-submit-time/3", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
+        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange(Constant.FORM_SUBMIT_TIME_URL + Constant.FormSubmitId.PREREQUISITE, HttpMethod.GET, req, new ParameterizedTypeReference<>() {
         });
         String startDate = Objects.requireNonNull(formSubmit.getBody()).getData().getStartDate();
         String endDate = Objects.requireNonNull(formSubmit.getBody()).getData().getEndDate();
@@ -984,7 +1036,7 @@ public class CompanyService implements ICompanyService {
         // Get submit timeline D3 (Management Content)
         ResponseEntity<Response<FormSubmitTimeResponse>> formSubmitD3 =
                 restTemplate.exchange(
-                        "http://management-content-service/management-content/form-submit-time/5",
+                        Constant.FORM_SUBMIT_TIME_URL + Constant.FormSubmitId.EVALUASI_PKL_D3,
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -1001,7 +1053,7 @@ public class CompanyService implements ICompanyService {
         // Get submit timeline D4 (Management Content)
         ResponseEntity<Response<FormSubmitTimeResponse>> formSubmitD4 =
                 restTemplate.exchange(
-                        "http://management-content-service/management-content/form-submit-time/6",
+                        Constant.FORM_SUBMIT_TIME_URL + Constant.FormSubmitId.EVALUASI_PKL_1_D4,
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -1019,7 +1071,7 @@ public class CompanyService implements ICompanyService {
         if (!isDateAvailableD4) {
             formSubmitD4 =
                     restTemplate.exchange(
-                            "http://management-content-service/management-content/form-submit-time/7",
+                            Constant.FORM_SUBMIT_TIME_URL + Constant.FormSubmitId.EVALUASI_PKL_2_D4,
                             HttpMethod.GET,
                             req,
                             new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -1037,7 +1089,7 @@ public class CompanyService implements ICompanyService {
             if (!isDateAvailableD4) {
                 formSubmitD4 =
                         restTemplate.exchange(
-                                "http://management-content-service/management-content/form-submit-time/8",
+                                Constant.FORM_SUBMIT_TIME_URL + Constant.FormSubmitId.EVALUASI_PKL_3_D4,
                                 HttpMethod.GET,
                                 req,
                                 new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -1213,35 +1265,49 @@ public class CompanyService implements ICompanyService {
     @Override
     public void createEvaluation(List<CreateEvaluationRequest> createEvaluationRequest) {
         for (CreateEvaluationRequest cer : createEvaluationRequest) {
-            Evaluation e = new Evaluation();
-            e.setIdCompany(cer.getIdCompany());
-            e.setIdParticipant(cer.getIdParticipant());
-            e.setIdProdi(cer.getIdProdi());
-            e.setPosition(cer.getPosition());
-
             if (cer.getIdProdi() == EProdi.D3.id) {
-                e.setNumEvaluation(1);
-                evaluationRepository.save(e);
+                if (!evaluationRepository.existsByIdParticipantAndNumEvaluation(cer.getIdParticipant(), 1)) {
+                    Evaluation e = new Evaluation();
+                    e.setIdCompany(cer.getIdCompany());
+                    e.setIdParticipant(cer.getIdParticipant());
+                    e.setIdProdi(cer.getIdProdi());
+                    e.setPosition(cer.getPosition());
+                    e.setNumEvaluation(1);
+                    evaluationRepository.save(e);
+                }
                 continue;
             }
 
             if (cer.getIdProdi() == EProdi.D4.id) {
-                e.setNumEvaluation(1);
-                evaluationRepository.save(e);
+                if (!evaluationRepository.existsByIdParticipantAndNumEvaluation(cer.getIdParticipant(), 1)) {
+                    Evaluation e = new Evaluation();
+                    e.setIdCompany(cer.getIdCompany());
+                    e.setIdParticipant(cer.getIdParticipant());
+                    e.setIdProdi(cer.getIdProdi());
+                    e.setPosition(cer.getPosition());
+                    e.setNumEvaluation(1);
+                    evaluationRepository.save(e);
+                }
 
-                e = new Evaluation();
-                e.setIdCompany(cer.getIdCompany());
-                e.setIdParticipant(cer.getIdParticipant());
-                e.setIdProdi(cer.getIdProdi());
-                e.setNumEvaluation(2);
-                evaluationRepository.save(e);
+                if (!evaluationRepository.existsByIdParticipantAndNumEvaluation(cer.getIdParticipant(), 2)) {
+                    Evaluation e = new Evaluation();
+                    e.setIdCompany(cer.getIdCompany());
+                    e.setIdParticipant(cer.getIdParticipant());
+                    e.setIdProdi(cer.getIdProdi());
+                    e.setPosition(cer.getPosition());
+                    e.setNumEvaluation(2);
+                    evaluationRepository.save(e);
+                }
 
-                e = new Evaluation();
-                e.setIdCompany(cer.getIdCompany());
-                e.setIdParticipant(cer.getIdParticipant());
-                e.setIdProdi(cer.getIdProdi());
-                e.setNumEvaluation(3);
-                evaluationRepository.save(e);
+                if (!evaluationRepository.existsByIdParticipantAndNumEvaluation(cer.getIdParticipant(), 3)) {
+                    Evaluation e = new Evaluation();
+                    e.setIdCompany(cer.getIdCompany());
+                    e.setIdParticipant(cer.getIdParticipant());
+                    e.setIdProdi(cer.getIdProdi());
+                    e.setPosition(cer.getPosition());
+                    e.setNumEvaluation(3);
+                    evaluationRepository.save(e);
+                }
             }
         }
     }
@@ -1933,7 +1999,7 @@ public class CompanyService implements ICompanyService {
         AtomicReference<Boolean> isSuccess = new AtomicReference<>(false);
 
         companyRepository.findById(idCompany).ifPresent(c -> {
-            if (!c.getStatus() == Boolean.TRUE.equals(Boolean.TRUE)) {
+            if (Boolean.FALSE.equals(c.getStatus())) {
                 Prerequisite prerequisite = prerequisiteRepository.findByCompanyIdAndYear(idCompany, currentYear);
                 if (prerequisite == null) {
                     Prerequisite pr = new Prerequisite();
@@ -1943,7 +2009,7 @@ public class CompanyService implements ICompanyService {
                     prerequisiteRepository.save(pr);
                 }
                 isSuccess.set(true);
-            } else if (!c.getStatus() == Boolean.TRUE.equals(Boolean.FALSE)) {
+            } else if (Boolean.TRUE.equals(c.getStatus())) {
                 ResponseEntity<Response<FormSubmitTimeResponse>> deleteCompany =
                         restTemplate.exchange(
                                 "http://mapping-service/mapping/final/delete-company/" + idCompany,
