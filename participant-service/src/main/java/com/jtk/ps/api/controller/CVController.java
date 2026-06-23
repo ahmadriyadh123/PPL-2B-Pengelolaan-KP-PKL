@@ -128,6 +128,7 @@ public class CVController {
         }
     }
     
+    @PreAuthorize("hasAuthority('PARTICIPANT')")
     @DeleteMapping(value = "/delete-competence/{id}")
     public ResponseEntity<Object> deleteCVCompetence(@PathVariable("id") Integer id) {
         try {
@@ -140,6 +141,7 @@ public class CVController {
         }
     }
     
+    @PreAuthorize("hasAuthority('PARTICIPANT')")
     @DeleteMapping(value = "/delete-jobscope/{id}")
     public ResponseEntity<Object> deleteCVJobscope(@PathVariable("id") Integer id) {
         try {
@@ -169,6 +171,8 @@ public class CVController {
     @GetMapping(value = "/{id_cv}/export", produces = MediaType.APPLICATION_PDF_VALUE)
     public void exportCV(HttpServletRequest request, HttpServletResponse response, @PathVariable("id_cv") Integer idCv) throws IOException {
         String cookie = request.getHeader(Constant.PayloadResponseConstant.COOKIE);
+        response.setHeader("Content-Disposition", "attachment; filename=\"CV_Mahasiswa_" + idCv + ".pdf\"");
+        response.setContentType(MediaType.APPLICATION_PDF_VALUE);
         participantService.exportCV(cookie, idCv, response);
     }
 }
