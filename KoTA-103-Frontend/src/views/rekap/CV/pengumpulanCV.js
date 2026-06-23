@@ -33,32 +33,47 @@ const PengumpulanCV = () => {
   const detailCV = () => {
     history.push(`/CV/detailCV/${data.id_cv}`);
   }
-  const exportPDF = async (index) => {
-    enterLoading(index)
-    axios.defaults.withCredentials = true;
-    await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}participant/cv/${data.id_cv}/export`, {
-      responseType: 'blob',
-    })
-      .then((response) => {
-        // notification.success({
-        //   message: 'Ekspor CV berhasil',
-        // });
-        FileDownload(response.data, `Data CV ${localStorage.getItem('name')}`);
-        setLoadings(prevLoadings => {
-          const newLoadings = [...prevLoadings];
-          newLoadings[index] = false;
-          return newLoadings;
-        });
-      }).catch((error) => {
-        // notification.error({
-        //   message: 'Ekspor CV gagal'
-        // });
-        setLoadings(prevLoadings => {
-          const newLoadings = [...prevLoadings];
-          newLoadings[index] = false;
-          return newLoadings;
-        });
-      });
+  const exportPDF = async (item, index) => {
+      enterLoading(index);
+      axios.defaults.withCredentials = true;
+      
+      try {
+          // We add the filename logic here, bypassing the faulty library
+          const response = await axios.get(
+              `${process.env.REACT_APP_API_GATEWAY_URL}participant/cv/${item.id_cv || item}/export`, 
+              {
+                  responseType: 'blob', // IMPORTANT: Keep this as blob
+              }
+          );
+
+          // Create a proper Blob with the correct type
+          const file = new Blob([response.data], { type: 'application/pdf' });
+          const fileURL = window.URL.createObjectURL(file);
+
+          // Force download with the correct extension
+          const tempLink = document.createElement('a');
+          tempLink.href = fileURL;
+          
+          // This naming logic ensures it has a .pdf extension
+          const fileName = item.name ? `Data CV ${item.name}.pdf` : `CV_${item}.pdf`;
+          tempLink.setAttribute('download', fileName);
+          
+          document.body.appendChild(tempLink);
+          tempLink.click();
+
+          // Cleanup
+          tempLink.remove();
+          window.URL.revokeObjectURL(fileURL);
+
+      } catch (error) {
+          console.error("Ekspor CV gagal:", error);
+      } finally {
+          setLoadings(prevLoadings => {
+              const newLoadings = [...prevLoadings];
+              newLoadings[index] = false;
+              return newLoadings;
+          });
+      }
   }
 
   const refreshData = (index) => {
