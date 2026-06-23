@@ -18,3 +18,9 @@ eureka:
   #   prefer-ip-address: true
   #   # Necessary for Docker otherwise you will get 172.0.0.x IP
   #   ip-address: 192.168.229.144
+app:
+  api:
+    url:
+      account-service: http://account-service
+      company-service: http://company-service
+      participant-service: http://participant-service
