@@ -1,13 +1,11 @@
 package com.jtk.ps.api.security;
 
 import com.jtk.ps.api.dto.RefreshResponse;
-import com.jtk.ps.api.dto.VerifyResponse;
 import com.jtk.ps.api.model.Account;
 import com.jtk.ps.api.service.AccountService;
-import com.jtk.ps.api.util.Constant;
-import com.jtk.ps.api.util.CookieUtil;
 import com.jtk.ps.api.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -26,10 +24,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.HttpCookie;
-import java.util.List;
 import java.util.Map;
 
 
+@Slf4j
 @Component
 public class CustomJwtAuthenticationFilter extends OncePerRequestFilter {
     @Value("${jwt.accessTokenCookieName}")
@@ -47,51 +45,46 @@ public class CustomJwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtils;
 
-    @Autowired
-    private CookieUtil cookieUtil;
-
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // JWT Token is in the form "Bearer token". Remove Bearer word and
-        // get  only the Token
-        boolean isAuthPath = 
-            "/login".equals(request.getServletPath()) || "/verify".equals(request.getServletPath()) ||
-            "/account/login".equals(request.getServletPath()) || "/account/verify".equals(request.getServletPath());
+        String jwtToken = getJwtToken(request, true);
 
-        if (!isAuthPath) {
-            String jwtToken = getJwtToken(request, true);
-            try {
-                boolean isValid = StringUtils.hasText(jwtToken) && jwtTokenUtil.validateToken(jwtToken);
-                if (isValid) {
-                    String username = jwtUtils.getUsernameFromToken(jwtToken);
+        if (!StringUtils.hasText(jwtToken)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        try {
+            if (jwtTokenUtil.validateToken(jwtToken)) {
+                jwtUtils.getUsernameFromToken(jwtToken).ifPresent(username -> {
                     UserDetails userDetails = accountService.loadUserByUsername(username);
 
-                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-                    usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    // After setting the Authentication in the context, we specify
-                    // that the current user is authenticated. So it passes the
-                    // Spring Security Configurations successfully.
-                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-                }
-
-            } catch (ExpiredJwtException  ex) {
-                try {
-                    String refreshToken = getRefreshToken(request);
-                    boolean isValid = StringUtils.hasText(refreshToken) && jwtTokenUtil.validateToken(refreshToken);
-                    if (isValid) {
-                        allowForRefreshToken(ex, request, response);
-                    }else request.setAttribute("exception", ex);
-                }catch (Exception e) {
-                    request.setAttribute("exception", e);
-                }
-            }catch (BadCredentialsException ex) {
-                request.setAttribute("exception", ex);
-            } catch (Exception ex) {
-                System.out.println(ex);
+                    UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                });
             }
+        } catch (ExpiredJwtException ex) {
+            try {
+                String refreshToken = getRefreshToken(request);
+                if (StringUtils.hasText(refreshToken) && jwtTokenUtil.validateToken(refreshToken)) {
+                    allowForRefreshToken(ex, request, response);
+                } else {
+                    request.setAttribute("exception", ex);
+                }
+            } catch (Exception e) {
+                request.setAttribute("exception", e);
+            }
+        } catch (BadCredentialsException ex) {
+            request.setAttribute("exception", ex);
+        } catch (Exception ex) {
+            log.warn("Token validation failed: {}", ex.getMessage());
+            request.setAttribute("exception", ex);
         }
+
         filterChain.doFilter(request, response);
     }
 

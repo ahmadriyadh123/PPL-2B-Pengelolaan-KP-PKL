@@ -58,7 +58,7 @@ public class LogbookControllerTest extends IntegrationTest{
         accessToken = getAccessToken(Constant.Role.PARTICIPANT);
         headers.add("COOKIE", accessToken);
         String body = "{\"date\": \"2023-06-29\"}";
-        headers.setContentType(MediaType.APPLICATION_JSON,);
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
         ResponseEntity<ResponseList<DeadlineResponse>> responseEntity = restTemplate.exchange(
                 createURLWithPort("/monitoring/deadline/get-all/laporan"),

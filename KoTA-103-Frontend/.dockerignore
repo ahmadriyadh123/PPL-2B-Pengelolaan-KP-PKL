@@ -1,10 +1,28 @@
-node_modules
-build
-.git
-.gitignore
-.vscode
-.idea
-coverage
+# Dependency lokal
+node_modules/
 npm-debug.log
-Dockerfile*
-docker-compose*
+yarn-error.log
+
+# Hasil build lokal
+build/
+dist/
+
+# Git & OS files
+.git/
+.gitignore
+.DS_Store
+Thumbs.db
+
+# Konfigurasi IDE
+.idea/
+.vscode/
+
+# Environment Variables
+.env
+.env.*
+.env.local
+
+# Docker files
+Dockerfile
+Dockerfile.dev
+docker-compose.yml

@@ -41,7 +41,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private RestTemplate restTemplates;
 
-
+    @Value("${app.api.url.account-service}")
+    private String accountServiceUrl;
+    
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
@@ -52,7 +54,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             HttpHeaders headers = new HttpHeaders();
             headers.add("Cookie", accessTokenCookieName + " = " + getJwtAccessTokenFromCookie(request)+"; "+refreshTokenCookieName+" = "+getJwtRefreshTokenFromCookie(request));
             HttpEntity<String> req = new HttpEntity<>(headers);
-            ResponseEntity<VerifyResponse> verifyResponse = restTemplates.exchange("http://account-service/account/verify", HttpMethod.POST, req, VerifyResponse.class);
+            ResponseEntity<VerifyResponse> verifyResponse = restTemplates.exchange(accountServiceUrl + "/account/verify", HttpMethod.POST, req, VerifyResponse.class);
             HttpStatus statusCode = verifyResponse.getStatusCode();
 
             if(statusCode.is3xxRedirection()){

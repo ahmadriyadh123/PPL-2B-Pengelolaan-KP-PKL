@@ -1,12 +1,24 @@
 package com.jtk.ps.api.security;
 
 
-import com.jtk.ps.api.dto.PayloadJwt;
-import com.jtk.ps.api.dto.VerifyResponse;
-import com.jtk.ps.api.util.Constant;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Objects;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,15 +32,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
+import com.jtk.ps.api.dto.PayloadJwt;
+import com.jtk.ps.api.dto.VerifyResponse;
+import com.jtk.ps.api.util.Constant;
 
 @Component
 public class AuthenticationFilter extends OncePerRequestFilter {
@@ -41,6 +47,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     private RestTemplate restTemplates;
+
+    @Value("${app.api.url.account-service}")
+    private String accountServiceUrl;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -61,7 +70,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 HttpHeaders headers = new HttpHeaders();
                 headers.add("Cookie", accessTokenCookieName + " = " + getJwtAccessTokenFromCookie(request) + ";" + refreshTokenCookieName + " = " + getJwtRefreshTokenFromCookie(request));
                 HttpEntity<String> req = new HttpEntity<>(headers);
-                verifyResponse = restTemplates.exchange("http://account-service/account/verify", HttpMethod.POST, req, VerifyResponse.class);
+                verifyResponse = restTemplates.exchange(accountServiceUrl + "/account/verify", HttpMethod.POST, req, VerifyResponse.class);
                 statusCode = verifyResponse.getStatusCode();
             }
 

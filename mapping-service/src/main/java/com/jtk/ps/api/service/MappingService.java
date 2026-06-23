@@ -1,50 +1,80 @@
 package com.jtk.ps.api.service;
 
-import com.jtk.ps.api.dto.*;
-import com.jtk.ps.api.dto.ranking.*;
-import com.jtk.ps.api.dto.ResponseList;
-import com.jtk.ps.api.dto.FinalParticipantCompany;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import com.jtk.ps.api.dto.AbsenceResponse;
+import com.jtk.ps.api.dto.CompanyReqSheetResponse;
+import com.jtk.ps.api.dto.CompanyResponse;
+import com.jtk.ps.api.dto.CompetenceResponse;
+import com.jtk.ps.api.dto.CourseResponse;
 import com.jtk.ps.api.dto.FinalMappingRequest;
 import com.jtk.ps.api.dto.FinalMappingResponse;
+import com.jtk.ps.api.dto.FinalParticipantCompany;
+import com.jtk.ps.api.dto.JobscopeGetAll;
+import com.jtk.ps.api.dto.ParticipantByCompany;
 import com.jtk.ps.api.dto.ParticipantFinalMappingResponse;
+import com.jtk.ps.api.dto.ParticipantIdName;
 import com.jtk.ps.api.dto.ParticipantResponse;
+import com.jtk.ps.api.dto.ParticipantValueList;
 import com.jtk.ps.api.dto.QuotaResponse;
-import com.jtk.ps.api.model.CriteriaMapping;
-import com.jtk.ps.api.model.FinalMapping;
-import com.jtk.ps.api.model.ParticipantRanking;
+import com.jtk.ps.api.dto.Response;
+import com.jtk.ps.api.dto.ResponseList;
+import com.jtk.ps.api.dto.ranking.CalculationSAW;
+import com.jtk.ps.api.dto.ranking.CompanyReqResponse;
+import com.jtk.ps.api.dto.ranking.CompanySelection;
+import com.jtk.ps.api.dto.ranking.CompetenceCompany;
+import com.jtk.ps.api.dto.ranking.CriteriaMappingValue;
+import com.jtk.ps.api.dto.ranking.JobscopeResponse;
+import com.jtk.ps.api.dto.ranking.ParticipantReqResponse;
+import com.jtk.ps.api.dto.ranking.ParticipantValue;
+import com.jtk.ps.api.dto.ranking.RankingAndDateResponse;
+import com.jtk.ps.api.dto.ranking.RankingResponse;
 import com.jtk.ps.api.model.Company;
-import com.jtk.ps.api.model.ERole;
+import com.jtk.ps.api.model.CriteriaMapping;
 import com.jtk.ps.api.model.EProdi;
+import com.jtk.ps.api.model.ERole;
+import com.jtk.ps.api.model.FinalMapping;
 import com.jtk.ps.api.model.Participant;
-import com.jtk.ps.api.model.Utility;
+import com.jtk.ps.api.model.ParticipantRanking;
 import com.jtk.ps.api.model.UtilityDate;
 import com.jtk.ps.api.repository.CriteriaMappingRepository;
 import com.jtk.ps.api.repository.FinalMappingRepository;
 import com.jtk.ps.api.repository.ParticipantRankingRepository;
-import com.jtk.ps.api.repository.UtilityRepository;
 import com.jtk.ps.api.repository.UtilityDateRepository;
+import com.jtk.ps.api.repository.UtilityRepository;
 import com.jtk.ps.api.util.Constant;
 import com.jtk.ps.api.util.MappingExcel;
 import com.jtk.ps.api.util.SAWUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
-import javax.servlet.http.HttpServletResponse;
-import org.springframework.scheduling.annotation.Scheduled;
 
 @Service
 public class MappingService implements IMappingService {
@@ -66,6 +96,15 @@ public class MappingService implements IMappingService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Value("${app.api.url.management-content-service}")
+    private String managementContentServiceUrl;
+
+    @Value("${app.api.url.company-service}")
+    private String companyServiceUrl;
+
+    @Value("${app.api.url.participant-service}")
+    private String participantServiceUrl;
 
     @Autowired
     private WebClient.Builder webClient;
@@ -116,7 +155,7 @@ public class MappingService implements IMappingService {
         HttpEntity<String> req = new HttpEntity<>(headers);
 
         ResponseEntity<ResponseList<ParticipantResponse>> pResponse = restTemplate.exchange(
-                "http://participant-service/participant/get-all?year=" + currentYear,
+                participantServiceUrl + "/participant/get-all?year=" + currentYear,
                 HttpMethod.GET,
                 req,
                 new ParameterizedTypeReference<>() {
@@ -125,7 +164,7 @@ public class MappingService implements IMappingService {
         List<ParticipantResponse> participantList = Objects.requireNonNull(pResponse.getBody()).getData();
 
         ResponseEntity<ResponseList<QuotaResponse>> qResponse = restTemplate.exchange(
-                "http://company-service/company/prerequisite/quota/",
+                companyServiceUrl + "/company/prerequisite/quota/",
                 HttpMethod.GET,
                 req,
                 new ParameterizedTypeReference<>() {
@@ -226,7 +265,7 @@ public class MappingService implements IMappingService {
 
         // Get all requirement Company
         Mono<ResponseList<CompanyReqResponse>> companyReq = webClient.build().get()
-                .uri("http://company-service/company/req-company")
+                .uri(companyServiceUrl + "/company/req-company")
                 .header(Constant.PayloadResponseConstant.COOKIE, cookie)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<>() {
@@ -234,7 +273,7 @@ public class MappingService implements IMappingService {
 
         // Get all cv and interest Participant
         Mono<ResponseList<ParticipantReqResponse>> participantResponse = webClient.build().get()
-                .uri("http://participant-service/participant/cv-interest-participant")
+                .uri(participantServiceUrl + "/participant/cv-interest-participant")
                 .header(Constant.PayloadResponseConstant.COOKIE, cookie)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<>() {
@@ -242,7 +281,7 @@ public class MappingService implements IMappingService {
 
         // Get all company selection
         Mono<ResponseList<CompanySelection>> companySelection = webClient.build().get()
-                .uri("http://participant-service/participant/company-selection/mapping")
+                .uri(participantServiceUrl + "/participant/company-selection/mapping")
                 .header(Constant.PayloadResponseConstant.COOKIE, cookie)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<>() {
@@ -705,13 +744,13 @@ public class MappingService implements IMappingService {
         HttpEntity<String> req = new HttpEntity<>(headers);
 
         ResponseEntity<ResponseList<CompanyResponse>> companyReq = restTemplate.exchange(
-                "http://company-service/company/get-all",
+                companyServiceUrl + "/company/get-all",
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                 });
 
         List<CompanyResponse> companyResponses = Objects.requireNonNull(companyReq.getBody()).getData();
         ResponseEntity<ResponseList<ParticipantResponse>> pResponse = restTemplate.exchange(
-                "http://participant-service/participant/get-all?year=" + currentYear,
+                participantServiceUrl + "/participant/get-all?year=" + currentYear,
                 HttpMethod.GET,
                 req,
                 new ParameterizedTypeReference<>() {
@@ -720,7 +759,7 @@ public class MappingService implements IMappingService {
         List<ParticipantResponse> participantResponses = Objects.requireNonNull(pResponse.getBody()).getData();
 
         ResponseEntity<ResponseList<QuotaResponse>> qResponse = restTemplate.exchange(
-                "http://company-service/company/prerequisite/quota/",
+                companyServiceUrl + "/company/prerequisite/quota/",
                 HttpMethod.GET,
                 req,
                 new ParameterizedTypeReference<>() {
@@ -788,14 +827,14 @@ public class MappingService implements IMappingService {
 
         // Get all requirement Company
         ResponseEntity<ResponseList<CompanyReqResponse>> companyReq = restTemplate.exchange(
-                "http://company-service/company/req-company",
+                companyServiceUrl + "/company/req-company",
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                 });
         List<CompanyReqResponse> listCompany = Objects.requireNonNull(companyReq.getBody()).getData();
 
         // Get all Participant Course Value
         ResponseEntity<ResponseList<ParticipantValueList>> participantCourseValue = restTemplate.exchange(
-                "http://participant-service/participant/participant-value",
+                participantServiceUrl + "/participant/participant-value",
                 HttpMethod.GET,
                 req,
                 new ParameterizedTypeReference<>() {
@@ -806,7 +845,7 @@ public class MappingService implements IMappingService {
 
         // Get all Absence
         ResponseEntity<ResponseList<AbsenceResponse>> absenceResponse = restTemplate.exchange(
-                "http://participant-service/participant/all-absence",
+                participantServiceUrl + "/participant/all-absence",
                 HttpMethod.GET,
                 req,
                 new ParameterizedTypeReference<>() {
@@ -816,19 +855,19 @@ public class MappingService implements IMappingService {
 
         // Get all course
         ResponseEntity<ResponseList<CourseResponse>> courseResponse = restTemplate.exchange(
-                "http://participant-service/participant/course",
+                participantServiceUrl + "/participant/course",
                 HttpMethod.GET,
                 req,
                 new ParameterizedTypeReference<>() {
                 });
 
         ResponseEntity<ResponseList<JobscopeGetAll>> jobsScopeList = restTemplate.exchange(
-                "http://management-content-service/management-content/jobscope/get-all/" + idProdi,
+                managementContentServiceUrl + "/management-content/jobscope/get-all/" + idProdi,
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                 });
 
         ResponseEntity<ResponseList<CompetenceResponse>> competenceList = restTemplate.exchange(
-                "http://management-content-service/management-content/competence/get-all/" + idProdi,
+                managementContentServiceUrl + "/management-content/competence/get-all/" + idProdi,
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                 });
 
@@ -853,7 +892,7 @@ public class MappingService implements IMappingService {
 
             try {
                 ResponseEntity<Response<String>> region = restTemplate
-                        .exchange("http://management-content-service/management-content/domicile/" +
+                        .exchange(managementContentServiceUrl + "/management-content/domicile/" +
                                 c.getIdDomicile(), HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                                 });
                 if (region.getStatusCode().is2xxSuccessful()) {
@@ -924,7 +963,7 @@ public class MappingService implements IMappingService {
                 HttpEntity<String> req = new HttpEntity<>(jsonArray.toString(), headers);
 
                 ResponseEntity<ResponseList<ParticipantResponse>> pResponse = restTemplate.exchange(
-                        "http://company-service/company/evaluation/create",
+                        companyServiceUrl + "/company/evaluation/create",
                         HttpMethod.POST,
                         req,
                         new ParameterizedTypeReference<ResponseList<ParticipantResponse>>() {
@@ -946,7 +985,7 @@ public class MappingService implements IMappingService {
                 HttpEntity<String> req = new HttpEntity<>(headers);
 
                 ResponseEntity<ParticipantResponse> response = restTemplate.exchange(
-                        "http://company-service/company/evaluation/delete-all",
+                        companyServiceUrl + "/company/evaluation/delete-all",
                         HttpMethod.DELETE,
                         req,
                         ParticipantResponse.class);
@@ -1007,7 +1046,7 @@ public class MappingService implements IMappingService {
             HttpEntity<String> req = new HttpEntity<>(jsonArray.toString(), headers);
 
             ResponseEntity<ResponseList<ParticipantResponse>> pResponse = restTemplate.exchange(
-                    "http://company-service/company/feedback/create",
+                    companyServiceUrl + "/company/feedback/create",
                     HttpMethod.POST,
                     req,
                     new ParameterizedTypeReference<ResponseList<ParticipantResponse>>() {
@@ -1069,7 +1108,7 @@ public class MappingService implements IMappingService {
         HttpEntity<String> req = new HttpEntity<>(headers);
 
         ResponseEntity<ResponseList<ParticipantIdName>> pResponse = restTemplate.exchange(
-                "http://participant-service/participant/get-all?type=dropdown&year=" + currentYear,
+                participantServiceUrl + "/participant/get-all?type=dropdown&year=" + currentYear,
                 HttpMethod.GET,
                 req,
                 new ParameterizedTypeReference<>() {

@@ -1,22 +1,48 @@
 package com.jtk.ps.api.service;
 
-import com.jtk.ps.api.dto.*;
-import com.jtk.ps.api.model.*;
-import com.jtk.ps.api.repository.*;
-import com.jtk.ps.api.util.Constant;
 import java.util.ArrayList;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import com.jtk.ps.api.dto.AssessmentAspectD4Response;
+import com.jtk.ps.api.dto.AssessmentAspectRequest;
+import com.jtk.ps.api.dto.CompetenceRequest;
+import com.jtk.ps.api.dto.CompetenceResponse;
+import com.jtk.ps.api.dto.FeedbackQuestionRequest;
+import com.jtk.ps.api.dto.FormSubmitUpdateRequest;
+import com.jtk.ps.api.dto.JobscopeRequest;
+import com.jtk.ps.api.dto.TimelineAllProdiResponse;
+import com.jtk.ps.api.dto.TimelineRequest;
+import com.jtk.ps.api.model.AssessmentAspect;
+import com.jtk.ps.api.model.Competence;
+import com.jtk.ps.api.model.CompetenceType;
+import com.jtk.ps.api.model.EProdi;
+import com.jtk.ps.api.model.FeedbackQuestion;
+import com.jtk.ps.api.model.FormSetting;
+import com.jtk.ps.api.model.Jobscope;
+import com.jtk.ps.api.model.Region;
+import com.jtk.ps.api.model.TimelineSetting;
+import com.jtk.ps.api.repository.AssessmentAspectRepository;
+import com.jtk.ps.api.repository.CompetenceRepository;
+import com.jtk.ps.api.repository.CompetenceTypeRepository;
+import com.jtk.ps.api.repository.EvaluationFormRepository;
+import com.jtk.ps.api.repository.FeedbackQuestionRepository;
+import com.jtk.ps.api.repository.FormSettingRepository;
+import com.jtk.ps.api.repository.JobscopeRepository;
+import com.jtk.ps.api.repository.RegionRepository;
+import com.jtk.ps.api.repository.TimelineSettingRepository;
+import com.jtk.ps.api.util.Constant;
 
 @Service
 public class ManagementContentService implements IManagementContentService {
@@ -60,6 +86,11 @@ public class ManagementContentService implements IManagementContentService {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Value("${app.api.url.company-service}")
+    private String companyServiceUrl;
+
+    @Value("${app.api.url.participant-service}")
+    private String participantServiceUrl;
 
     @Override
     public TimelineSetting createTimeline(TimelineRequest timelineRequest, Integer prodi) {
@@ -229,7 +260,7 @@ public class ManagementContentService implements IManagementContentService {
         HttpEntity<String> req = new HttpEntity<>(headers);
 
         ResponseEntity<CompetenceResponse> response = restTemplate.exchange(
-                "http://participant-service/participant/cv/delete-competence/"+ id,
+                participantServiceUrl + "/participant/cv/delete-competence/"+ id,
                 HttpMethod.DELETE,
                 req,
                 CompetenceResponse.class);
@@ -240,7 +271,7 @@ public class ManagementContentService implements IManagementContentService {
         
         // Delete Prerequisite Competence (Company)
         response = restTemplate.exchange(
-                "http://company-service/company/prerequisite/delete-competence/"+ id,
+                companyServiceUrl + "/company/prerequisite/delete-competence/"+ id,
                 HttpMethod.DELETE,
                 req,
                 CompetenceResponse.class);
@@ -288,7 +319,7 @@ public class ManagementContentService implements IManagementContentService {
         HttpEntity<String> req = new HttpEntity<>(headers);
 
         ResponseEntity<CompetenceResponse> response = restTemplate.exchange(
-                "http://participant-service/participant/cv/delete-jobscope/"+ id,
+                participantServiceUrl + "/participant/cv/delete-jobscope/"+ id,
                 HttpMethod.DELETE,
                 req,
                 CompetenceResponse.class);
@@ -299,7 +330,7 @@ public class ManagementContentService implements IManagementContentService {
         
         // Delete Prerequisite Jobscope (Company)
         response = restTemplate.exchange(
-                "http://company-service/company/prerequisite/delete-jobscope/"+ id,
+                companyServiceUrl + "/company/prerequisite/delete-jobscope/"+ id,
                 HttpMethod.DELETE,
                 req,
                 CompetenceResponse.class);
