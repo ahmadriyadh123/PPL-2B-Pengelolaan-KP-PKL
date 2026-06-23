@@ -70,11 +70,13 @@ services:
   account-service:
     build: ./account-service
     container_name: kpms-account-service
+    # File .env wajib ada (copy dari .env.example, lalu isi JWT_SECRET acak).
+    # Kalau JWT_SECRET kosong/lemah, JwtUtil akan gagal start dengan pesan jelas.
+    env_file:
+      - ./account-service/.env
     environment:
       <<: *common-env
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-account?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       JAVA_OPTS: >
         -XX:+UseContainerSupport
