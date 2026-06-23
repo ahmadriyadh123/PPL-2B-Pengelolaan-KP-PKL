@@ -126,8 +126,9 @@ public class CompanyController {
     @PreAuthorize("hasAuthority('COMMITTEE')")
     public ResponseEntity<Object> createCompany(@RequestBody CompanyRequest company, HttpServletRequest request) {
         try {
-            companyService.createCompany(company, request.getHeader(Constant.PayloadResponseConstant.COOKIE));
-            return ResponseHandler.generateResponse("Create company succeed", HttpStatus.OK);
+            CreateCompanyResponse result = companyService.createCompanyWithCredentials(
+                    company, request.getHeader(Constant.PayloadResponseConstant.COOKIE));
+            return ResponseHandler.generateResponse("Create company succeed", HttpStatus.OK, result);
         } catch (HttpClientErrorException ex){
             return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {

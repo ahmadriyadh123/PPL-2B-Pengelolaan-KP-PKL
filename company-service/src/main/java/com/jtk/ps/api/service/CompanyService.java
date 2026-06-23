@@ -226,6 +226,26 @@ public class CompanyService implements ICompanyService {
 
     @Override
     public Company createCompany(CompanyRequest company, String cookie) {
+        return createCompanyInternal(company, cookie).company;
+    }
+
+    @Override
+    public CreateCompanyResponse createCompanyWithCredentials(CompanyRequest company, String cookie) {
+        CompanyCreationResult result = createCompanyInternal(company, cookie);
+        return new CreateCompanyResponse(
+                result.company.getId(),
+                result.company.getCompanyEmail(),
+                result.company.getCompanyEmail(),
+                result.password);
+    }
+
+    /**
+     * Logika inti pembuatan company. Mengembalikan entity Company yang
+     * tersimpan beserta password awal yang digenerate, agar pemanggil dapat
+     * memilih: hanya butuh entity (createCompany) atau butuh kredensial juga
+     * (createCompanyWithCredentials).
+     */
+    private CompanyCreationResult createCompanyInternal(CompanyRequest company, String cookie) {
         Company newCompany = new Company();
 
         newCompany.setCompanyEmail(company.getCompanyEmail());
@@ -249,8 +269,9 @@ public class CompanyService implements ICompanyService {
         headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
 
         JSONObject jsonObject = new JSONObject();
+        String generatedPassword = generateRandomPassword();
         jsonObject.put("username", company.getCompanyEmail());
-        jsonObject.put("password", "1234");
+        jsonObject.put("password", generatedPassword);
         jsonObject.put("id_role", 2);
 
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
@@ -270,8 +291,30 @@ public class CompanyService implements ICompanyService {
         prerequisite.setCompany(newCompany);
         prerequisiteRepository.save(prerequisite);
 
+        return new CompanyCreationResult(newCompany, generatedPassword);
+    }
 
-        return newCompany;
+    /**
+     * Holder sederhana untuk membawa entity Company dan password awal
+     * dari logika internal ke method publik.
+     */
+    private static class CompanyCreationResult {
+        private final Company company;
+        private final String password;
+
+        CompanyCreationResult(Company company, String password) {
+            this.company = company;
+            this.password = password;
+        }
+    }
+
+    /**
+     * Generate password acak yang unik untuk setiap akun company baru.
+     * Menggunakan UUID agar setiap company tidak berbagi password yang sama.
+     * Karakter '-' dihapus dan diambil 12 karakter pertama agar lebih ringkas.
+     */
+    private String generateRandomPassword() {
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }
 
     @Override

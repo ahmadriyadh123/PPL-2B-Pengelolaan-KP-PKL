@@ -145,13 +145,14 @@ const DetailPengajuanPerusahaan = () => {
                 newLoadings[index] = false;
                 return newLoadings;
             });
+            const createdAccount = response.data.data;
             Modal.info({
                 title: `Data perusahaan dan akun perusahaan berhasil dibuat`,
                 content: (
                     <>
                         Berikut merupakan username dan password dari akun perusahaan yang telah dibuat<br />
-                        Username : {data.company_mail}<br />
-                        Password : 1234
+                        Username : {createdAccount.username}<br />
+                        Password : {createdAccount.password}
                     </>
                 ),
                 okText: "Ok",

@@ -20,6 +20,8 @@ public interface ICompanyService {
 
     Company createCompany(CompanyRequest company, String cookie);
 
+    CreateCompanyResponse createCompanyWithCredentials(CompanyRequest company, String cookie);
+
     void updateCompany(Integer idCompany, CompanyRequest company);
 
     PrerequisiteCard getCardPrerequisiteByCompany(Integer idCompany, String cookie);
@@ -64,7 +66,7 @@ public interface ICompanyService {
     
     void createCompanySubmission(SubmissionRequest submissionRequest);
     
-    void acceptCompanySubmission(Integer id, String cookie);
+    CreateCompanyResponse acceptCompanySubmission(Integer id, String cookie);
     
     void declineCompanySubmission(Integer id);
     
