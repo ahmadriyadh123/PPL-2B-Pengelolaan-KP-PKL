@@ -32,6 +32,7 @@ spring:
             - Path=/grade/**
       # Perbaikan Bug CORS di Spring Cloud Gateway (BUG-002) 
       globalcors:
+        add-to-simple-url-handler-mapping: true 
         corsConfigurations:
           '[/**]':
             allowedOrigins: 
@@ -44,7 +45,7 @@ spring:
               - "OPTIONS"
             allowedHeaders: "*"
             allowCredentials: true
-
+      
 server:
   port: 8080
 

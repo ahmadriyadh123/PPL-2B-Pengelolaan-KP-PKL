@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -28,8 +27,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -38,15 +35,31 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.AuthenticationManager;
+import com.jtk.ps.api.dto.AccountResponse;
+import com.jtk.ps.api.dto.CommitteeResponse;
+import com.jtk.ps.api.dto.CompanyResponse;
+import com.jtk.ps.api.dto.LoginRequest;
+import com.jtk.ps.api.dto.LoginResponse;
+import com.jtk.ps.api.dto.Participant;
+import com.jtk.ps.api.dto.ReadAccountsResponse;
+import com.jtk.ps.api.dto.RefreshResponse;
+import com.jtk.ps.api.dto.RegisterRequest;
+import com.jtk.ps.api.dto.ResponseList;
+import com.jtk.ps.api.dto.Token;
+import com.jtk.ps.api.dto.UpdateAccountRequest;
+import com.jtk.ps.api.dto.VerifyResponse;
+import com.jtk.ps.api.model.Account;
+import com.jtk.ps.api.model.CustomUserDetails;
+import com.jtk.ps.api.model.EProdi;
+import com.jtk.ps.api.model.ERole;
+import com.jtk.ps.api.model.Lecturer;
+import com.jtk.ps.api.repository.AccountRepository;
+import com.jtk.ps.api.repository.LecturerRepository;
+import com.jtk.ps.api.util.Constant;
+import com.jtk.ps.api.util.CookieUtil;
+import com.jtk.ps.api.util.JwtUtil;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import io.jsonwebtoken.ExpiredJwtException;
 
 @Service
 public class AccountService implements UserDetailsService, IAccountService {
