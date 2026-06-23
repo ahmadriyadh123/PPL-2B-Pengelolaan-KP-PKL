@@ -110,9 +110,16 @@ public class ParticipantService implements IParticipantService {
 
     @Override
     public List<Participant> getParticipantByYear(Integer year, Integer prodiId) {
-        if (year == null) {
-            return participantRepository.findAll();
+        // Always validate prodiId - never return unfiltered data
+        if (prodiId == null) {
+            throw new IllegalArgumentException("Prodi ID is required for filtering participant data");
         }
+
+        if (year == null) {
+            // Return only participants from the specified prodi, regardless of year
+            return participantRepository.findByProdiIdOnly(prodiId);
+        }
+        
         return participantRepository.findByYearAndProdiId(year, prodiId);
     }
 
@@ -241,89 +248,102 @@ public class ParticipantService implements IParticipantService {
 
     @Override
     public Boolean updateCV(Integer idCv, CVUpdateRequest cvUpdateRequest, Integer idParticipant) {
+        // Validate input parameters
+        if (idCv == null || idCv <= 0) {
+            throw new IllegalArgumentException("Invalid CV ID provided");
+        }
+        if (idParticipant == null || idParticipant <= 0) {
+            throw new IllegalArgumentException("Invalid participant ID provided");
+        }
+        if (cvUpdateRequest == null) {
+            throw new IllegalArgumentException("CV update request cannot be null");
+        }
+
         Optional<Participant> oParticipant = participantRepository.findById(idParticipant);
         AtomicBoolean isUpdate = new AtomicBoolean(false);
-        oParticipant.ifPresent(participant -> {
-            if (participant.getCv().getId() != idCv) {
-                return;
+        oParticipant.ifPresentOrElse(
+            participant -> {
+                if (participant.getCv().getId() != idCv) {
+                    throw new IllegalArgumentException("CV does not belong to this participant - Authorization violation");
+                }
+                Optional<CV> cv = cvRepository.findById(idCv);
+                cv.ifPresent(c -> {
+                    c.setAddress(cvUpdateRequest.getAddress());
+                    c.setBirthday(DateUtil.stringToDate(cvUpdateRequest.getBirthday()));
+                    c.setCitizenship(cvUpdateRequest.getCitizenship());
+                    c.setEmail(cvUpdateRequest.getEmail());
+                    c.setDomicileId(cvUpdateRequest.getDomicileId());
+                    c.setGender(cvUpdateRequest.getGender());
+                    c.setMarriage(cvUpdateRequest.getMarriage());
+                    c.setNickname(cvUpdateRequest.getNickname());
+                    c.setNoPhone(cvUpdateRequest.getNoPhone());
+                    c.setPlace(cvUpdateRequest.getPlace());
+                    c.setReligion(cvUpdateRequest.getReligion());
+
+                    educationRepository.deleteAllByCvId(idCv);
+                    List<Education> educations = cvUpdateRequest.getEducations();
+                    if (educations != null && !educations.isEmpty()) {
+                        educations.forEach(education -> education.setCv(c));
+                        educationRepository.saveAll(educations);
+                    }
+
+                    experienceRepository.deleteAllByCvId(idCv);
+                    List<Experience> experiences = cvUpdateRequest.getExperiences();
+                    if (experiences != null && !experiences.isEmpty()) {
+                        experiences.forEach(experience -> experience.setCv(c));
+                        experienceRepository.saveAll(experiences);
+                    }
+
+                    organizationRepository.deleteAllByCvId(idCv);
+                    List<Organization> organizations = cvUpdateRequest.getOrganizations();
+                    if (organizations != null && !organizations.isEmpty()) {
+                        organizations.forEach(organization -> organization.setCv(c));
+                        organizationRepository.saveAll(organizations);
+                    }
+
+                    cvCompetenceRepository.deleteAllByCvId(idCv);
+                    List<CVCompetence> cvCompetencies = cvUpdateRequest.getCompetencies();
+                    if (cvCompetencies != null && !cvCompetencies.isEmpty()) {
+                        cvCompetencies.forEach(cvCompetence -> cvCompetence.setCv(c));
+                        cvCompetenceRepository.saveAll(cvCompetencies);
+                    }
+
+                    cvJobScopeRepository.deleteAllByCvId(idCv);
+                    List<CVJobScope> cvJobScopes = cvUpdateRequest.getJobscopes();
+                    if (cvJobScopes != null && !cvJobScopes.isEmpty()) {
+                        cvJobScopes.forEach(cvJobScope -> cvJobScope.setCv(c));
+                        cvJobScopeRepository.saveAll(cvJobScopes);
+                    }
+
+                    skillRepository.deleteAllByCvId(idCv);
+                    List<Skill> skills = cvUpdateRequest.getSkills();
+                    if (skills != null && !skills.isEmpty()) {
+                        skills.forEach(skill -> skill.setCv(c));
+                        skillRepository.saveAll(skills);
+                    }
+
+                    seminarRepository.deleteAllByCvId(idCv);
+                    List<Seminar> seminars = cvUpdateRequest.getSeminars();
+                    if (seminars != null && !seminars.isEmpty()) {
+                        seminars.forEach(seminar -> seminar.setCv(c));
+                        seminarRepository.saveAll(seminars);
+                    }
+
+                    championshipRepository.deleteAllByCvId(idCv);
+                    List<Championship> championships = cvUpdateRequest.getChampionships();
+                    if (championships != null && !championships.isEmpty()) {
+                        championships.forEach(championship -> championship.setCv(c));
+                        championshipRepository.saveAll(championships);
+                    }
+
+                    cvRepository.save(c);
+                    isUpdate.set(true);
+                });
+            },
+            () -> {
+                throw new IllegalArgumentException("Participant not found with ID: " + idParticipant);
             }
-            Optional<CV> cv = cvRepository.findById(idCv);
-            cv.ifPresent(c -> {
-                c.setAddress(cvUpdateRequest.getAddress());
-                c.setBirthday(DateUtil.stringToDate(cvUpdateRequest.getBirthday()));
-                c.setCitizenship(cvUpdateRequest.getCitizenship());
-                c.setEmail(cvUpdateRequest.getEmail());
-                c.setDomicileId(cvUpdateRequest.getDomicileId());
-                c.setGender(cvUpdateRequest.getGender());
-                c.setMarriage(cvUpdateRequest.getMarriage());
-                c.setNickname(cvUpdateRequest.getNickname());
-                c.setNoPhone(cvUpdateRequest.getNoPhone());
-                c.setPlace(cvUpdateRequest.getPlace());
-                c.setReligion(cvUpdateRequest.getReligion());
-
-                educationRepository.deleteAllByCvId(idCv);
-
-                List<Education> educations = cvUpdateRequest.getEducations();
-                if (educations != null) {
-                    educations.forEach(education -> education.setCv(c));
-                    educationRepository.saveAll(educations);
-                }
-
-                experienceRepository.deleteAllByCvId(idCv);
-                List<Experience> experiences = cvUpdateRequest.getExperiences();
-                if (experiences != null) {
-                    experiences.forEach(experience -> experience.setCv(c));
-                    experienceRepository.saveAll(experiences);
-                }
-
-
-                organizationRepository.deleteAllByCvId(idCv);
-                List<Organization> organizations = cvUpdateRequest.getOrganizations();
-                if (organizations != null) {
-                    organizations.forEach(organization -> organization.setCv(c));
-                    organizationRepository.saveAll(organizations);
-                }
-
-
-                cvCompetenceRepository.deleteAllByCvId(idCv);
-                List<CVCompetence> cvCompetencies = cvUpdateRequest.getCompetencies();
-                if (cvCompetencies != null) {
-                    cvCompetencies.forEach(cvCompetence -> cvCompetence.setCv(c));
-                    cvCompetenceRepository.saveAll(cvCompetencies);
-                }
-
-                cvJobScopeRepository.deleteAllByCvId(idCv);
-                List<CVJobScope> cvJobScopes = cvUpdateRequest.getJobscopes();
-                if (cvJobScopes != null) {
-                    cvJobScopes.forEach(cvJobScope -> cvJobScope.setCv(c));
-                    cvJobScopeRepository.saveAll(cvJobScopes);
-                }
-
-                skillRepository.deleteAllByCvId(idCv);
-                List<Skill> skills = cvUpdateRequest.getSkills();
-                if (skills != null) {
-                    skills.forEach(skill -> skill.setCv(c));
-                    skillRepository.saveAll(skills);
-                }
-
-                seminarRepository.deleteAllByCvId(idCv);
-                List<Seminar> seminars = cvUpdateRequest.getSeminars();
-                if (seminars != null) {
-                    seminars.forEach(seminar -> seminar.setCv(c));
-                    seminarRepository.saveAll(seminars);
-                }
-
-                championshipRepository.deleteAllByCvId(idCv);
-                List<Championship> championships = cvUpdateRequest.getChampionships();
-                if (championships != null) {
-                    championships.forEach(championship -> championship.setCv(c));
-                    championshipRepository.saveAll(championships);
-                }
-
-                cvRepository.save(c);
-                isUpdate.set(true);
-            });
-        });
+        );
         return isUpdate.get();
     }
 

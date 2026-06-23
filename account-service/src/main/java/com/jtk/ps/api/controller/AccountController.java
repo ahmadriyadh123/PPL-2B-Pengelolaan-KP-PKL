@@ -124,6 +124,11 @@ public class AccountController {
             return ResponseHandler.generateResponse("New password is not the same as the confirmation of new password", HttpStatus.BAD_REQUEST);
         }
 
+        // Validasi: password baru tidak boleh sama dengan password lama
+        if (newPasswordRequest.getNewPassword().equals(newPasswordRequest.getOldPassword())) {
+            return ResponseHandler.generateResponse("Password baru tidak boleh sama dengan password lama.", HttpStatus.BAD_REQUEST);
+        }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         final Account account = service.findAccountByUsername(username);
@@ -153,6 +158,12 @@ public class AccountController {
         if (account == null) {
             return ResponseHandler.generateResponse("No account found with id " + committeePasswordRequest.getIdAccount(), HttpStatus.BAD_REQUEST);
         }
+
+        // Validasi: password baru tidak boleh sama dengan password lama (menggunakan BCrypt compare)
+        if (service.checkIfValidOldPassword(account, committeePasswordRequest.getNewPassword())) {
+            return ResponseHandler.generateResponse("Password baru tidak boleh sama dengan password lama.", HttpStatus.BAD_REQUEST);
+        }
+
         try {
             service.updatePassword(account, committeePasswordRequest.getNewPassword());
             return ResponseHandler.generateResponse("Password updated successfully", HttpStatus.OK);
