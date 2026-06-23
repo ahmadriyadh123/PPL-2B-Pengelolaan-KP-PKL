@@ -1,27 +1,20 @@
 package com.jtk.ps.api.service;
 
-import be.quodlibet.boxable.*;
-import be.quodlibet.boxable.line.LineStyle;
-import com.jtk.ps.api.dto.*;
-import com.jtk.ps.api.model.Company;
-import com.jtk.ps.api.model.Criteria;
-import com.jtk.ps.api.model.Prerequisite;
-import com.jtk.ps.api.model.PrerequisiteCompetence;
-import com.jtk.ps.api.model.PrerequisiteJobscope;
-import com.jtk.ps.api.model.Submission;
-import com.jtk.ps.api.model.SubmissionCriteria;
-import com.jtk.ps.api.model.Advantage;
-import com.jtk.ps.api.model.EProdi;
-import com.jtk.ps.api.model.Project;
-import com.jtk.ps.api.model.Proposer;
-import com.jtk.ps.api.model.Evaluation;
-import com.jtk.ps.api.model.FeedbackAnswer;
-import com.jtk.ps.api.model.Valuation;
-import com.jtk.ps.api.model.Feedback;
-import com.jtk.ps.api.repository.*;
-import com.jtk.ps.api.util.Constant;
-import com.jtk.ps.api.util.DateUtil;
-import com.jtk.ps.api.util.PDFUtil;
+import java.awt.Color;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -30,29 +23,106 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.awt.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
+import com.jtk.ps.api.dto.CompanyForCommittee;
+import com.jtk.ps.api.dto.CompanyIdName;
+import com.jtk.ps.api.dto.CompanyIdNameStatus;
+import com.jtk.ps.api.dto.CompanyName;
+import com.jtk.ps.api.dto.CompanyRequest;
+import com.jtk.ps.api.dto.CompanyRequirement;
+import com.jtk.ps.api.dto.CompanyResponse;
+import com.jtk.ps.api.dto.CompetenceAndType;
+import com.jtk.ps.api.dto.CompetenceResponse;
+import com.jtk.ps.api.dto.CreateAccountResponse;
+import com.jtk.ps.api.dto.CreateEvaluationRequest;
+import com.jtk.ps.api.dto.CreateFeedbackRequest;
+import com.jtk.ps.api.dto.CriteriaRequest;
+import com.jtk.ps.api.dto.DetailSubmissionResponse;
+import com.jtk.ps.api.dto.EvaluationCard;
+import com.jtk.ps.api.dto.EvaluationCardResponse;
+import com.jtk.ps.api.dto.EvaluationDetailResponse;
+import com.jtk.ps.api.dto.EvaluationFormResponse;
+import com.jtk.ps.api.dto.EvaluationTableResponse;
+import com.jtk.ps.api.dto.FeedbackCardResponse;
+import com.jtk.ps.api.dto.FeedbackTableResponse;
+import com.jtk.ps.api.dto.FormSubmitTimeResponse;
+import com.jtk.ps.api.dto.JobscopeResponse;
+import com.jtk.ps.api.dto.ListCompany;
+import com.jtk.ps.api.dto.ParticipantFinalMappingResponse;
+import com.jtk.ps.api.dto.ParticipantIdName;
+import com.jtk.ps.api.dto.ParticipantIdNameStatus;
+import com.jtk.ps.api.dto.ParticipantResponse;
+import com.jtk.ps.api.dto.PrerequisiteCard;
+import com.jtk.ps.api.dto.PrerequisiteCompetenceRecap;
+import com.jtk.ps.api.dto.PrerequisiteJobScopeRecap;
+import com.jtk.ps.api.dto.PrerequisiteRecapResponse;
+import com.jtk.ps.api.dto.PrerequisiteRequest;
+import com.jtk.ps.api.dto.PrerequisiteResponse;
+import com.jtk.ps.api.dto.PrerequisiteTableResponse;
+import com.jtk.ps.api.dto.ProjectResponse;
+import com.jtk.ps.api.dto.QuotaResponse;
+import com.jtk.ps.api.dto.Response;
+import com.jtk.ps.api.dto.ResponseList;
+import com.jtk.ps.api.dto.SubmissionRequest;
+import com.jtk.ps.api.dto.SubmissionResponse;
+import com.jtk.ps.api.dto.UpdateCompetenceJobscope;
+import com.jtk.ps.api.dto.UpdateEvaluationRequest;
+import com.jtk.ps.api.dto.UpdateFeedbackRequest;
+import com.jtk.ps.api.dto.ValuationRequest;
+import com.jtk.ps.api.model.Advantage;
+import com.jtk.ps.api.model.Company;
+import com.jtk.ps.api.model.Criteria;
+import com.jtk.ps.api.model.EProdi;
+import com.jtk.ps.api.model.Evaluation;
+import com.jtk.ps.api.model.Feedback;
+import com.jtk.ps.api.model.FeedbackAnswer;
+import com.jtk.ps.api.model.Prerequisite;
+import com.jtk.ps.api.model.PrerequisiteCompetence;
+import com.jtk.ps.api.model.PrerequisiteJobscope;
+import com.jtk.ps.api.model.Project;
+import com.jtk.ps.api.model.Proposer;
+import com.jtk.ps.api.model.Submission;
+import com.jtk.ps.api.model.SubmissionCriteria;
+import com.jtk.ps.api.model.Valuation;
+import com.jtk.ps.api.repository.AdvantageRepository;
+import com.jtk.ps.api.repository.CompanyRepository;
+import com.jtk.ps.api.repository.CriteriaRepository;
+import com.jtk.ps.api.repository.EvaluationRepository;
+import com.jtk.ps.api.repository.FeedbackAnswerRepository;
+import com.jtk.ps.api.repository.FeedbackRepository;
+import com.jtk.ps.api.repository.PrerequisiteCompetenceRepository;
+import com.jtk.ps.api.repository.PrerequisiteJobscopeRepository;
+import com.jtk.ps.api.repository.PrerequisiteRepository;
+import com.jtk.ps.api.repository.ProjectRepository;
+import com.jtk.ps.api.repository.ProposerRepository;
+import com.jtk.ps.api.repository.SubmissionCriteriaRepository;
+import com.jtk.ps.api.repository.SubmissionRepository;
+import com.jtk.ps.api.repository.ValuationRepository;
+import com.jtk.ps.api.util.Constant;
+import com.jtk.ps.api.util.DateUtil;
+import com.jtk.ps.api.util.PDFUtil;
 
-import org.json.JSONArray;
-
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.scheduling.annotation.Scheduled;
+import be.quodlibet.boxable.BaseTable;
+import be.quodlibet.boxable.Cell;
+import be.quodlibet.boxable.HorizontalAlignment;
+import be.quodlibet.boxable.Row;
+import be.quodlibet.boxable.VerticalAlignment;
 
 @Service
 public class CompanyService implements ICompanyService {
@@ -116,6 +186,18 @@ public class CompanyService implements ICompanyService {
     @Autowired
     @Lazy
     private RestTemplate restTemplate;
+
+    @Value("${app.api.url.account-service}")
+    private String accountServiceUrl;
+
+    @Value("${app.api.url.management-content-service}")
+    private String managementContentServiceUrl;
+
+    @Value("${app.api.url.mapping-service}")
+    private String mappingServiceUrl;
+
+    @Value("${app.api.url.participant-service}")
+    private String participantServiceUrl;
 
 
     @Override
@@ -254,7 +336,7 @@ public class CompanyService implements ICompanyService {
         jsonObject.put("id_role", 2);
 
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        ResponseEntity<Response<CreateAccountResponse>> response = restTemplate.exchange("http://account-service/account/create", HttpMethod.POST, request, new ParameterizedTypeReference<>() {
+        ResponseEntity<Response<CreateAccountResponse>> response = restTemplate.exchange(accountServiceUrl + "/account/create", HttpMethod.POST, request, new ParameterizedTypeReference<>() {
         });
 
         if (response.hasBody() && response.getBody() != null) {
@@ -317,7 +399,7 @@ public class CompanyService implements ICompanyService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange("http://management-content-service/management-content/form-submit-time/3", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
+        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange(managementContentServiceUrl + "/management-content/form-submit-time/3", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
         });
         String startDate = Objects.requireNonNull(formSubmit.getBody()).getData().getStartDate();
         String endDate = formSubmit.getBody().getData().getEndDate();
@@ -378,7 +460,7 @@ public class CompanyService implements ICompanyService {
                 competenceAndType.setIdCompetence(prerequisiteCompetence.getCompetenceId());
                 competenceAndType.setProdiId(prerequisiteCompetence.getProdiId());
 
-                ResponseEntity<Response<Integer>> typeId = restTemplate.exchange("http://management-content-service/management-content/competence/get-type?id=" + prerequisiteCompetence.getCompetenceId(),
+                ResponseEntity<Response<Integer>> typeId = restTemplate.exchange(managementContentServiceUrl + "/management-content/competence/get-type?id=" + prerequisiteCompetence.getCompetenceId(),
                         HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                         });
                 competenceAndType.setCompetenceType(Objects.requireNonNull(typeId.getBody()).getData());
@@ -505,7 +587,7 @@ public class CompanyService implements ICompanyService {
                 prerequisiteJobscopeRepository.saveAll(prerequisiteJobscopes);
             }
 
-            String urlDeleteCompanyInMapping = "http://mapping-service/mapping/final/delete-company/";
+            String urlDeleteCompanyInMapping = mappingServiceUrl + "/mapping/final/delete-company/";
             if (prerequisite.getTotalD3() < p.getTotalD3()) {
                 ResponseEntity<Response<FormSubmitTimeResponse>> deleteCompany =
                         restTemplate.exchange(
@@ -609,7 +691,7 @@ public class CompanyService implements ICompanyService {
         prerequisiteCard.setStatusPrerequisite(p.getStatus());
         prerequisiteCard.setCompanyName(p.getCompany().getCompanyName());
 
-        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange("http://management-content-service/management-content/form-submit-time/3", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
+        ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange(managementContentServiceUrl + "/management-content/form-submit-time/3", HttpMethod.GET, req, new ParameterizedTypeReference<>() {
         });
         String startDate = Objects.requireNonNull(formSubmit.getBody()).getData().getStartDate();
         String endDate = Objects.requireNonNull(formSubmit.getBody()).getData().getEndDate();
@@ -724,7 +806,7 @@ public class CompanyService implements ICompanyService {
         HttpEntity<String> req = new HttpEntity<>(headers);
         List<Company> companies = companyRepository.findByStatus(true);
 
-        ResponseEntity<ResponseList<CompetenceResponse>> competenceResponse = restTemplate.exchange("http://management-content-service/management-content/competence/get-all/" + idProdi,
+        ResponseEntity<ResponseList<CompetenceResponse>> competenceResponse = restTemplate.exchange(managementContentServiceUrl + "/management-content/competence/get-all/" + idProdi,
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                 });
 
@@ -955,7 +1037,7 @@ public class CompanyService implements ICompanyService {
         // Get is final mapping (Mapping)
         ResponseEntity<Response<Integer>> isFinalMappingD3Request =
                 restTemplate.exchange(
-                        "http://mapping-service/mapping/get-is-final/3",
+                        mappingServiceUrl + "/mapping/get-is-final/3",
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<Response<Integer>>() {
@@ -969,7 +1051,7 @@ public class CompanyService implements ICompanyService {
 
         ResponseEntity<Response<Integer>> isFinalMappingD4Request =
                 restTemplate.exchange(
-                        "http://mapping-service/mapping/get-is-final/4",
+                        mappingServiceUrl + "/mapping/get-is-final/4",
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<Response<Integer>>() {
@@ -984,7 +1066,7 @@ public class CompanyService implements ICompanyService {
         // Get submit timeline D3 (Management Content)
         ResponseEntity<Response<FormSubmitTimeResponse>> formSubmitD3 =
                 restTemplate.exchange(
-                        "http://management-content-service/management-content/form-submit-time/5",
+                        managementContentServiceUrl + "/management-content/form-submit-time/5",
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -1001,7 +1083,7 @@ public class CompanyService implements ICompanyService {
         // Get submit timeline D4 (Management Content)
         ResponseEntity<Response<FormSubmitTimeResponse>> formSubmitD4 =
                 restTemplate.exchange(
-                        "http://management-content-service/management-content/form-submit-time/6",
+                        managementContentServiceUrl + "/management-content/form-submit-time/6",
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -1019,7 +1101,7 @@ public class CompanyService implements ICompanyService {
         if (!isDateAvailableD4) {
             formSubmitD4 =
                     restTemplate.exchange(
-                            "http://management-content-service/management-content/form-submit-time/7",
+                            managementContentServiceUrl + "/management-content/form-submit-time/7",
                             HttpMethod.GET,
                             req,
                             new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -1037,7 +1119,7 @@ public class CompanyService implements ICompanyService {
             if (!isDateAvailableD4) {
                 formSubmitD4 =
                         restTemplate.exchange(
-                                "http://management-content-service/management-content/form-submit-time/8",
+                                managementContentServiceUrl + "/management-content/form-submit-time/8",
                                 HttpMethod.GET,
                                 req,
                                 new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -1057,7 +1139,7 @@ public class CompanyService implements ICompanyService {
         // Get participant-company final mapping (Mapping)
         ResponseEntity<ResponseList<ParticipantFinalMappingResponse>> participantFinalMapping =
                 restTemplate.exchange(
-                        "http://mapping-service/mapping/final/company/" + idCompany,
+                        mappingServiceUrl + "/mapping/final/company/" + idCompany,
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<ResponseList<ParticipantFinalMappingResponse>>() {
@@ -1082,7 +1164,7 @@ public class CompanyService implements ICompanyService {
         req = new HttpEntity<>(jsonObject.toString(), headers);
 
         ResponseEntity<ResponseList<ParticipantResponse>> pResponse = restTemplate.exchange(
-                "http://participant-service/participant/get-by-id",
+                participantServiceUrl + "/participant/get-by-id",
                 HttpMethod.POST,
                 req,
                 new ParameterizedTypeReference<ResponseList<ParticipantResponse>>() {
@@ -1194,7 +1276,7 @@ public class CompanyService implements ICompanyService {
 
                 ResponseEntity<Response<FormSubmitTimeResponse>> formSubmitTimeResponse =
                         restTemplate.exchange(
-                                "http://management-content-service/management-content/form-submit-time/" + idFormSubmit,
+                                managementContentServiceUrl + "/management-content/form-submit-time/" + idFormSubmit,
                                 HttpMethod.GET,
                                 req,
                                 new ParameterizedTypeReference<>() {
@@ -1286,7 +1368,7 @@ public class CompanyService implements ICompanyService {
 
         ResponseEntity<ResponseList<JobscopeResponse>> jobscopeResponse =
                 restTemplate.exchange(
-                        "http://management-content-service/management-content/jobscope/get-all/" + idProdi,
+                        managementContentServiceUrl + "/management-content/jobscope/get-all/" + idProdi,
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<>() {
@@ -1296,7 +1378,7 @@ public class CompanyService implements ICompanyService {
 
         ResponseEntity<ResponseList<CompetenceResponse>> competenceResponse =
                 restTemplate.exchange(
-                        "http://management-content-service/management-content/competence/get-all/" + idProdi,
+                        managementContentServiceUrl + "/management-content/competence/get-all/" + idProdi,
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<>() {
@@ -1412,7 +1494,7 @@ public class CompanyService implements ICompanyService {
             company = companyRepository.findById(valuation.get(0).getEvaluation().getIdCompany()).orElse(null);
             if (company != null) {
                 Prerequisite p = prerequisiteRepository.findByCompanyIdAndYear(company.getId(), currentYear);
-                ResponseEntity<Response<String>> region = restTemplate.exchange("http://management-content-service/management-content/domicile/" +
+                ResponseEntity<Response<String>> region = restTemplate.exchange(managementContentServiceUrl + "/management-content/domicile/" +
                         p.getRegionId(), HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                 });
 
@@ -1435,7 +1517,7 @@ public class CompanyService implements ICompanyService {
                 req = new HttpEntity<>(jsonObject.toString(), headers);
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 ResponseEntity<ResponseList<ParticipantResponse>> pResponse = restTemplate.exchange(
-                        "http://participant-service/participant/get-by-id",
+                        participantServiceUrl + "/participant/get-by-id",
                         HttpMethod.POST,
                         req,
                         new ParameterizedTypeReference<>() {
@@ -1448,7 +1530,7 @@ public class CompanyService implements ICompanyService {
                     if (pr.getIdProdi() == 0) {
                         ResponseEntity<Response<FormSubmitTimeResponse>> timeD3 =
                                 restTemplate.exchange(
-                                        "http://management-content-service/management-content/form-submit-time/11",
+                                        managementContentServiceUrl + "/management-content/form-submit-time/11",
                                         HttpMethod.GET,
                                         req,
                                         new ParameterizedTypeReference<>() {
@@ -1462,7 +1544,7 @@ public class CompanyService implements ICompanyService {
                     } else {
                         ResponseEntity<Response<FormSubmitTimeResponse>> timeD4 =
                                 restTemplate.exchange(
-                                        "http://management-content-service/management-content/form-submit-time/12",
+                                        managementContentServiceUrl + "/management-content/form-submit-time/12",
                                         HttpMethod.GET,
                                         req,
                                         new ParameterizedTypeReference<>() {
@@ -1882,7 +1964,7 @@ public class CompanyService implements ICompanyService {
 
         ResponseEntity<ResponseList<String>> assessmentAspects =
                 restTemplate.exchange(
-                        "http://management-content-service/management-content/assessment-aspect/get-form?prodi=" + idProdi + "&numeval=" + numEvaluation,
+                        managementContentServiceUrl + "/management-content/assessment-aspect/get-form?prodi=" + idProdi + "&numeval=" + numEvaluation,
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<>() {
@@ -1910,7 +1992,7 @@ public class CompanyService implements ICompanyService {
 
         ResponseEntity<Response<FormSubmitTimeResponse>> formSubmitTimeResponse =
                 restTemplate.exchange(
-                        "http://management-content-service/management-content/form-submit-time/" + idFormSubmit,
+                        managementContentServiceUrl + "/management-content/form-submit-time/" + idFormSubmit,
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<>() {
@@ -1946,7 +2028,7 @@ public class CompanyService implements ICompanyService {
             } else if (!c.getStatus() == Boolean.TRUE.equals(Boolean.FALSE)) {
                 ResponseEntity<Response<FormSubmitTimeResponse>> deleteCompany =
                         restTemplate.exchange(
-                                "http://mapping-service/mapping/final/delete-company/" + idCompany,
+                                mappingServiceUrl + "/mapping/final/delete-company/" + idCompany,
                                 HttpMethod.DELETE,
                                 req,
                                 new ParameterizedTypeReference<>() {
@@ -1971,11 +2053,11 @@ public class CompanyService implements ICompanyService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        ResponseEntity<ResponseList<JobscopeResponse>> jobsScopeList = restTemplate.exchange("http://management-content-service/management-content/jobscope/get-all/" + idProdi,
+        ResponseEntity<ResponseList<JobscopeResponse>> jobsScopeList = restTemplate.exchange(managementContentServiceUrl + "/management-content/jobscope/get-all/" + idProdi,
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                 });
 
-        ResponseEntity<ResponseList<CompetenceResponse>> competenceList = restTemplate.exchange("http://management-content-service/management-content/competence/get-all/" + idProdi,
+        ResponseEntity<ResponseList<CompetenceResponse>> competenceList = restTemplate.exchange(managementContentServiceUrl + "/management-content/competence/get-all/" + idProdi,
                 HttpMethod.GET, req, new ParameterizedTypeReference<>() {
                 });
 
@@ -2027,7 +2109,7 @@ public class CompanyService implements ICompanyService {
         // Get all participant (Participant)
         ResponseEntity<ResponseList<ParticipantIdName>> participantList =
                 restTemplate.exchange(
-                        "http://participant-service/participant/get-all?type=dropdown",
+                        participantServiceUrl + "/participant/get-all?type=dropdown",
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<ResponseList<ParticipantIdName>>() {
@@ -2050,7 +2132,7 @@ public class CompanyService implements ICompanyService {
 
         ResponseEntity<Response<Integer>> isFinalMappingD3Request =
                 restTemplate.exchange(
-                        "http://mapping-service/mapping/get-is-final/" + id,
+                        mappingServiceUrl + "/mapping/get-is-final/" + id,
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<Response<Integer>>() {
@@ -2198,7 +2280,7 @@ public class CompanyService implements ICompanyService {
             // Get submit timeline D3 (Management Content)
             ResponseEntity<Response<FormSubmitTimeResponse>> formSubmitD3 =
                     restTemplate.exchange(
-                            "http://management-content-service/management-content/form-submit-time/9",
+                            managementContentServiceUrl + "/management-content/form-submit-time/9",
                             HttpMethod.GET,
                             req,
                             new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -2225,7 +2307,7 @@ public class CompanyService implements ICompanyService {
             // Get submit timeline D4 (Management Content)
             ResponseEntity<Response<FormSubmitTimeResponse>> formSubmitD3 =
                     restTemplate.exchange(
-                            "http://management-content-service/management-content/form-submit-time/10",
+                            managementContentServiceUrl + "/management-content/form-submit-time/10",
                             HttpMethod.GET,
                             req,
                             new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {
@@ -2265,7 +2347,7 @@ public class CompanyService implements ICompanyService {
 
         ResponseEntity<Response<Integer>> isFinalMappingRequest =
                 restTemplate.exchange(
-                        "http://mapping-service/mapping/get-is-final/" + id,
+                        mappingServiceUrl + "/mapping/get-is-final/" + id,
                         HttpMethod.GET,
                         req,
                         new ParameterizedTypeReference<Response<Integer>>() {
