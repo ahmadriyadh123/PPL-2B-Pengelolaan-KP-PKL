@@ -30,13 +30,20 @@ spring:
           uri: lb://grade-service
           predicates:
             - Path=/grade/**
+      # Perbaikan Bug CORS di Spring Cloud Gateway (BUG-002) 
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOriginPatterns: "*"
-            allowedMethods: "GET,POST,PUT,DELETE,OPTIONS"
+            allowedOrigins: 
+              - "http://localhost:3000"
+            allowedMethods:
+              - "GET"
+              - "POST"
+              - "PUT"
+              - "DELETE"
+              - "OPTIONS"
             allowedHeaders: "*"
-            allowCredentials: "true"
+            allowCredentials: true
 
 server:
   port: 8080
