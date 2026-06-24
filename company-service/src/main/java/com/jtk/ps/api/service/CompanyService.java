@@ -506,14 +506,13 @@ public class CompanyService implements ICompanyService {
     @Override
     public Boolean updatePrerequisiteByCommittee(Integer idPrerequisite, PrerequisiteRequest prerequisite, String cookie) {
         Optional<Prerequisite> prerequisiteUpdate = prerequisiteRepository.findById(idPrerequisite);
-        AtomicReference<Boolean> isSuccess = new AtomicReference<>(Boolean.FALSE);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        prerequisiteUpdate.ifPresent(p -> {
+        return prerequisiteUpdate.map(p -> {
             p.setDescription(prerequisite.getDescription());
             p.setFacility(prerequisite.getFacility());
             p.setInAdvisorName(prerequisite.getInAdvisorName());
@@ -584,16 +583,14 @@ public class CompanyService implements ICompanyService {
 
             prerequisiteRepository.save(p);
 
-            isSuccess.set(Boolean.TRUE);
-        });
-        return isSuccess.get();
+            return Boolean.TRUE;
+        }).orElse(Boolean.FALSE);
     }
 
     @Override
     public Boolean markAsDoneByCommittee(Integer idPrerequisite) {
         Optional<Prerequisite> prerequisite = prerequisiteRepository.findById(idPrerequisite);
-        AtomicReference<Boolean> isSuccess = new AtomicReference<>(Boolean.FALSE);
-        prerequisite.ifPresent(p -> {
+        return prerequisite.map(p -> {
             if (p.getStatus() != null) {
                 Boolean status = p.getStatus();
                 p.setStatus(!status);
@@ -602,9 +599,8 @@ public class CompanyService implements ICompanyService {
             }
 
             prerequisiteRepository.save(p);
-            isSuccess.set(Boolean.TRUE);
-        });
-        return isSuccess.get();
+            return Boolean.TRUE;
+        }).orElse(Boolean.FALSE);
     }
 
     @Override
@@ -1996,9 +1992,8 @@ public class CompanyService implements ICompanyService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> req = new HttpEntity<>(headers);
 
-        AtomicReference<Boolean> isSuccess = new AtomicReference<>(false);
-
-        companyRepository.findById(idCompany).ifPresent(c -> {
+        return companyRepository.findById(idCompany).map(c -> {
+            boolean isSuccess = false;
             if (Boolean.FALSE.equals(c.getStatus())) {
                 Prerequisite prerequisite = prerequisiteRepository.findByCompanyIdAndYear(idCompany, currentYear);
                 if (prerequisite == null) {
@@ -2008,7 +2003,7 @@ public class CompanyService implements ICompanyService {
                     pr.setCompany(c);
                     prerequisiteRepository.save(pr);
                 }
-                isSuccess.set(true);
+                isSuccess = true;
             } else if (Boolean.TRUE.equals(c.getStatus())) {
                 ResponseEntity<Response<FormSubmitTimeResponse>> deleteCompany =
                         restTemplate.exchange(
@@ -2019,15 +2014,15 @@ public class CompanyService implements ICompanyService {
                                 });
                 if (deleteCompany.getStatusCode().is2xxSuccessful()) {
                     evaluationRepository.deleteAllByIdCompanyAndYear(idCompany, currentYear);
-                    isSuccess.set(true);
+                    isSuccess = true;
                 }
             }
-            if (Boolean.TRUE.equals(isSuccess.get())) {
+            if (isSuccess) {
                 c.setStatus(!c.getStatus());
                 companyRepository.save(c);
             }
-        });
-        return isSuccess.get();
+            return isSuccess;
+        }).orElse(false);
     }
 
     @Override

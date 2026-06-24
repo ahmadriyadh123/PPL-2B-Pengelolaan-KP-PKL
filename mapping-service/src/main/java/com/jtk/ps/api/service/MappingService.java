@@ -40,9 +40,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
-
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -66,9 +63,6 @@ public class MappingService implements IMappingService {
 
     @Autowired
     private RestTemplate restTemplate;
-
-    @Autowired
-    private WebClient.Builder webClient;
 
     @Override
     public FinalMappingResponse getFinalMapping(Integer idRole, Integer idProdi, String cookie) {
@@ -213,30 +207,32 @@ public class MappingService implements IMappingService {
         // Initialization for use rest api
         HttpHeaders headers = new HttpHeaders();
         headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> req = new HttpEntity<>(headers);
         Integer currentYear = Calendar.getInstance().get(Calendar.YEAR);
 
         // Get all requirement Company
-        Mono<ResponseList<CompanyReqResponse>> companyReq = webClient.build().get()
-                .uri("http://company-service/company/req-company")
-                .header(Constant.PayloadResponseConstant.COOKIE, cookie)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<>() {
+        ResponseEntity<ResponseList<CompanyReqResponse>> companyReq = restTemplate.exchange(
+                "http://company-service/company/req-company",
+                HttpMethod.GET,
+                req,
+                new ParameterizedTypeReference<>() {
                 });
 
         // Get all cv and interest Participant
-        Mono<ResponseList<ParticipantReqResponse>> participantResponse = webClient.build().get()
-                .uri("http://participant-service/participant/cv-interest-participant")
-                .header(Constant.PayloadResponseConstant.COOKIE, cookie)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<>() {
+        ResponseEntity<ResponseList<ParticipantReqResponse>> participantResponse = restTemplate.exchange(
+                "http://participant-service/participant/cv-interest-participant",
+                HttpMethod.GET,
+                req,
+                new ParameterizedTypeReference<>() {
                 });
 
         // Get all company selection
-        Mono<ResponseList<CompanySelection>> companySelection = webClient.build().get()
-                .uri("http://participant-service/participant/company-selection/mapping")
-                .header(Constant.PayloadResponseConstant.COOKIE, cookie)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<>() {
+        ResponseEntity<ResponseList<CompanySelection>> companySelection = restTemplate.exchange(
+                "http://participant-service/participant/company-selection/mapping",
+                HttpMethod.GET,
+                req,
+                new ParameterizedTypeReference<>() {
                 });
 
         // Get all criteria percentage
@@ -245,9 +241,9 @@ public class MappingService implements IMappingService {
         // Initialization Calculation SAW for each company (Normalization)
         List<CalculationSAW> finalScoreCalculationSaw = new ArrayList<>();
 
-        List<CompanyReqResponse> listCompany = Objects.requireNonNull(companyReq.block()).getData();
-        List<ParticipantReqResponse> listParticipant = Objects.requireNonNull(participantResponse.block()).getData();
-        List<CompanySelection> listCompanySelection = Objects.requireNonNull(companySelection.block()).getData();
+        List<CompanyReqResponse> listCompany = Objects.requireNonNull(companyReq.getBody()).getData();
+        List<ParticipantReqResponse> listParticipant = Objects.requireNonNull(participantResponse.getBody()).getData();
+        List<CompanySelection> listCompanySelection = Objects.requireNonNull(companySelection.getBody()).getData();
 
         // Get All bobot kriteria
         List<Float> bobotCriteria = new ArrayList<>();
