@@ -25,6 +25,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.jtk.ps.api.dto.CompanyDto;
 import com.jtk.ps.api.dto.ExaminerSeminarDto;
@@ -48,6 +54,7 @@ import com.jtk.ps.api.repository.ParticipantRepository;
 import com.jtk.ps.api.repository.SeminarCriteriaRepository;
 import com.jtk.ps.api.repository.SeminarFormRepository;
 import com.jtk.ps.api.repository.SeminarValuesRepository;
+import com.jtk.ps.api.repository.EventStoreRepository;
 import com.jtk.ps.api.service.SeminarService;
 
 @ExtendWith(MockitoExtension.class)
@@ -76,6 +83,12 @@ public class SeminarServiceTest {
     @Mock
     private SeminarValuesRepository seminarValuesRepository;
 
+    @Mock
+    private EventStoreRepository eventStoreRepository;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
     @Test
     void getAllCompaniesTest(){
         Integer roleId = 0;
@@ -95,7 +108,7 @@ public class SeminarServiceTest {
         
 
         when(companyRepository.findAll()).thenReturn(companies);
-        when(participantRepository.findParticipantByCompany(any(Integer.class),eq(2023))).thenReturn(participants);
+        when(participantRepository.findParticipantByCompany(any(Integer.class),any(Integer.class))).thenReturn(participants);
         when(accountRepository.findById(any(Integer.class))).thenAnswer(invocation -> {
             int accountId = invocation.getArgument(0);
             // Menggunakan data account yang sesuai dengan accountId
@@ -116,7 +129,7 @@ public class SeminarServiceTest {
 
         List<CompanyDto> companyDtos = seminarService.getAllCompany(roleId, prodiId);
 
-        verify(participantRepository, times(3)).findParticipantByCompany(any(Integer.class), eq(2023));
+        verify(participantRepository, times(3)).findParticipantByCompany(any(Integer.class), any(Integer.class));
         verify(accountRepository, times(12)).findById(any(Integer.class));
         verify(companyRepository, times(1)).findAll();
 
@@ -390,5 +403,42 @@ public class SeminarServiceTest {
 
         // Verify the response
         assertEquals(Integer.valueOf(0), result.getIsFinalization());
+    }
+
+    @Test
+    void testEventStoreHandler_swallowsException() {
+        // BUG-011 UT-011
+        Object dummyObject = new Object();
+        String entityId = "123";
+        String eventType = "TEST_EVENT";
+        Integer eventDataId = 1;
+
+        when(eventStoreRepository.save(any())).thenThrow(new RuntimeException("DB down"));
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            ReflectionTestUtils.invokeMethod(seminarService, "eventStoreHandler", entityId, eventType, dummyObject, eventDataId);
+        });
+
+        assertTrue(exception.getMessage().contains("Event store operation failed") || exception.getMessage().contains("DB down"));
+        verify(eventStoreRepository, times(1)).save(any());
+    }
+
+    @Test
+    void testEventStoreHandler_JsonProcessingException() throws JsonProcessingException {
+        // BUG-011 UT-012
+        Object dummyObject = new Object();
+        String entityId = "123";
+        String eventType = "TEST_EVENT";
+        Integer eventDataId = 1;
+
+        JsonProcessingException mockException = Mockito.mock(JsonProcessingException.class);
+        when(objectMapper.writeValueAsString(any())).thenThrow(mockException);
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            ReflectionTestUtils.invokeMethod(seminarService, "eventStoreHandler", entityId, eventType, dummyObject, eventDataId);
+        });
+
+        assertTrue(exception.getMessage().contains("Event store operation failed") || exception.getMessage().contains("serialization failed"));
+        verify(eventStoreRepository, times(0)).save(any());
     }
 }
