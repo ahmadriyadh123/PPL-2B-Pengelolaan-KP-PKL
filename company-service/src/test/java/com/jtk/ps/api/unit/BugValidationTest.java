@@ -8,6 +8,7 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -268,6 +269,7 @@ public class BugValidationTest {
          * dan sangat confusing. Ini adalah time bomb yang bisa gagal saat refactor.
          */
         @Test
+        @Disabled("Bug BUG-006 has been fixed. Kept for historical documentation. Running this test on the fixed code will fail because the code behaves correctly now.")
         @DisplayName("Ekspresi '!status == Boolean.TRUE.equals(Boolean.TRUE)' adalah confusing dan error-prone")
         void shouldExposeOperatorPrecedenceConfusion() {
             // Demonstrasi: evaluasi manual dari ekspresi buggy
@@ -384,6 +386,7 @@ public class BugValidationTest {
          * Root Cause: CompanyService.java baris 308 — tidak ada null-check
          */
         @Test
+        @Disabled("Bug BUG-010 has been fixed. Kept for historical documentation. Running this test on the fixed code will fail because NPE is no longer thrown.")
         @DisplayName("getCardPrerequisiteByCompany() NPE saat prerequisite tidak ditemukan")
         void shouldThrowNpeWhenPrerequisiteNotFound() {
             // Arrange — prerequisite tidak ditemukan
@@ -406,6 +409,7 @@ public class BugValidationTest {
          * Root Cause: CompanyService.java baris 601
          */
         @Test
+        @Disabled("Bug BUG-010 has been fixed. Kept for historical documentation. Running this test on the fixed code will fail because NPE is no longer thrown.")
         @DisplayName("getCardPrerequisiteByCommittee() NPE saat prerequisite tidak ditemukan")
         void shouldThrowNpeWhenPrerequisiteByCommitteeNotFound() {
             // Arrange
