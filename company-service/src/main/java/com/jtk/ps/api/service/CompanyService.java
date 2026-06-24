@@ -950,37 +950,38 @@ public class CompanyService implements ICompanyService {
     }
 
     @Override
-    public void acceptCompanySubmission(Integer id, String cookie) {
-        submissionRepository.findById(id).ifPresent(s -> {
+        public CreateCompanyResponse acceptCompanySubmission(Integer id, String cookie) {
+
+            Submission submission = submissionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Submission not found"));
+
             CompanyRequest cr = new CompanyRequest();
 
-            cr.setCompanyName(s.getCompanyName());
-            cr.setCompanyEmail(s.getCompanyMail());
-            cr.setNoPhone(s.getNoPhone());
-            cr.setAddress(s.getAddress());
+            cr.setCompanyName(submission.getCompanyName());
+            cr.setCompanyEmail(submission.getCompanyMail());
+            cr.setNoPhone(submission.getNoPhone());
+            cr.setAddress(submission.getAddress());
 
-            cr.setCpName(s.getCpName());
-            cr.setCpEmail(s.getCpMail());
-            cr.setCpPosition(s.getCpPosition());
-            cr.setCpPhone(s.getCpPhone());
+            cr.setCpName(submission.getCpName());
+            cr.setCpEmail(submission.getCpMail());
+            cr.setCpPosition(submission.getCpPosition());
+            cr.setCpPhone(submission.getCpPhone());
 
-            cr.setWebsite(s.getWebsite());
-            cr.setNumEmployee(s.getNumEmployee());
-            cr.setSinceYear(s.getSinceYear());
+            cr.setWebsite(submission.getWebsite());
+            cr.setNumEmployee(submission.getNumEmployee());
+            cr.setSinceYear(submission.getSinceYear());
 
             cr.setLecturerId(null);
             cr.setStatus(true);
 
-            Company newCompany = this.createCompany(cr, cookie);
-            proposerRepository.findBySubmissionIdId(s.getId()).ifPresent(psr -> {
-                psr.setCompanyId(newCompany);
-                proposerRepository.save(psr);
-            });
+            CreateCompanyResponse response =
+                    this.createCompanyWithCredentials(cr, cookie);
 
-            s.setIsDeleted(true);
-            submissionRepository.save(s);
-        });
-    }
+            submission.setIsDeleted(true);
+            submissionRepository.save(submission);
+
+            return response;
+        }
 
     @Override
     public void declineCompanySubmission(Integer id) {
