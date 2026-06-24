@@ -34,7 +34,7 @@ public class CompanyController {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
+    @PreAuthorize("hasAnyAuthority('COMMITTEE', 'HEAD_STUDY_PROGRAM')")
     @GetMapping("/get-all")
     public ResponseEntity<Object> getAllCompanies(
             @RequestParam(name = "type",required = false) String type,
@@ -85,6 +85,7 @@ public class CompanyController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('COMMITTEE', 'HEAD_STUDY_PROGRAM')")
     @GetMapping(value = "/get-name")
     public ResponseEntity<Object> getCompanyNameById() {
         try {
