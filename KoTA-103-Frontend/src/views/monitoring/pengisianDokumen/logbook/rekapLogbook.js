@@ -43,7 +43,6 @@ const RekapLogbook = () => {
   const [limitDateToSubmitAndEditLogbook, setLimitDateToSubmitAndEditLogbook] = useState()
   const [dataDeadlineLogbook, setDataDeadlineLogbook] = useState([])
 
-
   let rolePengguna = localStorage.id_role
   let history = useHistory()
   const [loadings, setLoadings] = useState([])
@@ -139,7 +138,7 @@ const RekapLogbook = () => {
     })
   }
 
-  const refreshData = async(index) => {
+  const refreshData = async (index) => {
     let PESERTA
     if (rolePengguna === '1') {
       PESERTA = NIM_PESERTA_AS_USER
@@ -151,7 +150,6 @@ const RekapLogbook = () => {
       .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/get-all/${PESERTA}`)
       .then((result) => {
         if (result.data.data.length > 0) {
-       
           var temp = result.data.data
           var temp_res = []
           const convertDate = (date) => {
@@ -172,9 +170,7 @@ const RekapLogbook = () => {
             ]
             let date_month = temp_date_split[1]
             let month_of_date = month[parseInt(date_month) - 1]
-            return date
-              ? `${temp_date_split[2]} - ${month_of_date} - ${temp_date_split[0]}`
-              : null
+            return date ? `${temp_date_split[2]} - ${month_of_date} - ${temp_date_split[0]}` : null
           }
 
           function setKeyIfNull(index, id) {
@@ -189,10 +185,10 @@ const RekapLogbook = () => {
             for (let i in obj) {
               temp_res.push({
                 id: setKeyIfNull(parseInt(i), obj[i].id),
-                idx : parseInt(i),
+                idx: parseInt(i),
                 real_id: obj[i].id,
                 date: convertDate(obj[i].date),
-                real_date : obj[i].date,
+                real_date: obj[i].date,
                 grade: obj[i].grade,
                 status: obj[i].status,
                 project_name: setProjectNameIfNull(obj[i].project_name),
@@ -207,7 +203,6 @@ const RekapLogbook = () => {
         }
         setIsLoading(false)
 
- 
         setLogbookPeserta(temp_res)
         setIsLoading(false)
         setIsLoading(false)
@@ -220,6 +215,8 @@ const RekapLogbook = () => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     async function getDataInformasiPeserta() {
       let PESERTA
       if (rolePengguna === '1') {
@@ -229,13 +226,23 @@ const RekapLogbook = () => {
       }
 
       await axios
-        .post(`${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`, {
-          id: [PESERTA],
-        })
+        .post(
+          `${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`,
+          {
+            id: [PESERTA],
+          },
+          {
+            signal: controller.signal,
+          },
+        )
         .then((result) => {
           setDataPeserta(result.data.data[0])
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -260,10 +267,11 @@ const RekapLogbook = () => {
       }
       enterLoading(index)
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/get-all/${PESERTA}`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/get-all/${PESERTA}`, {
+          signal: controller.signal,
+        })
         .then((result) => {
           if (result.data.data.length > 0) {
-         
             var temp = result.data.data
             var temp_res = []
             const convertDate = (date) => {
@@ -300,8 +308,8 @@ const RekapLogbook = () => {
             let getTempRes = function (obj) {
               for (let i in obj) {
                 temp_res.push({
-                  id: setKeyIfNull(parseInt(i), obj[i].id), 
-                  idx : parseInt(i),
+                  id: setKeyIfNull(parseInt(i), obj[i].id),
+                  idx: parseInt(i),
                   real_id: obj[i].id,
                   date: convertDate(obj[i].date),
                   grade: obj[i].grade,
@@ -319,6 +327,10 @@ const RekapLogbook = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -339,7 +351,9 @@ const RekapLogbook = () => {
 
     async function GetAccessPesertaToThisPage() {
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all?id_deadline=1`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all?id_deadline=1`, {
+          signal: controller.signal,
+        })
         .then((response) => {
           const convertDate = (date) => {
             let temp_date_split = date.split('-')
@@ -359,7 +373,7 @@ const RekapLogbook = () => {
             ]
             let date_month = temp_date_split[1]
             let month_of_date = month[parseInt(date_month) - 1]
-        
+
             return `${temp_date_split[2]} - ${month_of_date} - ${temp_date_split[0]}`
           }
 
@@ -382,12 +396,12 @@ const RekapLogbook = () => {
           data_date_deadline = {
             start_date: convertDate(start_date),
             finish_date: convertDate(finish_date),
-            day_range : range
+            day_range: range,
           }
           setDataDeadlineLogbook(data_date_deadline)
 
           let today = formatDate(new Date())
-      
+
           if (start_date <= today) {
             setIsParticipantAllowedToAccessThisPage(true)
           } else {
@@ -401,10 +415,36 @@ const RekapLogbook = () => {
           }
           // setFinishDateThisPageAllowedToAccess(response.data.data.finish_assignment_date)
         })
+        .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
+          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            history.push({
+              pathname: '/login',
+              state: {
+                session: true,
+              },
+            })
+          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+            history.push('/404')
+          } else if (error.toJSON().status > 500 && error.toJSON().status <= 599) {
+            history.push('/500')
+          } else if (error.toJSON().status === 500) {
+            setLogbookPeserta(undefined)
+            setIsLoading(false)
+          }
+        })
     }
     getLogbookPeserta()
     GetAccessPesertaToThisPage()
     getDataInformasiPeserta()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const confirmToEdit = () => {
@@ -503,7 +543,6 @@ const RekapLogbook = () => {
                   <Button
                     size="small"
                     type="primary"
-                    
                     onClick={() => actionLihatDetailPenilaianLogbook(record.id)}
                   >
                     Lihat Detail
@@ -571,7 +610,6 @@ const RekapLogbook = () => {
     return [year, month, day].join('-')
   }
 
-
   const columns = [
     {
       title: 'NO',
@@ -619,7 +657,7 @@ const RekapLogbook = () => {
         <>
           <Row>
             <Col span={12} style={{ textAlign: 'center' }}>
-              {(record.grade !== 'BELUM DINILAI' && record.real_id !== null)&& (
+              {record.grade !== 'BELUM DINILAI' && record.real_id !== null && (
                 <Popover content={<div>Pengeditan logbook tidak diizinkan</div>}>
                   <Button
                     id="button-pencil"
@@ -636,7 +674,7 @@ const RekapLogbook = () => {
                 </Popover>
               )}
 
-              {(record.grade === 'BELUM DINILAI' && record.real_id !== null) && (
+              {record.grade === 'BELUM DINILAI' && record.real_id !== null && (
                 <Popover content={<div>Lakukan pengeditan logbook</div>}>
                   <Popconfirm
                     placement="topRight"
@@ -660,7 +698,6 @@ const RekapLogbook = () => {
                   </Popconfirm>
                 </Popover>
               )}
-
             </Col>
             {record.real_id !== null && (
               <Col span={12} style={{ textAlign: 'center' }}>
@@ -752,14 +789,20 @@ const RekapLogbook = () => {
             <div>
               <ul>
                 <li>
-                  Pengisian dapat dilakukan mulai &nbsp;&nbsp; <b>{dataDeadlineLogbook.start_date}</b>&nbsp;&nbsp; dan akan ditutup
-                  akses pengumpulan pada tanggal &nbsp;&nbsp; <b>{dataDeadlineLogbook.finish_date}</b>
+                  Pengisian dapat dilakukan mulai &nbsp;&nbsp;{' '}
+                  <b>{dataDeadlineLogbook.start_date}</b>&nbsp;&nbsp; dan akan ditutup akses
+                  pengumpulan pada tanggal &nbsp;&nbsp; <b>{dataDeadlineLogbook.finish_date}</b>
+                </li>
+                <li>Pengeditan logbook akan berpengaruh pada status pengumpulan</li>
+                <li>
+                  Peserta dapat melakukan edit (selama masih memiliki akses) dan melihat detail isi
+                  logbook
                 </li>
                 <li>
-                  Pengeditan logbook akan berpengaruh pada status pengumpulan
+                  Tanggal logbook yang dikumpulkan melebihi &nbsp;{' '}
+                  <b>{dataDeadlineLogbook.day_range}</b> &nbsp; hari, pengumpulan logbook tersebut
+                  akan diberi status <b>terlambat</b>
                 </li>
-                <li>Peserta dapat melakukan edit (selama masih memiliki akses) dan melihat detail isi logbook</li>
-                <li>Tanggal logbook yang dikumpulkan melebihi &nbsp; <b>{dataDeadlineLogbook.day_range}</b> &nbsp; hari, pengumpulan logbook tersebut akan diberi status <b>terlambat</b></li>
               </ul>
             </div>
           }
@@ -774,18 +817,15 @@ const RekapLogbook = () => {
             <>
               <Row>
                 <Col span={24} style={{ textAlign: 'right' }}>
-                
-                    <Button
-                      id="create-logbook"
-                      size="sm"
-                      shape="round"
-                      style={{ color: 'white', background: '#339900', marginBottom: 16 }}
-                      onClick={handleCreateLogbook}
-                    >
-                      Tambahkan Logbook Baru
-                    </Button>
-               
-                
+                  <Button
+                    id="create-logbook"
+                    size="sm"
+                    shape="round"
+                    style={{ color: 'white', background: '#339900', marginBottom: 16 }}
+                    onClick={handleCreateLogbook}
+                  >
+                    Tambahkan Logbook Baru
+                  </Button>
                 </Col>
               </Row>
             </>
@@ -812,7 +852,6 @@ const RekapLogbook = () => {
               icon={<SmileOutlined />}
               title="Maaf Akses Untuk Halaman Ini Belum Dibuka"
               subTitle="Anda dapat melakukan akses setelah memasuki tanggal yang telah ditentukan"
-            
             />
           )}
 
@@ -827,7 +866,7 @@ const RekapLogbook = () => {
                   columns={columnsPanitiaPembimbing}
                   dataSource={logbookPeserta}
                   rowKey="real_date"
-                  pagination = {true}
+                  pagination={true}
                   bordered
                 />
               </CCol>

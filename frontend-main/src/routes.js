@@ -197,7 +197,7 @@ const routes = [
   { path: '/nilaiIndustri/:id', name: ':id', component: NilaiIndustri},
 
   // *************** Kafka ***************
-  // { path: '/kafka', name: 'Test Kafka', component: Kafka, exact: true },
+  { path: '/kafka', name: 'Test Kafka', component: Kafka, exact: true },
 
   // *************** Etpro ***************
   {path: '/etikaProfesiTeori', name: 'Aspek Penilaian EtPro Teori', component: KelolaAspekEtproTeori, exact: true},

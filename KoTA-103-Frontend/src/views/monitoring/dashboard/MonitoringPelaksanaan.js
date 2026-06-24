@@ -11,33 +11,44 @@ const MonitoringPelaksanaan = () => {
   const [dataDashboard, setDataDashboard] = useState([])
   axios.defaults.withCredentials = true
 
+  useEffect(() => {
+    const controller = new AbortController()
 
-useEffect(()=>{
-  const getDataDashboard = async (index) => {
-    await axios
-      .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/dashboard`)
-      .then((result) => {
-       // console.log(result.data.data)
-        setDataDashboard(result.data.data)
-      })
-      .catch(function (error) {
-        if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-          history.push({
-            pathname: '/login',
-            state: {
-              session: true,
-            },
-          })
-        } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-          history.push('/404')
-        } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
-          history.push('/500')
-        }
-      })
-  }
-  getDataDashboard()
+    const getDataDashboard = async (index) => {
+      await axios
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/dashboard`, {
+          signal: controller.signal,
+        })
+        .then((result) => {
+          // console.log(result.data.data)
+          setDataDashboard(result.data.data)
+        })
+        .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
 
-},[history])
+          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            history.push({
+              pathname: '/login',
+              state: {
+                session: true,
+              },
+            })
+          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+            history.push('/404')
+          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
+            history.push('/500')
+          }
+        })
+    }
+    getDataDashboard()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
+  }, [history])
 
   const title = (judul) => {
     return (
@@ -56,7 +67,6 @@ useEffect(()=>{
   }
   return (
     <>
-
       {title('INFORMASI DOKUMEN PESERTA ')}
       <div className="container2">
         <div className="spacebottom spacetop">
@@ -128,7 +138,7 @@ useEffect(()=>{
         </div>
         <div>
           <Row gutter={16}>
-          <Col span={6}>
+            <Col span={6}>
               <Card bordered={false}>
                 <b style={{ textAlign: 'center', fontSize: 20 }}>RPP</b>
                 <hr style={{ paddingTop: 5, color: '#520339' }} />
@@ -193,7 +203,6 @@ useEffect(()=>{
           </Row>
         </div>
       </div>
-     
     </>
   )
 }

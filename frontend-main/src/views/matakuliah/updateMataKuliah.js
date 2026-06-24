@@ -71,7 +71,7 @@ const UpdateMataKuliah = () => {
   //   console.log(data)
   // }, [data])
   const detailMataKuliah = (id) => {
-    history.push(`/matakuliah/listmatakuliah/detailmatakuliah/${parseInt(id)}`)
+    history.push(`/mataKuliah/listMatakuliah/detailMatakuliah/${parseInt(id)}`)
   }
 
   const prodiJurusan = [

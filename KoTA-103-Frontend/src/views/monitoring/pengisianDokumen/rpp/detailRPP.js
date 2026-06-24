@@ -4,7 +4,7 @@ import '../rpp/rpp.css'
 import { Col, Row } from 'react-bootstrap'
 import axios from 'axios'
 import { Route, Router, useHistory, useParams } from 'react-router-dom'
-import {ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined } from '@ant-design/icons'
 import routes from 'src/routes'
 import {
   Box,
@@ -46,12 +46,14 @@ const DetailRPP = (props) => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const getRPPDetailPeserta = async (index) => {
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/rpp/get/${RPP_ID}`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/rpp/get/${RPP_ID}`, {
+          signal: controller.signal,
+        })
         .then((response) => {
-   
-
           const convertDate = (date) => {
             var temp_date_split = date.split('-')
             const month = [
@@ -81,23 +83,22 @@ const DetailRPP = (props) => {
             task_description: response.data.data.task_description,
           })
 
-              /**SET DATA DELIVERABLES */
-              let temp_del = []
-              let temp_del1 = []
-              temp_del = response.data.data.deliverables
-              let temp_deliverables = function (obj) {
-                for (var i in obj) {
-                  temp_del1.push({
-                    id: obj[i].id,
-                    due_date: convertDate(obj[i].due_date),
-                    deliverables: obj[i].deliverables,
-                  })
-                }
-              }
-    
-              temp_deliverables(temp_del)
-              setDataDeliverables(temp_del1)
-            
+          /**SET DATA DELIVERABLES */
+          let temp_del = []
+          let temp_del1 = []
+          temp_del = response.data.data.deliverables
+          let temp_deliverables = function (obj) {
+            for (var i in obj) {
+              temp_del1.push({
+                id: obj[i].id,
+                due_date: convertDate(obj[i].due_date),
+                deliverables: obj[i].deliverables,
+              })
+            }
+          }
+
+          temp_deliverables(temp_del)
+          setDataDeliverables(temp_del1)
 
           /** SET DATA MILESTONES */
           let temp_mil = []
@@ -116,9 +117,6 @@ const DetailRPP = (props) => {
 
           temp_milestone(temp_mil)
           setDataMilestones(temp_mil1)
-      
-
-      
 
           /**SET DATA RENCANA CAPAIAN MINGGUAN */
           let temp_rcm = []
@@ -137,7 +135,6 @@ const DetailRPP = (props) => {
 
           temp_rencanaCapaianMingguan(temp_rcm)
           setDataCapaianMingguan(temp_rcm1)
-      
 
           /** JADWAL PENYELESAIAN KESELURUHAN */
           let temp_jadwalKeseluruhan = []
@@ -157,11 +154,14 @@ const DetailRPP = (props) => {
 
           temp_jadwalKeseluruhans(temp_jadwalKeseluruhan)
           setDataJadwalPenyelesaianKeseluruhan(temp_jadwalKeseluruhan1)
-     
 
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -178,33 +178,38 @@ const DetailRPP = (props) => {
     }
 
     getRPPDetailPeserta()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const HandleKembali = () => {
-   (rolePengguna === '1')?  history.push(`/rencanaPenyelesaianProyek`): history.push(`/rekapDokumenPeserta/rppPeserta/${NIM_PESERTA}`)
+    rolePengguna === '1'
+      ? history.push(`/rencanaPenyelesaianProyek`)
+      : history.push(`/rekapDokumenPeserta/rppPeserta/${NIM_PESERTA}`)
   }
 
-
-  return isLoading?( <Spin tip="Loading" size="large">
-  <div className="content" />
-</Spin>): (
+  return isLoading ? (
+    <Spin tip="Loading" size="large">
+      <div className="content" />
+    </Spin>
+  ) : (
     <>
       <div className="container2">
-      <React.Fragment>
-      <Space wrap className="title-s">
-       
-     
-        </Space>
+        <React.Fragment>
+          <Space wrap className="title-s"></Space>
         </React.Fragment>
         <h1 className="justify">RENCANA PENYELESAIAN PROYEK</h1>
         <div className="spacebottom"></div>
         <Box sx={{ color: 'primary.main' }}>
           Tanggal RPP : {dataRPP.start_date} &nbsp;&nbsp;s/d&nbsp;&nbsp; {dataRPP.finish_date}
         </Box>
-    
+
         <div className="spacebottom"></div>
 
-        <TableContainer component={Paper} style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Topik/Tema/Judul Pekerjaan</b>
             <TableRow>
@@ -216,7 +221,7 @@ const DetailRPP = (props) => {
         </TableContainer>
         <div className="spacebottom"></div>
 
-        <TableContainer component={Paper} style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Peran Kelompok Dalam Pekerjaan</b>
             <TableRow>
@@ -228,7 +233,7 @@ const DetailRPP = (props) => {
         </TableContainer>
         <div className="spacebottom"></div>
 
-        <TableContainer component={Paper} style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Deskripsi Pekerjaan</b>
             <TableRow>
@@ -240,7 +245,7 @@ const DetailRPP = (props) => {
         </TableContainer>
 
         <div className="spacebottom"></div>
-        <TableContainer component={Paper}  style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Deliverables</b>
             <TableRow>
@@ -261,7 +266,7 @@ const DetailRPP = (props) => {
         </TableContainer>
 
         <div className="spacebottom"></div>
-        <TableContainer component={Paper}  style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Milestones</b>
             <TableRow>
@@ -284,7 +289,7 @@ const DetailRPP = (props) => {
         </TableContainer>
 
         <div className="spacebottom"></div>
-        <TableContainer component={Paper}  style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Rencana Capaian PerMinggu</b>
             <TableRow>
@@ -292,7 +297,7 @@ const DetailRPP = (props) => {
               <TableCell>TANGGAL MULAI</TableCell>
               <TableCell>TANGGAL SELESAI</TableCell>
               <TableCell>RENCANA CAPAIAN</TableCell>
-              <TableCell/>
+              <TableCell />
             </TableRow>
             {dataCapaianMingguan.map((capaian, index) => {
               return (
@@ -301,7 +306,7 @@ const DetailRPP = (props) => {
                   <TableCell>{capaian.start_date}</TableCell>
                   <TableCell>{capaian.finish_date}</TableCell>
                   <TableCell>{capaian.achievement_plan}</TableCell>
-                  <TableCell/>
+                  <TableCell />
                 </TableRow>
               )
             })}
@@ -309,7 +314,7 @@ const DetailRPP = (props) => {
         </TableContainer>
 
         <div className="spacebottom"></div>
-        <TableContainer component={Paper}  style={{padding:20}}>
+        <TableContainer component={Paper} style={{ padding: 20 }}>
           <Table sx={{ minWidth: 650 }} aria-label="caption table">
             <b className="left">Jadwal Penyelesaian Keseluruhan</b>
             <TableRow>
@@ -318,7 +323,7 @@ const DetailRPP = (props) => {
               <TableCell>TANGGAL SELESAI</TableCell>
               <TableCell>JENIS PEKERJAAN</TableCell>
               <TableCell>BUTIR PEKERJAAN</TableCell>
-              <TableCell/>
+              <TableCell />
             </TableRow>
             {dataJadwalPenyelesaianKeseluruhan.map((keseluruhan, index) => {
               return (
@@ -328,21 +333,20 @@ const DetailRPP = (props) => {
                   <TableCell>{keseluruhan.finish_date}</TableCell>
                   <TableCell>{keseluruhan.task_type}</TableCell>
                   <TableCell>{keseluruhan.task_name}</TableCell>
-                  <TableCell/>
+                  <TableCell />
                 </TableRow>
               )
             })}
           </Table>
         </TableContainer>
       </div>
-           
-                 <FloatButton type='primary' onClick={HandleKembali} icon={<ArrowLeftOutlined />} tooltip={<div>Kembali ke Rekap RPP</div>} />
-                 
-        
 
-
-
-
+      <FloatButton
+        type="primary"
+        onClick={HandleKembali}
+        icon={<ArrowLeftOutlined />}
+        tooltip={<div>Kembali ke Rekap RPP</div>}
+      />
     </>
   )
 }

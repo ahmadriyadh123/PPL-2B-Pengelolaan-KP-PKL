@@ -1,32 +1,32 @@
-# ================== BUILD STAGE ==================
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+# syntax=docker/dockerfile:1.7
+
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
+
 WORKDIR /app
 
-# Install certificates
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && \
-    update-ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY pom.xml .
 
-# Copy settings
-COPY settings.xml /root/.m2/settings.xml
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:go-offline \
+    -DskipTests \
+    --no-transfer-progress
 
-# Copy pom files
-COPY pom.xml ./
-COPY */pom.xml ./ 
+COPY src src
 
-# Copy source code
-COPY src ./src
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn clean package \
+    -DskipTests \
+    --no-transfer-progress
 
-# Build (dengan retry untuk stabilitas jaringan)
-RUN mvn -s /root/.m2/settings.xml clean package -DskipTests --no-transfer-progress \
-    -Dmaven.wagon.http.retryhandler.count=3
-
-# ================== RUNTIME STAGE ==================
 FROM eclipse-temurin:21-jre-alpine
+
 WORKDIR /app
 
-# Salin hasil jar dari build stage
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=builder --chown=1001:1001 \
+    /app/target/*.jar app.jar
 
-# Gunakan port 8080 (sesuai standar Spring Boot)
+USER 1001
+
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+
+ENTRYPOINT ["java","-jar","app.jar"]

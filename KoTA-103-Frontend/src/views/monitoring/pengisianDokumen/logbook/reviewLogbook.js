@@ -31,7 +31,6 @@ const ReviewLogbook = (props) => {
     })
   }
 
-  
   const convertDate = (date) => {
     let temp_date_split = date.split('-')
     const month = [
@@ -54,18 +53,24 @@ const ReviewLogbook = (props) => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
 
     const getDataLogbook = async (index) => {
       const ID_LOGBOOK = parseInt(LOGBOOK)
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/get/${ID_LOGBOOK}`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/get/${ID_LOGBOOK}`, {
+          signal: controller.signal,
+        })
         .then((result) => {
-         
           setLogbookAttributesData(result.data.data)
           setTanggalLogbook(convertDate(result.data.data.date))
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -80,7 +85,13 @@ const ReviewLogbook = (props) => {
           }
         })
     }
+
     getDataLogbook()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const hoverButtonKembali = <div>Klik tombol, untuk kembali ke list logbook</div>
@@ -91,14 +102,13 @@ const ReviewLogbook = (props) => {
       : history.push(`/logbook`)
   }
 
-  const setTagColorStatus = (status) =>{
-    if(status === 'Terlambat'){
+  const setTagColorStatus = (status) => {
+    if (status === 'Terlambat') {
       return 'red'
-    }else{
+    } else {
       return 'green'
     }
-
-  } 
+  }
   return isLoading ? (
     <Spin tip="Loading" size="large">
       <div className="content" />
@@ -106,22 +116,21 @@ const ReviewLogbook = (props) => {
   ) : (
     <>
       <React.Fragment>
-     
-
         <div className="container">
           <h3 className="title-s" style={{ textAlign: 'center' }}>
-          
-           FORM LOGBOOK PESERTA
+            FORM LOGBOOK PESERTA
           </h3>
 
           <Form>
-            <Row className='spacebottom'>
-              <Col span={2}>
-               Tanggal Logbook : 
-              </Col>
+            <Row className="spacebottom">
+              <Col span={2}>Tanggal Logbook :</Col>
               <Col span={8}>{tanggalLogbook}</Col>
               <Col span={2}>Status Pengumpulan : </Col>
-              <Col span={4}><Tag color={setTagColorStatus(logbookAttributesData.status.status)}>{logbookAttributesData.status.status}</Tag></Col>
+              <Col span={4}>
+                <Tag color={setTagColorStatus(logbookAttributesData.status.status)}>
+                  {logbookAttributesData.status.status}
+                </Tag>
+              </Col>
             </Row>
             <Row>
               <Col>
@@ -160,7 +169,6 @@ const ReviewLogbook = (props) => {
                 </Form.Group>
               </Col>
             </Row>
-
             <Row>
               <Col>
                 <Form.Group className="mb-3" controlId="tugas">
@@ -229,7 +237,8 @@ const ReviewLogbook = (props) => {
                   />
                 </Form.Group>
               </Col>
-            </Row>    <Row>
+            </Row>{' '}
+            <Row>
               <Col>
                 <Form.Group className="mb-3" controlId="keterangan">
                   <Form.Label>Kendala </Form.Label>
@@ -243,9 +252,6 @@ const ReviewLogbook = (props) => {
                 </Form.Group>
               </Col>
             </Row>
-
-
-         
           </Form>
         </div>
       </React.Fragment>
