@@ -86,6 +86,12 @@
             <artifactId>json</artifactId>
             <version>20220320</version>
         </dependency>
+        <!-- S3-T04: auth-commons untuk StatelessJwtAuthenticationFilter -->
+        <dependency>
+            <groupId>com.kppkl</groupId>
+            <artifactId>auth-commons</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
