@@ -247,7 +247,7 @@ public class ParticipantService implements IParticipantService {
     }
 
     @Override
-    public Boolean updateCV(Integer idCv, CVUpdateRequest cvUpdateRequest, Integer idParticipant) {
+    public Boolean updateCV(Integer idCv, CVUpdateRequest cvUpdateRequest, Integer idParticipant, String cookie) {
         // Validate input parameters
         if (idCv == null || idCv <= 0) {
             throw new IllegalArgumentException("Invalid CV ID provided");
@@ -265,6 +265,22 @@ public class ParticipantService implements IParticipantService {
             participant -> {
                 if (participant.getCv().getId() != idCv) {
                     throw new IllegalArgumentException("CV does not belong to this participant - Authorization violation");
+                }
+                
+                HttpHeaders headers = new HttpHeaders();
+                headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                HttpEntity<String> req = new HttpEntity<>(headers);
+
+                ResponseEntity<Response<FormSubmitTimeResponse>> formSubmit = restTemplate.exchange("http://management-content-service/management-content/form-submit-time/2", HttpMethod.GET, req, new ParameterizedTypeReference<Response<FormSubmitTimeResponse>>() {});
+
+                if (formSubmit.hasBody() && formSubmit.getBody() != null && formSubmit.getBody().getData() != null) {
+                    String startDate = formSubmit.getBody().getData().getStartDate();
+                    String endDate = formSubmit.getBody().getData().getEndDate();
+                    Boolean isWithinTime = DateUtil.checkNowDate(startDate, endDate);
+                    if (isWithinTime == null || !isWithinTime) {
+                        throw new IllegalArgumentException("Formulir Data CV tidak dapat diubah karena diluar waktu yang telah ditetapkan.");
+                    }
                 }
                 Optional<CV> cv = cvRepository.findById(idCv);
                 cv.ifPresent(c -> {
