@@ -213,8 +213,9 @@ public class MappingController {
         try {
             if(idProdi == null) {
                 mappingService.deleteCompany(idCompany);
+            } else {
+                mappingService.deleteCompanyByProdi(idCompany, idProdi);
             }
-            mappingService.deleteCompanyByProdi(idCompany, idProdi);
             return ResponseHandler.generateResponse("Delete company succeed", HttpStatus.OK);
         } catch (HttpClientErrorException ex) {
             return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
