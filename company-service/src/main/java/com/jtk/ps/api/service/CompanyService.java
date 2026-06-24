@@ -950,38 +950,48 @@ public class CompanyService implements ICompanyService {
     }
 
     @Override
-        public CreateCompanyResponse acceptCompanySubmission(Integer id, String cookie) {
-
-            Submission submission = submissionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Submission not found"));
-
-            CompanyRequest cr = new CompanyRequest();
-
-            cr.setCompanyName(submission.getCompanyName());
-            cr.setCompanyEmail(submission.getCompanyMail());
-            cr.setNoPhone(submission.getNoPhone());
-            cr.setAddress(submission.getAddress());
-
-            cr.setCpName(submission.getCpName());
-            cr.setCpEmail(submission.getCpMail());
-            cr.setCpPosition(submission.getCpPosition());
-            cr.setCpPhone(submission.getCpPhone());
-
-            cr.setWebsite(submission.getWebsite());
-            cr.setNumEmployee(submission.getNumEmployee());
-            cr.setSinceYear(submission.getSinceYear());
-
-            cr.setLecturerId(null);
-            cr.setStatus(true);
-
-            CreateCompanyResponse response =
-                    this.createCompanyWithCredentials(cr, cookie);
-
-            submission.setIsDeleted(true);
-            submissionRepository.save(submission);
-
-            return response;
+    public CreateCompanyResponse acceptCompanySubmission(Integer id, String cookie) {
+        Submission s = submissionRepository.findById(id).orElse(null);
+        if (s == null) {
+            return null;
         }
+
+        CompanyRequest cr = new CompanyRequest();
+
+        cr.setCompanyName(s.getCompanyName());
+        cr.setCompanyEmail(s.getCompanyMail());
+        cr.setNoPhone(s.getNoPhone());
+        cr.setAddress(s.getAddress());
+
+        cr.setCpName(s.getCpName());
+        cr.setCpEmail(s.getCpMail());
+        cr.setCpPosition(s.getCpPosition());
+        cr.setCpPhone(s.getCpPhone());
+
+        cr.setWebsite(s.getWebsite());
+        cr.setNumEmployee(s.getNumEmployee());
+        cr.setSinceYear(s.getSinceYear());
+
+        cr.setLecturerId(null);
+        cr.setStatus(true);
+
+        CompanyCreationResult result = createCompanyInternal(cr, cookie);
+        Company newCompany = result.company;
+
+        proposerRepository.findBySubmissionIdId(s.getId()).ifPresent(psr -> {
+            psr.setCompanyId(newCompany);
+            proposerRepository.save(psr);
+        });
+
+        s.setIsDeleted(true);
+        submissionRepository.save(s);
+
+        return new CreateCompanyResponse(
+                newCompany.getId(),
+                newCompany.getCompanyEmail(),
+                newCompany.getCompanyEmail(),
+                result.password);
+    }
 
     @Override
     public void declineCompanySubmission(Integer id) {
@@ -1064,6 +1074,10 @@ public class CompanyService implements ICompanyService {
         endDate = Objects.requireNonNull(formSubmitD4.getBody()).getData().getEndDate();
         Boolean isDateAvailableD4 = DateUtil.checkNowDate(startDate, endDate);
         Integer numEvaluationD4 = 1;
+        // Penanda apakah ada minimal satu periode timeline D4 yang aktif.
+        // Dipakai sebagai guard agar saat ketiga periode sudah lewat, kode tidak
+        // diam-diam memetakan participant D4 ke evaluasi terakhir seolah aktif.
+        boolean isAnyD4TimelineActive = Boolean.TRUE.equals(isDateAvailableD4);
 
         if (!isDateAvailableD4) {
             formSubmitD4 =
@@ -1082,6 +1096,7 @@ public class CompanyService implements ICompanyService {
             endDate = Objects.requireNonNull(formSubmitD4.getBody()).getData().getEndDate();
             isDateAvailableD4 = DateUtil.checkNowDate(startDate, endDate);
             numEvaluationD4 = 2;
+            isAnyD4TimelineActive = isAnyD4TimelineActive || Boolean.TRUE.equals(isDateAvailableD4);
 
             if (!isDateAvailableD4) {
                 formSubmitD4 =
@@ -1100,7 +1115,16 @@ public class CompanyService implements ICompanyService {
                 endDate = Objects.requireNonNull(formSubmitD4.getBody()).getData().getEndDate();
                 isDateAvailableD4 = DateUtil.checkNowDate(startDate, endDate);
                 numEvaluationD4 = 3;
+                isAnyD4TimelineActive = isAnyD4TimelineActive || Boolean.TRUE.equals(isDateAvailableD4);
             }
+        }
+
+        // Guard: jika tidak ada satu pun periode timeline D4 yang aktif, jangan
+        // paksa pemetaan ke evaluasi ke-3. Kembalikan ke evaluasi pertama sebagai
+        // nilai netral, dan tandai bahwa timeline D4 sudah terlewat.
+        if (!isAnyD4TimelineActive) {
+            numEvaluationD4 = 1;
+            isDateAvailableD4 = Boolean.FALSE;
         }
 
         // Get participant-company final mapping (Mapping)
@@ -1171,7 +1195,7 @@ public class CompanyService implements ICompanyService {
         }
 
         if (isFinalMappingD4 == 0) {
-            ecrList.getParticipantD3().removeIf(e -> (e.getParticipantProdi() == EProdi.D4.id));
+            ecrList.getParticipantD4().removeIf(e -> (e.getParticipantProdi() == EProdi.D4.id));
         }
 
         ecrList.setIsMoreThanTimelineD3(Boolean.FALSE.equals(isDateAvailableD3));
