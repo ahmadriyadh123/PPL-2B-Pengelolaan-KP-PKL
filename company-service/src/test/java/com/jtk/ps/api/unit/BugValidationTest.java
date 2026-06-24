@@ -56,7 +56,6 @@ import static org.mockito.ArgumentMatchers.*;
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-@SpringBootTest(classes = {BugValidationTest.class})
 public class BugValidationTest {
 
     @Test
