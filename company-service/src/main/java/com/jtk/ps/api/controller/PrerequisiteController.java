@@ -74,6 +74,7 @@ public class PrerequisiteController {
     }
     
     @GetMapping("quota")
+    @PreAuthorize("hasAnyAuthority('COMMITTEE', 'HEAD_STUDY_PROGRAM')")
     public ResponseEntity<Object> getQuota(
             HttpServletRequest request)
     {
@@ -159,6 +160,7 @@ public class PrerequisiteController {
     }
 
     @DeleteMapping(value = "/delete-competence/{id}")
+    @PreAuthorize("hasAuthority('COMPANY')")
     public ResponseEntity<Object> deletePrerequisiteCompetence(@PathVariable("id") Integer id) {
         try {
             companyService.deletePrerequisiteCompetence(id);
@@ -171,6 +173,7 @@ public class PrerequisiteController {
     }
     
     @DeleteMapping(value = "/delete-jobscope/{id}")
+    @PreAuthorize("hasAuthority('COMPANY')")
     public ResponseEntity<Object> deletePrerequisiteJobscope(@PathVariable("id") Integer id) {
         try {
             companyService.deletePrerequisiteJobscope(id);
