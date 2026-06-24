@@ -12,7 +12,7 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     serviceUrl:
-      defaultZone: http://192.168.229.22:8761/eureka
+      defaultZone: http://localhost:8761/eureka
   instance:
     # Necessary for Docker as it doesn't have DNS entries
     prefer-ip-address: true
