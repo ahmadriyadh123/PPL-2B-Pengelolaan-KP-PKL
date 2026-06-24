@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import 'antd/dist/antd.css'
+import 'antd/dist/reset.css'
 import 'src/scss/_custom.scss'
 import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import {
@@ -109,7 +109,7 @@ const PembobotanMataKuliah = () => {
           setIsSpinner(false)
         })
         .catch(function (error) {
-          if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
               state: {
@@ -566,4 +566,3 @@ const PembobotanMataKuliah = () => {
   )
 }
 export default PembobotanMataKuliah
-

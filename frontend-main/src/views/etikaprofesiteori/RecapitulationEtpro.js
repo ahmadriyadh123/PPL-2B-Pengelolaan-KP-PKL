@@ -1,4 +1,4 @@
-import 'antd/dist/antd.css'
+import 'antd/dist/reset.css'
 import 'src/scss/_custom.scss'
 import { Card, Table, notification, Spin, Button } from 'antd'
 import axios from 'axios'

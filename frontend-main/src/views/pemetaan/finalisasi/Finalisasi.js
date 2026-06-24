@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import 'antd/dist/antd.css';
+import 'antd/dist/reset.css';
 import { Table, Button, Form, Select, Input, Space, Row, Col, Tooltip, notification, Alert, Spin, Modal } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faX } from '@fortawesome/free-solid-svg-icons';
@@ -111,7 +111,7 @@ const Finalisasi = () => {
             })
         })
         .catch(function (error) {
-          // if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+          // if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
           //   history.push({
           //     pathname: "/login",
           //     state: {
@@ -569,7 +569,7 @@ const Finalisasi = () => {
         setDataRankPeserta(data)
       })
       .catch(function (error) {
-        if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+        if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
           history.push({
             pathname: "/login",
             state: {
@@ -761,4 +761,3 @@ const Finalisasi = () => {
 }
 
 export default Finalisasi
-

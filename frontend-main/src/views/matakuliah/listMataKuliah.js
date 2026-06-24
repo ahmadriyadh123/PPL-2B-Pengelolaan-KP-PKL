@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 import React, { useState, useEffect } from 'react'
-import 'antd/dist/antd.css'
+import 'antd/dist/reset.css'
 import 'src/scss/_custom.scss'
 import { CCard, CCardBody, CCol, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -48,19 +48,31 @@ const ListMataKuliah = () => {
         console.log('ini final', final)
         setIsLoading(false)
       } catch (error) {
-        if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-          history.push({
-            pathname: '/login',
-            state: {
-              session: true,
-            },
-          })
-        } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+      // 1. Ambil status menggunakan optional chaining yang aman
+      const status = error?.response?.status
+
+      if (status) {
+        // SERVER MERESPON DENGAN HTTP STATUS
+        if (status === 401 || status === 403) {
+          // Jika token habis/ditolak, arahkan ke login
+          history.push({ pathname: '/login', state: { session: true } })
+        } else if (status === 404) {
+          // Hanya rute yang benar-benar 404 yang diredirect ke 404
           history.push('/404')
-        } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
+        } else if (status >= 500) {
           history.push('/500')
         }
+      } else {
+        // BACKEND MATI / KESALAHAN JARINGAN (Tidak ada respon HTTP)
+        notification.error({
+          message: 'Koneksi Gagal',
+          description: 'Gagal terhubung ke server. Pastikan backend Anda sudah berjalan.',
+        })
       }
+
+      // Wajib matikan loading spinner baik sukses maupun error
+      setIsLoading(false)
+    }
     }
     getData()
   }, [history, id])
@@ -529,4 +541,3 @@ const ListMataKuliah = () => {
   )
 }
 export default ListMataKuliah
-

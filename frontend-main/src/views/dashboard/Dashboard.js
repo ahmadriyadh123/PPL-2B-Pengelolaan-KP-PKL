@@ -59,7 +59,14 @@ const Dashboard = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
-          if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+          if (error.toJSON().status === 401 || error.toJSON().status === 403) {
+            history.push({
+              pathname: "/login",
+              state: {
+                session: true,
+              }
+            });
+          } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: "/login",
               state: {
@@ -156,7 +163,14 @@ const Dashboard = () => {
             })
         })
         .catch(function (error) {
-          if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+          if (error.toJSON().status === 401 || error.toJSON().status === 403) {
+            history.push({
+              pathname: "/login",
+              state: {
+                session: true,
+              }
+            });
+          } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: "/login",
               state: {
@@ -233,4 +247,3 @@ const Dashboard = () => {
 }
 
 export default Dashboard
-

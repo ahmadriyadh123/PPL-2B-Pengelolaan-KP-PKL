@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import 'antd/dist/antd.css'
+import 'antd/dist/reset.css'
 import 'src/scss/_custom.scss'
 import { CCard, CCardBody } from '@coreui/react';
 import { LoadingOutlined } from '@ant-design/icons'
