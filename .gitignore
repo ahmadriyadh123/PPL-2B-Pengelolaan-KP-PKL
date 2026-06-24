@@ -2,3 +2,7 @@
 .env
 .env.*
 !.env.example
+
+# SQL and database dumps
+*.sql
+dump database/
