@@ -68,6 +68,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+        <!-- S3-T07: Shared library auth-commons untuk validasi JWT lokal -->
+        <dependency>
+            <groupId>com.kppkl</groupId>
+            <artifactId>auth-commons</artifactId>
+            <version>1.0.0</version>
+        </dependency>
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
