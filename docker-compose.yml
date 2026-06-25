@@ -3,7 +3,7 @@ services:
     image: mysql:8.0
     container_name: kpms-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
       MYSQL_DATABASE: db-account
     ports:
       - "3306:3306"
@@ -11,7 +11,7 @@ services:
       - mysql-data:/var/lib/mysql
       - ./.docker/mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-root}"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -70,6 +70,7 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-account?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      AUTH_LOCAL_VALIDATION_ENABLED: "true"
     ports:
       - "8081:8081"
     depends_on:
@@ -88,9 +89,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-participant?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      AUTH_LOCAL_VALIDATION_ENABLED: "true"
     ports:
       - "8082:8082"
     depends_on:
@@ -109,9 +111,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-company?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      AUTH_LOCAL_VALIDATION_ENABLED: "true"
     ports:
       - "8083:8083"
     depends_on:
@@ -130,9 +133,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-management-content?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      AUTH_LOCAL_VALIDATION_ENABLED: "true"
     ports:
       - "8084:8084"
     depends_on:
@@ -151,9 +155,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-mapping?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      AUTH_LOCAL_VALIDATION_ENABLED: "true"
     ports:
       - "8085:8085"
     depends_on:
@@ -172,10 +177,11 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-grade?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      AUTH_LOCAL_VALIDATION_ENABLED: "true"
     ports:
       - "8087:8087"
     depends_on:
