@@ -20,12 +20,15 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
 import javax.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 @RestController
 @RequestMapping({"/", "/account"})
 public class AccountController {
+    private static final Logger log = LoggerFactory.getLogger(AccountController.class);
     @Autowired
     private IAccountService service;
 
@@ -84,15 +87,30 @@ public class AccountController {
     @PostMapping("/verify")
     public ResponseEntity<Object> verify(
             @CookieValue(name = "accessToken", required = false) String accessToken,
-            @CookieValue(name = "refreshToken", required = false) String refreshToken) {
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletRequest request) {
+        // [S3-T09] Endpoint ini di-deprecate. Semua service sudah migrasi ke auth-commons
+        // (validasi JWT lokal). Endpoint tetap aktif Sprint 3, akan dihapus Sprint 4.
+        log.warn("[DEPRECATED] /account/verify dipanggil dari: {}", request.getRemoteAddr());
+
         try {
             VerifyResponse verifyResponse = service.verify(accessToken, refreshToken);
+
+            HttpHeaders deprecationHeaders = new HttpHeaders();
+            deprecationHeaders.add("Warning", "299 - \"Endpoint /account/verify deprecated. Will be removed in Sprint 4.\"");
+
             if (verifyResponse.getHttpStatus().is3xxRedirection()) {
-                return ResponseHandler.generateResponse("Redirect to login!",
+                ResponseEntity<Object> original = ResponseHandler.generateResponse("Redirect to login!",
                         verifyResponse.getHttpStatus(), verifyResponse.getResponse(), verifyResponse.getHeaders());
+                return ResponseEntity.status(original.getStatusCode())
+                        .headers(deprecationHeaders)
+                        .body(original.getBody());
             } else {
-                return ResponseHandler.generateResponse("Verify successfully!",
+                ResponseEntity<Object> original = ResponseHandler.generateResponse("Verify successfully!",
                         verifyResponse.getHttpStatus(), verifyResponse.getResponse(), verifyResponse.getHeaders());
+                return ResponseEntity.status(original.getStatusCode())
+                        .headers(deprecationHeaders)
+                        .body(original.getBody());
             }
         } catch (Exception e) {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.FOUND);
