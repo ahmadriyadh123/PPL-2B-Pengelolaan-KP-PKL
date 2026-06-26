@@ -99,11 +99,16 @@ const PengisianSelfAssessment = () => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const getPoinPenilaianSelfAssessment = async (record, index) => {
       enterLoading(index)
       await axios
         .get(
           `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/aspect/get?type=active`,
+          {
+            signal: controller.signal,
+          },
         )
         .then((result) => {
           console.log(result.data.data)
@@ -112,6 +117,10 @@ const PengisianSelfAssessment = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -128,6 +137,11 @@ const PengisianSelfAssessment = () => {
     }
 
     getPoinPenilaianSelfAssessment()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   /** HANDLE INPUT NILAI DAN KETERANGAN */
@@ -315,13 +329,21 @@ const PengisianSelfAssessment = () => {
   // }, [tanggalBerakhirSelfAssessment])
 
   useEffect(() => {
+    const controller = new AbortController()
+
     async function GetDayRange() {
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all?id_deadline=2`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all?id_deadline=2`, {
+          signal: controller.signal,
+        })
         .then((response) => {
           setDayRangeDeadlineSelfAssessment(response.data.data.day_range)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -336,7 +358,13 @@ const PengisianSelfAssessment = () => {
           }
         })
     }
+
     GetDayRange()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const handleKembaliKeRekapSelfAssessment = () => {
@@ -485,7 +513,7 @@ const PengisianSelfAssessment = () => {
 
       {/* CONTOH PDF */}
       <Modal
-      style={{marginLeft:350}}
+        style={{ marginLeft: 350 }}
         title="Rubrik Pengisian Self Assessment - Acuan Pengisian Nilai Self Asssesssment"
         footer={[
           <>

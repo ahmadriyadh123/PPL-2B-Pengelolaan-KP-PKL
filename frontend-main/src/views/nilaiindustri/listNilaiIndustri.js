@@ -29,17 +29,23 @@ const ListNilaiIndustri = () => {
         setIsLoading(false)
       })
       .catch(function (error) {
-        if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-          history.push({
-            pathname: '/login',
-            state: {
-              session: true,
-            },
-          })
-        } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-          history.push('/404')
-        } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
-          history.push('/500')
+        const status = error.response ? error.response.status : (error.toJSON && typeof error.toJSON === 'function' ? error.toJSON().status : null);
+        if (status) {
+          if (status >= 300 && status <= 399) {
+            history.push({
+              pathname: '/login',
+              state: {
+                session: true,
+              },
+            })
+          } else if (status >= 400 && status <= 499) {
+            history.push('/404')
+          } else if (status >= 500 && status <= 599) {
+            history.push('/500')
+          }
+        } else {
+          console.error(error)
+          setIsLoading(false)
         }
       })
   }
@@ -50,31 +56,46 @@ const ListNilaiIndustri = () => {
 
   const renderRows = () => {
     const rows = [];
+    if (!Array.isArray(data)) return rows;
   
     data.forEach((row, rowIndex) => {
-      const itemsCount = row.evaluations.length;
+      const evaluations = row.evaluations || [];
+      const itemsCount = evaluations.length;
   
-      row.evaluations.forEach((evaluation, itemIndex) => {
-        if (itemIndex === 0) {
-          rows.push({
-            key: `${rowIndex}-${itemIndex}`,
-            no: rowIndex+1,
-            id: row.id,
-            name: row.name,
-            nim: row.nim,
-            numEvaluation: `Evaluasi ${evaluation.numEvaluation}`,
-            idNumEvaluation: evaluation.id,
-            rowSpan: itemsCount
-          });
-        } else {
-          rows.push({
-            key: `${rowIndex}-${itemIndex}`,
-            numEvaluation: `Evaluasi ${evaluation.numEvaluation}`,
-            idNumEvaluation: evaluation.id,
-            rowSpan: 0
-          });
-        }
-      });
+      if (itemsCount === 0) {
+        rows.push({
+          key: `${rowIndex}-0`,
+          no: rowIndex + 1,
+          id: row.id,
+          name: row.name,
+          nim: row.nim,
+          numEvaluation: '-',
+          idNumEvaluation: null,
+          rowSpan: 1
+        });
+      } else {
+        evaluations.forEach((evaluation, itemIndex) => {
+          if (itemIndex === 0) {
+            rows.push({
+              key: `${rowIndex}-${itemIndex}`,
+              no: rowIndex + 1,
+              id: row.id,
+              name: row.name,
+              nim: row.nim,
+              numEvaluation: `Evaluasi ${evaluation.numEvaluation}`,
+              idNumEvaluation: evaluation.id,
+              rowSpan: itemsCount
+            });
+          } else {
+            rows.push({
+              key: `${rowIndex}-${itemIndex}`,
+              numEvaluation: `Evaluasi ${evaluation.numEvaluation}`,
+              idNumEvaluation: evaluation.id,
+              rowSpan: 0
+            });
+          }
+        });
+      }
     });
     return rows;
   };
@@ -122,7 +143,11 @@ const ListNilaiIndustri = () => {
       key: 'numEvaluation',
       align: 'center',
       render: (text, record) => (
-        <a href={`nilaiIndustri/${record.idNumEvaluation}`}>{record.numEvaluation}</a>
+        record.idNumEvaluation ? (
+          <a href={`nilaiIndustri/${record.idNumEvaluation}`}>{record.numEvaluation}</a>
+        ) : (
+          record.numEvaluation
+        )
       ),
     }
   ];

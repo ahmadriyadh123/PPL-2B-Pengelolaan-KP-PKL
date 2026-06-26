@@ -1,3 +1,7 @@
+x-common-env: &common-env
+  SPRING_PROFILES_ACTIVE: docker
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+
 services:
   mysql:
     image: mysql:8.0
@@ -57,6 +61,11 @@ services:
     restart: unless-stopped
     networks:
       - kpms-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8761/actuator/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
 
   account-service:
     build: ./account-service
@@ -66,147 +75,258 @@ services:
     env_file:
       - ./account-service/.env
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+      <<: *common-env
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-account?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       AUTH_LOCAL_VALIDATION_ENABLED: "true"
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75
     ports:
       - "8081:8081"
     depends_on:
       mysql:
         condition: service_healthy
       service-registry:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - kpms-network
+    mem_limit: 512m
+    cpus: 0.50
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   participant-service:
     build: ./participant-service
     container_name: kpms-participant-service
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+      <<: *common-env
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-participant?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       AUTH_LOCAL_VALIDATION_ENABLED: "true"
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75
     ports:
       - "8082:8082"
     depends_on:
       mysql:
         condition: service_healthy
       service-registry:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - kpms-network
+    mem_limit: 512m
+    cpus: 0.50
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   company-service:
     build: ./company-service
     container_name: kpms-company-service
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+      <<: *common-env
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-company?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       AUTH_LOCAL_VALIDATION_ENABLED: "true"
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75
     ports:
       - "8083:8083"
     depends_on:
       mysql:
         condition: service_healthy
       service-registry:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - kpms-network
+    mem_limit: 512m
+    cpus: 0.50
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   management-content-service:
     build: ./management-content-service
     container_name: kpms-management-content-service
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+      <<: *common-env
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-management-content?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       AUTH_LOCAL_VALIDATION_ENABLED: "true"
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75
     ports:
       - "8084:8084"
     depends_on:
       mysql:
         condition: service_healthy
       service-registry:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - kpms-network
+    mem_limit: 512m
+    cpus: 0.50
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   mapping-service:
     build: ./mapping-service
     container_name: kpms-mapping-service
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+      <<: *common-env
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-mapping?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       AUTH_LOCAL_VALIDATION_ENABLED: "true"
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75
     ports:
       - "8085:8085"
     depends_on:
       mysql:
         condition: service_healthy
       service-registry:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - kpms-network
+    mem_limit: 512m
+    cpus: 0.50
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   grade-service:
     build: ./grade-service
     container_name: kpms-grade-service
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+      <<: *common-env
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-grade?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       AUTH_LOCAL_VALIDATION_ENABLED: "true"
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75
     ports:
       - "8087:8087"
     depends_on:
       mysql:
         condition: service_healthy
       service-registry:
-        condition: service_started
+        condition: service_healthy
       kafka:
         condition: service_started
     restart: unless-stopped
     networks:
       - kpms-network
+    mem_limit: 512m
+    cpus: 0.50
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  monitoring-service:
+    build: ./monitoring-service
+    container_name: kpms-monitoring-service
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db-monitoring?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75
+    ports:
+      - "8086:8086"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - kpms-network
+    mem_limit: 512m
+    cpus: 0.50
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   api-gateway:
     build: ./api-gateway
     container_name: kpms-api-gateway
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+      <<: *common-env
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75
     ports:
       - "8080:8080"
     depends_on:
       service-registry:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
+    networks:
+      - kpms-network
+    mem_limit: 512m
+    cpus: 0.50
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    build:
+      context: ./frontend-main
+      dockerfile: Dockerfile.dev
+    container_name: kpms-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_GATEWAY_URL: http://localhost:8080/
+      PORT: 3000
+    volumes:
+      - ./frontend-main:/app
+      - /app/node_modules
+    stdin_open: true
+    tty: true
     networks:
       - kpms-network
 
@@ -214,5 +334,5 @@ volumes:
   mysql-data:
 
 networks:
-  kpms-network:
-    driver: bridge
+    kpms-network:
+      driver: bridge

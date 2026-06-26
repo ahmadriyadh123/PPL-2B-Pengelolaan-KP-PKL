@@ -96,11 +96,11 @@ const ListMataKuliah = () => {
     // console.log(route)
     // history.push(route)
     // console.log(history.push(`/matakuliah/listmatakuliah/tambahmatakuliah`))
-    history.push(`/matakuliah/listmatakuliah/tambahmatakuliah`)
+    history.push(`/mataKuliah/listMatakuliah/tambahMatakuliah`)
   }
 
   const detailMataKuliah = (id) => {
-    history.push(`/matakuliah/listmatakuliah/detailmatakuliah/${id}`)
+    history.push(`/mataKuliah/listMatakuliah/detailMatakuliah/${id}`)
   }
 
   const showModalDelete = (record) => {

@@ -1,16 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/reset.css'
-import { CCard, CCardBody, CCardHeader} from '@coreui/react'
-import {
-  Button,
-  Row,
-  Col,
-  Form,
-  Input,
-  notification,
-  Spin,
-  Popover,
-} from 'antd'
+import { CCard, CCardBody, CCardHeader } from '@coreui/react'
+import { Button, Row, Col, Form, Input, notification, Spin, Popover } from 'antd'
 import axios from 'axios'
 import { useHistory } from 'react-router-dom'
 import '../pengisianDokumen/rpp/rpp.css'
@@ -26,43 +17,45 @@ const PengaturanBobotFormPembimbingJurusan = () => {
   const [dataPoinPenilaian, setDataPoinPenilaian] = useState([])
   const [isSuccessUpdateData, setIsSuccessUpdateData] = useState(true)
 
-
-  
   useEffect(() => {
+    const controller = new AbortController()
+
     const getDataPoinPenilaianFormPembimbing = async (index) => {
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-grade/aspect/get`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-grade/aspect/get`, {
+          signal: controller.signal,
+        })
         .then((result) => {
           console.log('rata', result.data.data)
           let dataresult = result.data.data
-          if(dataresult.length<1){
+          if (dataresult.length < 1) {
             setDataPoinPenilaian(dataresult)
-          }else{
+          } else {
             setPoinPenilaianFormPembimbing({
               idNilaiProsesBimbingan: result.data.data[0].id,
               idNilaiLaporan: result.data.data[1].id,
               idNilaiLainnya: result.data.data[2].id,
-  
+
               bobotNilaiProsesBimbingan: result.data.data[0].max_grade,
               bobotNilaiLaporan: result.data.data[1].max_grade,
               bobotNilaiLainnya: result.data.data[2].max_grade,
-  
+
               deskripsiNilaiProsesBimbingan: result.data.data[0].description,
               deskripsiNilaiLaporan: result.data.data[1].description,
               deskripsiNilaiLainnya: result.data.data[2].description,
-  
+
               poinNilaiProsesBimbingan: result.data.data[0].name,
               poinNilaiLaporan: result.data.data[1].name,
               poinNilaiLainnya: result.data.data[2].name,
             })
-  
+
             let temp = result.data.data
             let temp1 = []
             let getTempDataPoin = function (obj) {
               for (let i in obj) {
                 temp1.push({
                   id: obj[i].id,
-                  name : obj[i].name,
+                  name: obj[i].name,
                   description: obj[i].description,
                   max_grade: obj[i].max_grade,
                 })
@@ -74,6 +67,10 @@ const PengaturanBobotFormPembimbingJurusan = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -89,17 +86,13 @@ const PengaturanBobotFormPembimbingJurusan = () => {
         })
     }
 
-
-
-
-
     getDataPoinPenilaianFormPembimbing()
 
-
-
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
-
-
 
   const isMaxGradeEmpty = (nilaibobot) => {
     return nilaibobot ? nilaibobot : 0
@@ -134,7 +127,6 @@ const PengaturanBobotFormPembimbingJurusan = () => {
     setDataPoinPenilaian(dataPoinPenilaian)
   }
 
-
   const simpanPoinPenilaian = () => {
     let total_bobot = CekTotalBobotInput()
     if (parseInt(total_bobot) > 100 || parseInt(total_bobot) < 100) {
@@ -155,17 +147,17 @@ const PengaturanBobotFormPembimbingJurusan = () => {
       let name_new = data[i].name
       await axios
         .put(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-grade/aspect/update`, {
-          "description" : description_new,
-          "id" : aspect_id,
-          "max_grade" : max_grade_new,
-          "name" : name_new
+          description: description_new,
+          id: aspect_id,
+          max_grade: max_grade_new,
+          name: name_new,
         })
         .then((res) => {
-         if((parseInt(i)+1) === (data.length)){
-          notification.success({
-            message: 'Data bobot penilaian berhasil diperbarui',
-          })
-         }
+          if (parseInt(i) + 1 === data.length) {
+            notification.success({
+              message: 'Data bobot penilaian berhasil diperbarui',
+            })
+          }
           // refreshData()
         })
         .catch(function (error) {
@@ -187,47 +179,45 @@ const PengaturanBobotFormPembimbingJurusan = () => {
           }
         })
     }
-
-  
   }
 
   const refreshData = async (index) => {
     await axios
-    .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-grade/aspect/get`)
-    .then((result) => {
-      setPoinPenilaianFormPembimbing({
-        idNilaiProsesBimbingan: result.data.data[0].id,
-        idNilaiLaporan: result.data.data[1].id,
-        idNilaiLainnya: result.data.data[2].id,
+      .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-grade/aspect/get`)
+      .then((result) => {
+        setPoinPenilaianFormPembimbing({
+          idNilaiProsesBimbingan: result.data.data[0].id,
+          idNilaiLaporan: result.data.data[1].id,
+          idNilaiLainnya: result.data.data[2].id,
 
-        bobotNilaiProsesBimbingan: result.data.data[0].max_grade,
-        bobotNilaiLaporan: result.data.data[1].max_grade,
-        bobotNilaiLainnya: result.data.data[2].max_grade,
+          bobotNilaiProsesBimbingan: result.data.data[0].max_grade,
+          bobotNilaiLaporan: result.data.data[1].max_grade,
+          bobotNilaiLainnya: result.data.data[2].max_grade,
 
-        deskripsiNilaiProsesBimbingan: result.data.data[0].description,
-        deskripsiNilaiLaporan: result.data.data[1].description,
-        deskripsiNilaiLainnya: result.data.data[2].description,
+          deskripsiNilaiProsesBimbingan: result.data.data[0].description,
+          deskripsiNilaiLaporan: result.data.data[1].description,
+          deskripsiNilaiLainnya: result.data.data[2].description,
 
-        poinNilaiProsesBimbingan: result.data.data[0].name,
-        poinNilaiLaporan: result.data.data[1].name,
-        poinNilaiLainnya: result.data.data[2].name,
-      })
+          poinNilaiProsesBimbingan: result.data.data[0].name,
+          poinNilaiLaporan: result.data.data[1].name,
+          poinNilaiLainnya: result.data.data[2].name,
+        })
 
-      let temp = result.data.data
-      let temp1 = []
-      let getTempDataPoin = function (obj) {
-        for (var i in obj) {
-          temp1.push({
-            id: obj[i].id,
-            name : obj[i].name,
-            description: obj[i].description,
-            max_grade: obj[i].max_grade,
-          })
+        let temp = result.data.data
+        let temp1 = []
+        let getTempDataPoin = function (obj) {
+          for (var i in obj) {
+            temp1.push({
+              id: obj[i].id,
+              name: obj[i].name,
+              description: obj[i].description,
+              max_grade: obj[i].max_grade,
+            })
+          }
         }
-      }
-      getTempDataPoin(temp)
-      setDataPoinPenilaian(temp1)
-      setIsLoading(false)
+        getTempDataPoin(temp)
+        setDataPoinPenilaian(temp1)
+        setIsLoading(false)
       })
       .catch(function (error) {
         if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
@@ -245,7 +235,7 @@ const PengaturanBobotFormPembimbingJurusan = () => {
       })
   }
 
-  return(
+  return (
     <>
       <div className="container2">
         <h2 className="justify">Pengelolaan Poin Penilaian Form Pembimbing</h2>
@@ -308,7 +298,12 @@ const PengaturanBobotFormPembimbingJurusan = () => {
           ]}
         >
           <Popover content={<div>Klik tombol untuk menyimpan perubahan</div>}>
-            <Button type="primary" onClick={()=>{simpanPoinPenilaian()}}>
+            <Button
+              type="primary"
+              onClick={() => {
+                simpanPoinPenilaian()
+              }}
+            >
               Simpan
             </Button>
           </Popover>

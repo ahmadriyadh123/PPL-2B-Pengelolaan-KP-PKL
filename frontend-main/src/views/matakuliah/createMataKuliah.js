@@ -68,7 +68,7 @@ const CreateMataKuliah = () => {
   })
 
   const listmatakuliah = () => {
-    history.push('/matakuliah/listmatakuliah')
+    history.push('/mataKuliah/listMatakuliah')
   }
 
   function onChangeProdi(value) {

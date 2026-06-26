@@ -30,6 +30,10 @@ spring:
           uri: lb://grade-service
           predicates:
             - Path=/grade/**
+        - id: monitoring-service
+          uri: lb://monitoring-service
+          predicates:
+            - Path=/monitoring/**
       globalcors:
         corsConfigurations:
           '[/**]':
