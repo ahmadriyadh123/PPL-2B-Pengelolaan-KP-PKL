@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,7 +45,8 @@ public class CourseController {
     }
 
     @PostMapping("/form") //checked
-    public ResponseEntity<Object> createCourseForm(@RequestBody CourseFormRequestDto newCourse){
+    @PreAuthorize("hasAuthority('COMMITTEE')")
+    public ResponseEntity<Object> createCourseForm(@Valid @RequestBody CourseFormRequestDto newCourse){
         courseService.createCourseForm(newCourse);
         return ResponseHandler.generateResponse("Create Course Form succeed",HttpStatus.OK);
     }
@@ -54,12 +57,14 @@ public class CourseController {
     }
 
     @PutMapping("/form/update/{idForm}") //checked
-    public ResponseEntity<Object> updateCourseForm(@PathVariable("idForm") Integer idForm,@RequestBody CourseFormRequestDto newCourseForm){
+    @PreAuthorize("hasAuthority('COMMITTEE')")
+    public ResponseEntity<Object> updateCourseForm(@PathVariable("idForm") Integer idForm, @Valid @RequestBody CourseFormRequestDto newCourseForm){
         courseService.updateCourseForm(idForm, newCourseForm);
         return ResponseHandler.generateResponse("Update Course Form succeed",HttpStatus.OK);
     }
 
     @DeleteMapping("/form/delete/{idForm}") //checked
+    @PreAuthorize("hasAuthority('COMMITTEE')")
     public ResponseEntity<Object> deleteCourseForm(@PathVariable("idForm") Integer idForm){
         courseService.deleteCourseForm(idForm);
         return ResponseHandler.generateResponse("Deleted Course Form succeed",HttpStatus.OK);
@@ -86,7 +91,8 @@ public class CourseController {
     }
 
     @PutMapping("/component/update") // checked
-    public ResponseEntity<Object> updateComponentCourse(@RequestBody List<ComponentCourseDto> newComponentCourses){
+    @PreAuthorize("hasAuthority('COMMITTEE')")
+    public ResponseEntity<Object> updateComponentCourse(@Valid @RequestBody List<ComponentCourseDto> newComponentCourses){
         courseService.updateComponent(newComponentCourses);
         return ResponseHandler.generateResponse("Update Component Course Form succeed",HttpStatus.OK);
     }
