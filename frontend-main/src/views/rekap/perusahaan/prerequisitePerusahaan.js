@@ -88,7 +88,7 @@ const PrerequisitePerusahaan = () => {
                         })
                 })
                 .catch(function (error) {
-                    if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+                    if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
                         history.push({
                             pathname: "/login",
                             state: {
@@ -111,7 +111,7 @@ const PrerequisitePerusahaan = () => {
                     setIsLoading(false)
                 })
                 .catch(function (error) {
-                    if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+                    if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
                         history.push({
                             pathname: "/login",
                             state: {
@@ -160,44 +160,91 @@ const PrerequisitePerusahaan = () => {
     }
     return isLoading ? (<Spin indicator={antIcon} />) : (
         <>
-            <>
-                {localStorage.getItem("id_role") === "2" && (
-                    data.status_submission === false && (
-                        <div style={{ paddingBottom: "20px" }}>
-                            <Alert
-                                message="Catatan"
-                                description="Formulir Data Prerequisite Perusahaan tidak dapat diisi atau diubah karena diluar waktu yang telah ditetapkan."
-                                type="info"
-                                showIcon
-                                closable />
-                        </div>
-                    )
-                )}
-                {localStorage.getItem("id_role") === "0" && (
-                    statusMapping === 1 && (
-                        <div style={{ paddingBottom: "20px" }}>
-                            <Alert
-                                message="Catatan"
-                                description="Formulir Data Prerequisite Perusahaan tidak dapat diisi atau diubah karena pemetaan sudah dilakukan."
-                                type="info"
-                                showIcon
-                                closable />
-                        </div>
-                    )
-                )}
-                <CCard className="mb-4" style={{overflowX: "scroll"}}>
-                    <CCardBody>
-                        <Row align='middle'>
-                            <Col span={2}>
-                                <FontAwesomeIcon icon={faClipboard} style={{ width: "50px", height: "50px" }} />
-                            </Col>
-                            {localStorage.getItem("id_role") === "2" ? (
-                                <>
-                                    <Col span={data.status_submission === true ? 10 : 19}>
-                                        {data.company_name}
-                                    </Col>
+            {data ? (
+                <>
+                    {localStorage.getItem("id_role") === "2" && (
+                        data.status_submission === false && (
+                            <div style={{ paddingBottom: "20px" }}>
+                                <Alert
+                                    message="Catatan"
+                                    description="Formulir Data Prerequisite Perusahaan tidak dapat diisi atau diubah karena diluar waktu yang telah ditetapkan."
+                                    type="info"
+                                    showIcon
+                                    closable />
+                            </div>
+                        )
+                    )}
+                    {localStorage.getItem("id_role") === "0" && (
+                        statusMapping === 1 && (
+                            <div style={{ paddingBottom: "20px" }}>
+                                <Alert
+                                    message="Catatan"
+                                    description="Formulir Data Prerequisite Perusahaan tidak dapat diisi atau diubah karena pemetaan sudah dilakukan."
+                                    type="info"
+                                    showIcon
+                                    closable />
+                            </div>
+                        )
+                    )}
+                    <CCard className="mb-4" style={{overflowX: "scroll"}}>
+                        <CCardBody>
+                            <Row align='middle'>
+                                <Col span={2}>
+                                    <FontAwesomeIcon icon={faClipboard} style={{ width: "50px", height: "50px" }} />
+                                </Col>
+                                {localStorage.getItem("id_role") === "2" ? (
                                     <>
-                                        {data.status_submission === true && (
+                                        <Col span={data.status_submission === true ? 10 : 19}>
+                                            {data.company_name}
+                                        </Col>
+                                        <>
+                                            {data.status_submission === true && (
+                                                <Col span={5} style={{ textAlign: "center" }}>
+                                                    <Button
+                                                        id={data.status_prerequisite === false ? "selesai" : "batal"}
+                                                        size="small"
+                                                        shape="round"
+                                                        loading={loadings[0]}
+                                                        style={data.status_prerequisite === false ? { color: "white", background: "#339900" } : { color: "white", background: "#CC0033" }}
+                                                        onClick={() => handleMark(data.id_prerequisite, 0)}
+                                                    >
+                                                        <FontAwesomeIcon icon={faCheck} style={{ paddingRight: "5px" }} />
+                                                        {data.status_prerequisite === false ? "Tandai sebagai selesai" : "Batal tandai selesai"}
+                                                    </Button>
+                                                </Col>
+                                            )}
+                                            <Col span={3} style={{ textAlign: "center" }}>
+                                                <Button
+                                                    id="detail"
+                                                    size="small"
+                                                    shape="round"
+                                                    style={{ color: "black", background: "#FBB03B" }}
+                                                    onClick={() => prerequisitePerusahaan(data.id_prerequisite)}
+                                                >
+                                                    <FontAwesomeIcon icon={faEye} style={{ paddingRight: "5px" }} /> Detail
+                                                </Button>
+                                            </Col>
+                                            {data.status_submission === true && (
+                                                <Col span={4} style={{ textAlign: "center" }}>
+                                                    <Button
+                                                        id="update"
+                                                        size="small"
+                                                        shape="round"
+                                                        style={{ color: "black", background: "#FCEE21" }}
+                                                        onClick={() => updatePrerequisite(data.id_prerequisite)}
+                                                    >
+                                                        <FontAwesomeIcon icon={faPencil} style={{ paddingRight: "5px" }} /> Ubah Prerequisite
+                                                    </Button>
+                                                </Col>
+                                            )}
+                                        </>
+                                    </>
+                                ) : localStorage.getItem("id_role") === "0" ? (
+                                    <>
+                                        <Col span={statusMapping === 0 ? 10 : 19}>
+                                            {data.company_name}
+                                        </Col>
+                                        {statusMapping === 0 && (
                                             <Col span={5} style={{ textAlign: "center" }}>
                                                 <Button
                                                     id={data.status_prerequisite === false ? "selesai" : "batal"}
@@ -223,7 +270,7 @@ const PrerequisitePerusahaan = () => {
                                                 <FontAwesomeIcon icon={faEye} style={{ paddingRight: "5px" }} /> Detail
                                             </Button>
                                         </Col>
-                                        {data.status_submission === true && (
+                                        {statusMapping === 0 && (
                                             <Col span={4} style={{ textAlign: "center" }}>
                                                 <Button
                                                     id="update"
@@ -237,77 +284,42 @@ const PrerequisitePerusahaan = () => {
                                             </Col>
                                         )}
                                     </>
-                                </>
-                            ) : localStorage.getItem("id_role") === "0" ? (
-                                <>
-                                    <Col span={statusMapping === 0 ? 10 : 19}>
-                                        {data.company_name}
-                                    </Col>
-                                    {statusMapping === 0 && (
-                                        <Col span={5} style={{ textAlign: "center" }}>
+                                ) : (
+                                    <>
+                                        <Col span={18}>
+                                            {data.company_name}
+                                        </Col>
+                                        <Col span={3} style={{ textAlign: "center" }}>
                                             <Button
-                                                id={data.status_prerequisite === false ? "selesai" : "batal"}
+                                                id="detail"
                                                 size="small"
                                                 shape="round"
-                                                loading={loadings[0]}
-                                                style={data.status_prerequisite === false ? { color: "white", background: "#339900" } : { color: "white", background: "#CC0033" }}
-                                                onClick={() => handleMark(data.id_prerequisite, 0)}
+                                                style={{ color: "black", background: "#FBB03B" }}
+                                                onClick={() => prerequisitePerusahaan(data.id_prerequisite)}
                                             >
-                                                <FontAwesomeIcon icon={faCheck} style={{ paddingRight: "5px" }} />
-                                                {data.status_prerequisite === false ? "Tandai sebagai selesai" : "Batal tandai selesai"}
+                                                <FontAwesomeIcon icon={faEye} style={{ paddingRight: "5px" }} /> Detail
                                             </Button>
                                         </Col>
-                                    )}
-                                    <Col span={3} style={{ textAlign: "center" }}>
-                                        <Button
-                                            id="detail"
-                                            size="small"
-                                            shape="round"
-                                            style={{ color: "black", background: "#FBB03B" }}
-                                            onClick={() => prerequisitePerusahaan(data.id_prerequisite)}
-                                        >
-                                            <FontAwesomeIcon icon={faEye} style={{ paddingRight: "5px" }} /> Detail
-                                        </Button>
-                                    </Col>
-                                    {statusMapping === 0 && (
-                                        <Col span={4} style={{ textAlign: "center" }}>
-                                            <Button
-                                                id="update"
-                                                size="small"
-                                                shape="round"
-                                                style={{ color: "black", background: "#FCEE21" }}
-                                                onClick={() => updatePrerequisite(data.id_prerequisite)}
-                                            >
-                                                <FontAwesomeIcon icon={faPencil} style={{ paddingRight: "5px" }} /> Ubah Prerequisite
-                                            </Button>
-                                        </Col>
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    <Col span={18}>
-                                        {data.company_name}
-                                    </Col>
-                                    <Col span={3} style={{ textAlign: "center" }}>
-                                        <Button
-                                            id="detail"
-                                            size="small"
-                                            shape="round"
-                                            style={{ color: "black", background: "#FBB03B" }}
-                                            onClick={() => prerequisitePerusahaan(data.id_prerequisite)}
-                                        >
-                                            <FontAwesomeIcon icon={faEye} style={{ paddingRight: "5px" }} /> Detail
-                                        </Button>
-                                    </Col>
-                                </>
-                            )}
-                        </Row>
-                    </CCardBody>
-                </CCard>
-            </>
+                                    </>
+                                )}
+                            </Row>
+                        </CCardBody>
+                    </CCard>
+                </>
+            ) : (
+                <div style={{ padding: "20px" }}>
+                    <Alert
+                        message="Data Belum Tersedia"
+                        description="Data Prerequisite Perusahaan untuk tahun ini belum diisi atau tidak ditemukan."
+                        type="warning"
+                        showIcon
+                    />
+                </div>
+            )}
         </>
     )
 }
 
 export default PrerequisitePerusahaan
+
 

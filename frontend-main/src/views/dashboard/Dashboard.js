@@ -23,6 +23,9 @@ const Dashboard = () => {
   axios.defaults.withCredentials = true;
 
   const getData = (data) => {
+    if (!Array.isArray(data)) {
+      return [];
+    }
     for (var i = 0; i < data.length; i++) {
       data[i].start_date = new Date(data[i].start_date);
       data[i].end_date = new Date(data[i].end_date);
