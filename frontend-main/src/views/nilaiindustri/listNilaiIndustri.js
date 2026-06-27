@@ -17,32 +17,43 @@ const ListNilaiIndustri = () => {
 
   // initial
   useEffect(() => {
-    getDataForm()
-  }, [history])
+    const source = axios.CancelToken.source();
+    let isMounted = true;
 
-  const getDataForm = async () => {
-    axios.defaults.withCredentials = true
-    await axios
-      .get(`${process.env.REACT_APP_API_GATEWAY_URL}grade/evaluation/`)
-      .then(function (response) {
-        setData(response.data.data)
-        setIsLoading(false)
-      })
-      .catch(function (error) {
-        if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-          history.push({
-            pathname: '/login',
-            state: {
-              session: true,
-            },
-          })
-        } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-          history.push('/404')
-        } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
-          history.push('/500')
-        }
-      })
-  }
+    const getDataForm = async () => {
+      axios.defaults.withCredentials = true
+      await axios
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}grade/evaluation/`, { cancelToken: source.token })
+        .then(function (response) {
+          if (isMounted) {
+            setData(response.data.data)
+            setIsLoading(false)
+          }
+        })
+        .catch(function (error) {
+          if (axios.isCancel(error)) return;
+          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            history.push({
+              pathname: '/login',
+              state: {
+                session: true,
+              },
+            })
+          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+            history.push('/404')
+          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
+            history.push('/500')
+          }
+        })
+    }
+
+    getDataForm()
+
+    return () => {
+      isMounted = false;
+      source.cancel("Component unmounted");
+    }
+  }, [history])
   
   useEffect(() => {
     console.log("isi data =>>", data);

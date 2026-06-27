@@ -1,5 +1,5 @@
 import React, {
-  useEffect, useState
+  useEffect, useState, useRef
 } from 'react'
 import axios from 'axios'
 import { useHistory } from 'react-router-dom';
@@ -20,6 +20,7 @@ const Dashboard = () => {
   const [timeline, setTimeline] = useState([])
   const [date, setDate] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const cancelTokenSource = useRef(null);
   axios.defaults.withCredentials = true;
 
   const getData = (data) => {
@@ -52,13 +53,20 @@ const Dashboard = () => {
     }];
 
   useEffect(() => {
+    const source = axios.CancelToken.source();
+    cancelTokenSource.current = source;
+    let isMounted = true;
+
     const getTimeline = async () => {
-      await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/timeline`)
+      await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/timeline`, { cancelToken: source.token })
         .then(function (response) {
-          setTimeline(response.data.data)
-          setIsLoading(false)
+          if (isMounted) {
+            setTimeline(response.data.data)
+            setIsLoading(false)
+          }
         })
         .catch(function (error) {
+          if (axios.isCancel(error)) return;
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: "/login",
@@ -80,95 +88,50 @@ const Dashboard = () => {
     }
 
     const getDate = async () => {
-      let data = []
-      await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/3`)
-        .then(function (response) {
-          data.push({
-            id: 1,
-            name: "Pengisian Prerequisite Perusahaan",
-            tanggal: getDates(response.data.data.start_date) + " - " + getDates(response.data.data.end_date),
-          })
-          axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/11`)
-            .then(function (response) {
-              data.push({
-                id: 2,
-                name: "Pelaksanaan Kegiatan KP",
-                tanggal: getDates(response.data.data.start_date) + " - " + getDates(response.data.data.end_date),
-              })
-              axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/12`)
-                .then(function (response) {
-                  data.push({
-                    id: 3,
-                    name: "Pelaksanaan Kegiatan PKL",
-                    tanggal: getDates(response.data.data.start_date) + " - " + getDates(response.data.data.end_date),
-                  })
-                  axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/5`)
-                    .then(function (response) {
-                      data.push({
-                        id: 4,
-                        name: "Evaluasi Peserta KP",
-                        tanggal: getDates(response.data.data.start_date) + " - " + getDates(response.data.data.end_date),
-                      })
-                      axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/6`)
-                        .then(function (response) {
-                          data.push({
-                            id: 5,
-                            name: "Evaluasi 1 Peserta PKL",
-                            tanggal: getDates(response.data.data.start_date) + " - " + getDates(response.data.data.end_date),
-                          })
-                          axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/7`)
-                            .then(function (response) {
-                              data.push({
-                                id: 6,
-                                name: "Evaluasi 2 Peserta PKL",
-                                tanggal: getDates(response.data.data.start_date) + " - " + getDates(response.data.data.end_date),
-                              })
-                              axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/8`)
-                                .then(function (response) {
-                                  data.push({
-                                    id: 7,
-                                    name: "Evaluasi 3 Peserta PKL",
-                                    tanggal: getDates(response.data.data.start_date) + " - " + getDates(response.data.data.end_date),
-                                  })
-                                  axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/9`)
-                                    .then(function (response) {
-                                      data.push({
-                                        id: 8,
-                                        name: response.data.data.name,
-                                        tanggal: getDates(response.data.data.start_date) + " - " + getDates(response.data.data.end_date),
-                                      })
-                                      axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/10`)
-                                        .then(function (response) {
-                                          data.push({
-                                            id: 9,
-                                            name: response.data.data.name,
-                                            tanggal: getDates(response.data.data.start_date) + " - " + getDates(response.data.data.end_date),
-                                          })
-                                          setDate(data)
-                                          setIsLoading(false)
-                                        })
-                                    })
-                                })
-                            })
-                        })
-                    })
-                })
-            })
-        })
-        .catch(function (error) {
-          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-            history.push({
-              pathname: "/login",
-              state: {
-                session: true,
-              }
-            });
-          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-            history.push("/404");
-          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
-            history.push("/500");
-          }
-        });
+      const formIds = [3, 11, 12, 5, 6, 7, 8, 9, 10];
+      const formNames = [
+        "Pengisian Prerequisite Perusahaan",
+        "Pelaksanaan Kegiatan KP",
+        "Pelaksanaan Kegiatan PKL",
+        "Evaluasi Peserta KP",
+        "Evaluasi 1 Peserta PKL",
+        "Evaluasi 2 Peserta PKL",
+        "Evaluasi 3 Peserta PKL",
+        null,
+        null,
+      ];
+
+      try {
+        const requests = formIds.map(id =>
+          axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/${id}`, { cancelToken: source.token })
+        );
+        const responses = await Promise.all(requests);
+
+        if (!isMounted) return;
+
+        const data = responses.map((response, index) => ({
+          id: index + 1,
+          name: formNames[index] || response.data.data.name,
+          tanggal: getDates(response.data.data.start_date) + " - " + getDates(response.data.data.end_date),
+        }));
+
+        setDate(data);
+        setIsLoading(false);
+      } catch (error) {
+        if (axios.isCancel(error)) return;
+        if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+          history.push({
+            pathname: "/login",
+            state: {
+              session: true,
+            }
+          });
+        } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+          history.push("/404");
+        } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
+          history.push("/500");
+        }
+      }
     }
 
     if (localStorage.getItem("id_role") === "2") {
@@ -177,6 +140,10 @@ const Dashboard = () => {
       getTimeline();
     }
 
+    return () => {
+      isMounted = false;
+      source.cancel('Component unmounted');
+    };
   }, [history]);
 
   const customizeTooltip = (arg) => {

@@ -30,4 +30,7 @@ public class SeminarValues {
     @Column(name = "seminar_form_id", nullable = false)
     @JsonProperty("seminar_form_id")
     private Integer seminarFormId;
+
+    @Version
+    private Long version;
 }

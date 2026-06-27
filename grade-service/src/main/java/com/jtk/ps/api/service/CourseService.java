@@ -159,6 +159,10 @@ public class CourseService implements ICourseService{
     private TotalCoursesRepository totalCoursesRepository;
 
     @Autowired
+    @Lazy
+    private com.jtk.ps.api.repository.MultiRoleWeightRepository multiRoleWeightRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     private void eventStoreHandler(String entityId, String eventType, Object object,Integer eventDataId){
@@ -716,6 +720,25 @@ public class CourseService implements ICourseService{
             }
         }
         return totalCourse;
+    }
+
+    /**
+     * Utility method for Multi-Role Weight calculation (UAT-F-04).
+     * This calculates the proportional course value based on multiple job scopes.
+     */
+    public Float calculateProportionalCourseWeight(Integer participantId, Float rawCourseValue) {
+        List<com.jtk.ps.api.model.MultiRoleWeight> weights = multiRoleWeightRepository.findByParticipantId(participantId);
+        if (weights == null || weights.isEmpty()) {
+            return rawCourseValue; // Default behavior if no multi-role
+        }
+
+        float totalProportionalValue = 0f;
+        for (com.jtk.ps.api.model.MultiRoleWeight weight : weights) {
+            if (weight.getProportionalWeight() != null) {
+                totalProportionalValue += rawCourseValue * weight.getProportionalWeight();
+            }
+        }
+        return totalProportionalValue;
     }
 
     private List<RecapitulationComponentDto> getListComponentRecapitulation(Integer year, Integer prodiId,CourseForm form,Participant participant){
