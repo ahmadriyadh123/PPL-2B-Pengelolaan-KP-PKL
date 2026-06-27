@@ -94,8 +94,9 @@ public class CVController {
                 request.getAttribute(Constant.VerifyConstant.ID),
                 "User ID not found in request"
             );
+            String cookie = request.getHeader(Constant.PayloadResponseConstant.COOKIE);
 
-            Boolean isSuccess = participantService.updateCV(idCv, cvUpdateRequest, idParticipant);
+            Boolean isSuccess = participantService.updateCV(idCv, cvUpdateRequest, idParticipant, cookie);
             
             if (Boolean.TRUE.equals(isSuccess)) {
                 return ResponseHandler.generateResponse("Update cv succeed", HttpStatus.OK);

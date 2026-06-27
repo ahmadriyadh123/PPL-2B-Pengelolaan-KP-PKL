@@ -26,7 +26,7 @@ public interface IParticipantService {
 
     CVGetResponse getCVDetail(Integer idCv, String cookie);
 
-    Boolean updateCV(Integer idCv, CVUpdateRequest cvUpdateRequest, Integer idParticipant);
+    Boolean updateCV(Integer idCv, CVUpdateRequest cvUpdateRequest, Integer idParticipant, String cookie);
 
     Boolean markAsDoneCv(Integer idParticipant);
 
