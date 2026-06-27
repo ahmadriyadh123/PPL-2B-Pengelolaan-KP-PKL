@@ -7,11 +7,11 @@
   "license": "MIT",
   "author": "KoTA 111",
   "scripts": {
-    "build": "node -e \"const { execSync } = require('child_process'); const major = parseInt(process.versions.node.split('.')[0]); if (major >= 17) process.env.NODE_OPTIONS = '--openssl-legacy-provider'; execSync('craco build', { stdio: 'inherit' });\"",
+    "build": "node -e \"const { execSync } = require('child_process'); const major = parseInt(process.versions.node.split('.')[0]); if (major >= 17) process.env.NODE_OPTIONS = '--openssl-legacy-provider --max-old-space-size=4096'; execSync('craco build', { stdio: 'inherit' });\"",
     "changelog": "auto-changelog --starting-version 3.0.0 --commit-limit false --hide-credit",
     "eject": "react-scripts eject",
     "lint": "eslint \"src/**/*.js\"",
-    "start": "node -e \"const { execSync } = require('child_process'); const major = parseInt(process.versions.node.split('.')[0]); if (major >= 17) process.env.NODE_OPTIONS = '--openssl-legacy-provider'; execSync('craco start', { stdio: 'inherit' });\"",
+    "start": "node -e \"const { execSync } = require('child_process'); const major = parseInt(process.versions.node.split('.')[0]); if (major >= 17) process.env.NODE_OPTIONS = '--openssl-legacy-provider --max-old-space-size=4096'; execSync('craco start', { stdio: 'inherit' });\"",
     "test": "react-scripts test",
     "test:cov": "npm test -- --coverage --watchAll=false",
     "test:debug": "react-scripts --inspect-brk test --runInBand"
