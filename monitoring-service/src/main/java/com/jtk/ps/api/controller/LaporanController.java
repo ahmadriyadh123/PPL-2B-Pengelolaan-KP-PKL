@@ -114,12 +114,23 @@ public class LaporanController {
 
     @PostMapping("/check")
     @PreAuthorize("hasAnyAuthority('PARTICIPANT')")
-    public ResponseEntity<Object> checkByDate(@RequestBody CheckLaporan check, HttpServletRequest request){
+    public ResponseEntity<Object> checkLaporan(@RequestBody CheckLaporan check, HttpServletRequest request) {
         try {
             Integer id = (Integer) Objects.requireNonNull(request.getAttribute(Constant.VerifyConstant.ID));
             return ResponseHandler.generateResponse("Check by phase succeed", HttpStatus.OK, monitoringService.isLaporanExist(id, check.getPhase()));
         } catch (HttpClientErrorException ex){
             return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/rekap")
+    @PreAuthorize("hasAnyAuthority('COMMITTEE')")
+    public ResponseEntity<Object> getRekapLaporan(HttpServletRequest request) {
+        try {
+            String cookie = request.getHeader(Constant.PayloadResponseConstant.COOKIE);
+            return ResponseHandler.generateResponse("Get rekap Laporan succeed", HttpStatus.OK, monitoringService.getRekapLaporan(cookie));
         } catch (Exception e) {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }

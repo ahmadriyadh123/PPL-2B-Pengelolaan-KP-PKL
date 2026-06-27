@@ -34,6 +34,113 @@ const Perangkingan = () => {
   const refreshData = async (index) => {
     let d = {
       rangking: [],
+<<<<<<< HEAD
+      date: null
+    };
+    let rank = 0;
+    let count = 0;
+    let nilai = 0;
+    await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}mapping/get-rank`).then(response => {
+      if (response.data.data.ranking_list) {
+        response.data.data.ranking_list.map((item) => {
+          rank = 0;
+          count = 0;
+          nilai = null;
+          return item.participants.sort((a, b) => b.result - a.result).forEach((i) => {
+            count = count + 1
+            if (nilai === null || nilai !== i.result) {
+              rank = count
+            }
+            d.rangking.push({
+              id: item.company_name + i.participant_name,
+              company_name: item.company_name,
+              quota: item.quota,
+              participant_name: i.participant_name,
+              rangking: rank,
+              result: i.result
+            })
+            nilai = i.result
+          })
+        })
+      }
+      d.date = response.data.data.date
+      setData(d)
+      setLoadings(prevLoadings => {
+        const newLoadings = [...prevLoadings];
+        newLoadings[index] = false;
+        return newLoadings;
+      });
+    })
+  }
+
+  const generatePerangkingan = async (index) => {
+    enterLoading(index)
+    await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}mapping/generate-rank`)
+      .then(function (response) {
+        refreshData(index)
+        notification.success({
+          message: 'Generate perangkingan berhasil'
+        });
+      })
+      .catch(function (error) {
+        notification.error({
+          message: 'Generate perangkingan gagal!'
+        });
+        setLoadings(prevLoadings => {
+          const newLoadings = [...prevLoadings];
+          newLoadings[index] = false;
+          return newLoadings;
+        });
+      });
+  }
+
+  const eksporPerangkingan = async (index) => {
+    enterLoading(index)
+    axios.defaults.withCredentials = true;
+    await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}mapping/export-mapping`, {
+      responseType: 'blob',
+    })
+      .then(function (response) {
+        notification.success({
+          message: 'Ekspor perangkingan berhasil'
+        });
+        FileDownload(response.data, 'Data pendukung.xlsx');
+        response && setLoadings(prevLoadings => {
+          const newLoadings = [...prevLoadings];
+          newLoadings[index] = false;
+          return newLoadings;
+        });
+      })
+      .catch(function (error) {
+        notification.error({
+          message: 'Ekspor perangkingan gagal!'
+        });
+        setLoadings(prevLoadings => {
+          const newLoadings = [...prevLoadings];
+          newLoadings[index] = false;
+          return newLoadings;
+        });
+      });
+  }
+
+  useEffect(() => {
+    const getRangking = async () => {
+      let d = {
+        rangking: [],
+        date: null
+      };
+      let count = 0;
+      let rank = 0;
+      let nilai = 0;
+      axios.defaults.withCredentials = true;
+      await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}mapping/get-rank`)
+        .then(function (response) {
+          response.data.data.ranking_list ? response.data.data.ranking_list.map((item) => {
+            rank = 0
+            count = 0
+            nilai = null
+            return item.participants.sort((a, b) => b.result - a.result).forEach((i) => {
+=======
       date: null,
     }
     let rank = 0
@@ -49,6 +156,7 @@ const Perangkingan = () => {
           return item.participants
             .sort((a, b) => b.result - a.result)
             .forEach((i) => {
+>>>>>>> 3467592ad474c65678ee364569cd30fcf96ae890
               count = count + 1
               if (nilai === null || nilai !== i.result) {
                 rank = count

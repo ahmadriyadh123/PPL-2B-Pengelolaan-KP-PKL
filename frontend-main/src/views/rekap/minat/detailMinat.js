@@ -34,7 +34,7 @@ const DetailMinat = () => {
                         })
                 })
                 .catch(function (error) {
-                    if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+                    if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
                         history.push({
                             pathname: "/login",
                             state: {
@@ -154,3 +154,4 @@ const DetailMinat = () => {
 }
 
 export default DetailMinat
+

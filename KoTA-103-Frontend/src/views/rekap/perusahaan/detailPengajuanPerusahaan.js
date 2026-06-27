@@ -221,6 +221,106 @@ const DetailPengajuanPerusahaan = () => {
       })
   }
 
+<<<<<<< HEAD
+    const handleOkAccept = async (index) => {
+        enterLoading(index)
+        await axios.put(`${process.env.REACT_APP_API_GATEWAY_URL}company/submission/accept/${id}`, {
+        }).then((response) => {
+            notification.success({
+                message: 'Data pengajuan berhasil diterima'
+            });
+            setLoadings(prevLoadings => {
+                const newLoadings = [...prevLoadings];
+                newLoadings[index] = false;
+                return newLoadings;
+            });
+            const createdAccount = response.data.data;
+            Modal.info({
+                title: `Data perusahaan dan akun perusahaan berhasil dibuat`,
+                content: (
+                    <>
+                        Berikut merupakan username dan password dari akun perusahaan yang telah dibuat<br />
+                        Username : {createdAccount.username}<br />
+                        Password : {createdAccount.password}
+                    </>
+                ),
+                okText: "Ok",
+                cancelText: "Close",
+                onOk: () => {
+                    history.push("/pengajuanPerusahaan")
+                },
+                onCancel: () => {
+                    history.push("/pengajuanPerusahaan")
+                },
+            })
+
+        }).catch((error) => {
+            setLoadings(prevLoadings => {
+                const newLoadings = [...prevLoadings];
+                newLoadings[index] = false;
+                return newLoadings;
+            });
+            if (error.response.data.message.search("Username already taken") === -1) {
+                notification.error({
+                    message: 'Data pengajuan gagal diterima!'
+                });
+            } else {
+                notification.error({
+                    message: 'Email perusahaan sudah ada!'
+                });
+            }
+        });
+    };
+
+    const handleOkDelete = async (index) => {
+        enterLoading(index)
+        await axios.put(`${process.env.REACT_APP_API_GATEWAY_URL}company/submission/decline/${id}`, {
+        }).then((response) => {
+            notification.success({
+                message: 'Data pengajuan berhasil ditolak'
+            });
+            setLoadings(prevLoadings => {
+                const newLoadings = [...prevLoadings];
+                newLoadings[index] = false;
+                return newLoadings;
+            });
+            history.push("/pengajuanPerusahaan")
+        }).catch((error) => {
+            setLoadings(prevLoadings => {
+                const newLoadings = [...prevLoadings];
+                newLoadings[index] = false;
+                return newLoadings;
+            });
+            notification.error({
+                message: 'Data pengajuan gagal ditolak!'
+            });
+        });
+    };
+
+    return isLoading ? (<Spin indicator={antIcon} />) : (
+        <>
+            <CRow>
+                <CCol style={{ textAlign: "right", paddingBottom: "15px" }}>
+                    <Button
+                        id="accept"
+                        shape="round"
+                        loading={loadings[0]}
+                        style={{ backgroundColor: "#339900", borderColor: "#339900", color: "white" }}
+                        onClick={() => showModalAccept(0)}
+                    >
+                        Terima Pengajuan
+                    </Button>
+                    &nbsp;&nbsp;&nbsp;
+                    <Button
+                        id="decline"
+                        shape="round"
+                        loading={loadings[1]}
+                        style={{ backgroundColor: "#CC0033", borderColor: "#CC0033", color: "white" }}
+                        onClick={() => showModalDelete(1)}
+                    >
+                        Tolak Pengajuan
+                    </Button>
+=======
   return isLoading ? (
     <Spin indicator={antIcon} />
   ) : (
@@ -269,6 +369,7 @@ const DetailPengajuanPerusahaan = () => {
               <CRow>
                 <CCol sm={12}>
                   <b>Nama Pengusul</b>
+>>>>>>> 3467592ad474c65678ee364569cd30fcf96ae890
                 </CCol>
               </CRow>
               <CRow>

@@ -69,12 +69,65 @@ const CreatePerusahaan = () => {
             return
           }
 
+<<<<<<< HEAD
+    const onFinishFailed = (errorInfo) => {
+        notification.error({
+            message: 'Harap isi semua inputan wajib!',
+        });
+    };
+
+    const onFinish = async (index) => {
+        enterLoading(index)
+        await axios.post(`${process.env.REACT_APP_API_GATEWAY_URL}company/create`, {
+            company_name: data.company_name,
+            company_email: data.company_email,
+            address: data.address,
+            no_phone: data.no_phone,
+            cp_name: data.cp_name,
+            cp_phone: data.cp_phone,
+            cp_email: data.cp_email,
+            cp_position: data.cp_position,
+            website: data.website,
+            num_employee: data.num_employee,
+            since_year: data.since_year,
+            status: false,
+            lecturer_id: data.lecturer_id,
+        }).then((response) => {
+            setData({})
+            notification.success({
+                message: 'Perusahaan berhasil dibuat'
+            });
+            setLoadings(prevLoadings => {
+                const newLoadings = [...prevLoadings];
+                newLoadings[index] = false;
+                return newLoadings;
+            });
+            const createdAccount = response.data.data;
+            Modal.info({
+                title: `Data perusahaan dan akun perusahaan berhasil dibuat`,
+                content: (
+                    <>
+                        Berikut merupakan username dan password dari akun perusahaan yang telah dibuat<br />
+                        Username : {createdAccount.username}<br />
+                        Password : {createdAccount.password}
+                    </>
+                ),
+                okText: "Ok",
+                cancelText: "Close",
+                onOk: () => {
+                    history.push("/listPerusahaan");
+                },
+                onCancel: () => {
+                    history.push("/listPerusahaan");
+                },
+=======
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
               state: {
                 session: true,
               },
+>>>>>>> 3467592ad474c65678ee364569cd30fcf96ae890
             })
           } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
             history.push('/404')
