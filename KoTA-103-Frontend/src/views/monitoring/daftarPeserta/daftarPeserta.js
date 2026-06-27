@@ -152,6 +152,7 @@ const DaftarPeserta = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -204,6 +205,7 @@ const DaftarPeserta = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -271,6 +273,7 @@ const DaftarPeserta = () => {
             setIsLoading(false)
           })
           .catch(function (error) {
+            setIsLoading(false)
             if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
               return
             }
@@ -330,6 +333,7 @@ const DaftarPeserta = () => {
             setIsLoading(false)
           })
           .catch(function (error) {
+            setIsLoading(false)
             if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
               return
             }

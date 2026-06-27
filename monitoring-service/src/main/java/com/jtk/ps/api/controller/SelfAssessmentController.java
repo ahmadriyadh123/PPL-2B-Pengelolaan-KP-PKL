@@ -146,4 +146,15 @@ public class SelfAssessmentController {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/rekap")
+    @PreAuthorize("hasAnyAuthority('COMMITTEE')")
+    public ResponseEntity<Object> getRekapSelfAssessment(HttpServletRequest request) {
+        try {
+            String cookie = request.getHeader(Constant.PayloadResponseConstant.COOKIE);
+            return ResponseHandler.generateResponse("Get rekap Self Assessment succeed", HttpStatus.OK, monitoringService.getRekapSelfAssessment(cookie));
+        } catch (Exception e) {
+            return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

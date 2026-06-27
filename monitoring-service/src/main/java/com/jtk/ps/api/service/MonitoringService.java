@@ -79,7 +79,7 @@ public class MonitoringService implements IMonitoringService {
     public List<RppResponse> getRppList(int participantId) {
         List<Rpp> rppList = rppRepository.findByParticipantId(participantId);
         if(rppList.size()==0)
-            throw new IllegalStateException("Rpp tidak ditemukan");
+            return new ArrayList<>();
         List<RppResponse> responses = new ArrayList<>();
         for(Rpp temp:rppList){
             Rpp rpp = rppRepository.findById((int)temp.getId());
@@ -320,7 +320,7 @@ public class MonitoringService implements IMonitoringService {
     public List<LogbookResponse> getLogbookByParticipantId(int participantId) {
         List<Logbook> logbookList = logbookRepository.findByParticipantIdOrderByDateAsc(participantId);
         if(logbookList.size()==0)
-            throw new IllegalStateException("Logbook tidak ditemukan");
+            return new ArrayList<>();
 
         final Set<DayOfWeek> businessDays = Set.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY);
         Deadline logbook = deadlineRepository.findByNameLike("logbook");
@@ -572,7 +572,7 @@ public class MonitoringService implements IMonitoringService {
     public List<SelfAssessmentResponse> getSelfAssessmentList(int idParticipant) {
         List<SelfAssessment> selfAssessments = selfAssessmentRepository.findByParticipantIdOrderByStartDateAsc(idParticipant);
         if(selfAssessments.size() == 0)
-            throw new IllegalStateException("Self Assessment belum dibuat");
+            return new ArrayList<>();
         List<SelfAssessmentResponse> responses = new ArrayList<>();
         List<LocalDate> dateList = new ArrayList<>();
 
@@ -1022,7 +1022,8 @@ public class MonitoringService implements IMonitoringService {
         Optional<Laporan> laporan = laporanRepository.findById(id);
         if(laporan.isPresent()){
             LaporanResponse response = new LaporanResponse(laporan.get());
-            response.setSupervisorGrade(supervisorGradeRepository.findByParticipantIdAndPhase(laporan.get().getParticipant(), laporan.get().getPhase()).get().getId());
+            Optional<SupervisorGrade> sg = supervisorGradeRepository.findByParticipantIdAndPhase(laporan.get().getParticipant(), laporan.get().getPhase());
+            response.setSupervisorGrade(sg.isPresent() ? sg.get().getId() : null);
             return response;
         }else{
             throw new IllegalStateException("laporan tidak ditemukan");
@@ -1035,7 +1036,7 @@ public class MonitoringService implements IMonitoringService {
         List<LaporanResponse> responses = new ArrayList<>();
         for(Laporan temp:laporanList) {
             Optional<SupervisorGrade> supervisorGrade = supervisorGradeRepository.findByParticipantIdAndPhase(temp.getParticipant(), temp.getPhase());
-            responses.add(new LaporanResponse(temp.getId(), temp.getUriName(), temp.getUploadDate(), temp.getPhase(), supervisorGrade.get().getId()));
+            responses.add(new LaporanResponse(temp.getId(), temp.getUriName(), temp.getUploadDate(), temp.getPhase(), supervisorGrade.isPresent() ? supervisorGrade.get().getId() : null));
         }
         return responses;
     }
@@ -1579,5 +1580,86 @@ public class MonitoringService implements IMonitoringService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public List<RekapDokumenResponse> getRekapRpp(String cookie) {
+        return getRekapData(cookie, "rpp");
+    }
+
+    @Override
+    public List<RekapDokumenResponse> getRekapLogbook(String cookie) {
+        return getRekapData(cookie, "logbook");
+    }
+
+    @Override
+    public List<RekapDokumenResponse> getRekapSelfAssessment(String cookie) {
+        return getRekapData(cookie, "self_assessment");
+    }
+
+    @Override
+    public List<RekapDokumenResponse> getRekapLaporan(String cookie) {
+        return getRekapData(cookie, "laporan");
+    }
+
+    private List<RekapDokumenResponse> getRekapData(String cookie, String type) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(Constant.PayloadResponseConstant.COOKIE, cookie);
+        HttpEntity<String> req = new HttpEntity<>(headers);
+
+        ResponseEntity<ResponseList<ParticipantResponse>> participantRes = restTemplate.exchange(
+                "http://participant-service/participant/get-all",
+                HttpMethod.GET, req, new ParameterizedTypeReference<>() {});
+        List<ParticipantResponse> participants = Objects.requireNonNull(participantRes.getBody()).getData();
+
+        ResponseEntity<ResponseList<CompanyResponse>> companyRes = restTemplate.exchange(
+                "http://company-service/company/get-all",
+                HttpMethod.GET, req, new ParameterizedTypeReference<>() {});
+        List<CompanyResponse> companies = Objects.requireNonNull(companyRes.getBody()).getData();
+        
+        HashMap<Integer, String> companyMap = new HashMap<>();
+        for (CompanyResponse comp : companies) {
+            companyMap.put(comp.getId(), comp.getName());
+        }
+
+        List<RekapDokumenResponse> responses = new ArrayList<>();
+
+        for (ParticipantResponse participant : participants) {
+            String companyName = "-";
+            SupervisorMapping mapping = supervisorMappingRepository.findByParticipantId(participant.getIdParticipant());
+            if (mapping != null && mapping.getCompanyId() != null) {
+                companyName = companyMap.getOrDefault(mapping.getCompanyId(), "-");
+            }
+
+            String status = "Belum Mengumpulkan";
+
+            if (type.equals("rpp")) {
+                if (!rppRepository.findByParticipantId(participant.getIdParticipant()).isEmpty()) {
+                    status = "Sudah Mengumpulkan";
+                }
+            } else if (type.equals("logbook")) {
+                if (!logbookRepository.findByParticipantIdOrderByDateAsc(participant.getIdParticipant()).isEmpty()) {
+                    status = "Sudah Mengumpulkan";
+                }
+            } else if (type.equals("self_assessment")) {
+                if (!selfAssessmentRepository.findByParticipantIdOrderByStartDateAsc(participant.getIdParticipant()).isEmpty()) {
+                    status = "Sudah Mengumpulkan";
+                }
+            } else if (type.equals("laporan")) {
+                if (!laporanRepository.findByParticipantId(participant.getIdParticipant()).isEmpty()) {
+                    status = "Sudah Mengumpulkan";
+                }
+            }
+
+            responses.add(new RekapDokumenResponse(
+                    participant.getIdParticipant(),
+                    String.valueOf(participant.getNim()),
+                    participant.getName(),
+                    companyName,
+                    status
+            ));
+        }
+
+        return responses;
     }
 }
