@@ -4,12 +4,26 @@ import { CCard, CCardBody, CCol, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { faEye, faPencil } from '@fortawesome/free-solid-svg-icons'
-import { Table, Button, Row, Col, Input, Space, Spin, Popover, Card, FloatButton, Alert, Result, Tag } from 'antd'
+import {
+  Table,
+  Button,
+  Row,
+  Col,
+  Input,
+  Space,
+  Spin,
+  Popover,
+  Card,
+  FloatButton,
+  Alert,
+  Result,
+  Tag,
+} from 'antd'
 import axios from 'axios'
 import { SearchOutlined } from '@ant-design/icons'
 import Highlighter from 'react-highlight-words'
 import { useHistory, useParams } from 'react-router-dom'
-import { LoadingOutlined,SmileOutlined  } from '@ant-design/icons'
+import { LoadingOutlined, SmileOutlined } from '@ant-design/icons'
 
 const antIcon = <LoadingOutlined style={{ fontSize: 40 }} spin />
 const RekapSelfAssessment = () => {
@@ -60,7 +74,7 @@ const RekapSelfAssessment = () => {
   }
 
   useEffect(() => {
- 
+    const controller = new AbortController()
 
     const getSelfAssessment = async (index) => {
       let PESERTA
@@ -73,41 +87,38 @@ const RekapSelfAssessment = () => {
       await axios
         .get(
           `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/get-all/${PESERTA}`,
+          {
+            signal: controller.signal,
+          },
         )
         .then((result) => {
-          let len = result.data.data.length-1
-      
+          let len = result.data.data.length - 1
 
           let temp = []
-         
+
           const temp1 = JSON.parse(JSON.stringify(result.data.data))
 
-          
-
-          function handleIdNull (id,index){
-            return id?id:index
+          function handleIdNull(id, index) {
+            return id ? id : index
           }
 
-          function setStatus(id){
-            return id?'Sudah Dikumpulkan' : 'Tidak Dikumpulkan'
+          function setStatus(id) {
+            return id ? 'Sudah Dikumpulkan' : 'Tidak Dikumpulkan'
           }
           if (result.data.data.length > 1) {
-            
             let getTempSelfAssessment = function (obj) {
               for (let i in obj) {
-           
-                if (parseInt(i)<len) {
+                if (parseInt(i) < len) {
                   temp.push({
-                    idx : parseInt(i),
+                    idx: parseInt(i),
                     start_date: convertDate(obj[i].start_date),
                     finish_date: convertDate(obj[i].finish_date),
-                    self_assessment_id: handleIdNull(obj[i].self_assessment_id,parseInt(i)),
-                    actual_id : obj[i].self_assessment_id,
+                    self_assessment_id: handleIdNull(obj[i].self_assessment_id, parseInt(i)),
+                    actual_id: obj[i].self_assessment_id,
                     participant_id: obj[i].participant_id,
-                    status : setStatus(obj[i].self_assessment_id)
+                    status: setStatus(obj[i].self_assessment_id),
                   })
                 }
-              
               }
             }
 
@@ -122,6 +133,11 @@ const RekapSelfAssessment = () => {
           }
         })
         .catch(function (error) {
+          setIsLoading(false)
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -148,14 +164,25 @@ const RekapSelfAssessment = () => {
         PESERTA = parseInt(NIM_PESERTA_FROM_PARAMS)
       }
       await axios
-        .post(`${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`, {
-          id: [PESERTA],
-        })
+        .post(
+          `${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`,
+          {
+            id: [PESERTA],
+          },
+          {
+            signal: controller.signal,
+          },
+        )
         .then((result) => {
           setDataPeserta(result.data.data[0])
           setIsLoading(false)
         })
         .catch(function (error) {
+          setIsLoading(false)
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -171,52 +198,78 @@ const RekapSelfAssessment = () => {
         })
     }
 
-    
-    async function GetDataDeadlineAndPageOpened(){
-      
-      await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all?id_deadline=2`).then((response)=>{
-        function formatDate(date) {
-          var d = new Date(date),
-            month = '' + (d.getMonth() + 1),
-            day = '' + d.getDate(),
-            year = d.getFullYear()
-      
-          if (month.length < 2) month = '0' + month
-          if (day.length < 2) day = '0' + day
-      
-          return [year, month, day].join('-')
-        }
+    async function GetDataDeadlineAndPageOpened() {
+      await axios
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all?id_deadline=2`, {
+          signal: controller.signal,
+        })
+        .then((response) => {
+          function formatDate(date) {
+            var d = new Date(date),
+              month = '' + (d.getMonth() + 1),
+              day = '' + d.getDate(),
+              year = d.getFullYear()
 
-       let start_date = response.data.data.start_assignment_date
-       let finish_date = response.data.data.finish_assignment_date
-       let range = response.data.data.day_range
-       let data_deadline = {
-        start_date : convertDate(start_date),
-        finish_date : convertDate(finish_date),
-        day_range : range
-       }
+            if (month.length < 2) month = '0' + month
+            if (day.length < 2) day = '0' + day
 
-       setDataDeadlineSelfAssessment(data_deadline)
+            return [year, month, day].join('-')
+          }
 
-       let today = formatDate(new Date())
-       if(start_date <= today ){
-        setIsParticipantAllowedToAccessThisPage(true)
-       }else{
-        setIsParticipantAllowedToAccessThisPage(false)
-       }
+          let start_date = response.data.data.start_assignment_date
+          let finish_date = response.data.data.finish_assignment_date
+          let range = response.data.data.day_range
+          let data_deadline = {
+            start_date: convertDate(start_date),
+            finish_date: convertDate(finish_date),
+            day_range: range,
+          }
 
-       if(finish_date <= today){
-        setIsFinishDateToAssignSelfAssessment(true)
-       }else{
-        setIsFinishDateToAssignSelfAssessment(false)
-       }
-      })
+          setDataDeadlineSelfAssessment(data_deadline)
+
+          let today = formatDate(new Date())
+          if (start_date <= today) {
+            setIsParticipantAllowedToAccessThisPage(true)
+          } else {
+            setIsParticipantAllowedToAccessThisPage(false)
+          }
+
+          if (finish_date <= today) {
+            setIsFinishDateToAssignSelfAssessment(true)
+          } else {
+            setIsFinishDateToAssignSelfAssessment(false)
+          }
+        })
+        .catch(function (error) {
+          setIsLoading(false)
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
+          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            history.push({
+              pathname: '/login',
+              state: {
+                session: true,
+              },
+            })
+          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+            history.push('/404')
+          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
+            history.push('/500')
+          }
+        })
     }
 
     GetDataInfoPeserta()
     GetDataDeadlineAndPageOpened()
 
     getSelfAssessment()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const getColumnSearchProps = (dataIndex, name) => ({
@@ -309,55 +362,45 @@ const RekapSelfAssessment = () => {
       PESERTA = NIM_PESERTA_FROM_PARAMS
     }
     await axios
-        .get(
-          `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/get-all/${PESERTA}`,
-        )
-        .then((result) => {
-          let len = result.data.data.length-1
-      
+      .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/get-all/${PESERTA}`)
+      .then((result) => {
+        let len = result.data.data.length - 1
 
-          let temp = []
-         
-          const temp1 = JSON.parse(JSON.stringify(result.data.data))
+        let temp = []
 
-          
+        const temp1 = JSON.parse(JSON.stringify(result.data.data))
 
-          function handleIdNull (id,index){
-            return id?id:index
-          }
+        function handleIdNull(id, index) {
+          return id ? id : index
+        }
 
-          function setStatus(id){
-            return id?'Sudah Dikumpulkan' : 'Tidak Dikumpulkan'
-          }
-          if (result.data.data.length > 1) {
-       
-            let getTempSelfAssessment = function (obj) {
-              for (let i in obj) {
-            
-                if (parseInt(i)<len) {
-                  temp.push({
-                    idx : parseInt(i),
-                    start_date: convertDate(obj[i].start_date),
-                    finish_date: convertDate(obj[i].finish_date),
-                    self_assessment_id: handleIdNull(obj[i].self_assessment_id,parseInt(i)),
-                    actual_id : obj[i].self_assessment_id,
-                    participant_id: obj[i].participant_id,
-                    status : setStatus(obj[i].self_assessment_id)
-                  })
-                }
-              
+        function setStatus(id) {
+          return id ? 'Sudah Dikumpulkan' : 'Tidak Dikumpulkan'
+        }
+        if (result.data.data.length > 1) {
+          let getTempSelfAssessment = function (obj) {
+            for (let i in obj) {
+              if (parseInt(i) < len) {
+                temp.push({
+                  idx: parseInt(i),
+                  start_date: convertDate(obj[i].start_date),
+                  finish_date: convertDate(obj[i].finish_date),
+                  self_assessment_id: handleIdNull(obj[i].self_assessment_id, parseInt(i)),
+                  actual_id: obj[i].self_assessment_id,
+                  participant_id: obj[i].participant_id,
+                  status: setStatus(obj[i].self_assessment_id),
+                })
               }
             }
-
-            getTempSelfAssessment(temp1)
-            setSelfAssessmentPeserta(temp)
-            setIsLoading(false)
-       
-          } else {
-            setSelfAssessmentPeserta(result.data.data)
-            setIsLoading(false)
-      
           }
+
+          getTempSelfAssessment(temp1)
+          setSelfAssessmentPeserta(temp)
+          setIsLoading(false)
+        } else {
+          setSelfAssessmentPeserta(result.data.data)
+          setIsLoading(false)
+        }
         setLoadings((prevLoadings) => {
           const newLoadings = [...prevLoadings]
           newLoadings[index] = false
@@ -371,10 +414,10 @@ const RekapSelfAssessment = () => {
   }
 
   const handleRekapProgres = () => {
-    history.push(`/rekapDokumenPeserta/selfAssessmentPeserta/${NIM_PESERTA_FROM_PARAMS}/rekapProgres`)
+    history.push(
+      `/rekapDokumenPeserta/selfAssessmentPeserta/${NIM_PESERTA_FROM_PARAMS}/rekapProgres`,
+    )
   }
-
-
 
   const lihatDetailSelfAssessment = (idsa) => {
     rolePengguna !== '1'
@@ -397,7 +440,7 @@ const RekapSelfAssessment = () => {
       width: '5%',
       align: 'center',
       render: (value, item, index) => {
-        return value +1
+        return value + 1
       },
     },
     {
@@ -439,7 +482,7 @@ const RekapSelfAssessment = () => {
               <Col span={12} style={{ textAlign: 'center' }}>
                 <Popover content={<div>Lihat isi detail self assessment</div>}>
                   <Button
-                    id="button-pencil" 
+                    id="button-pencil"
                     htmlType="submit"
                     shape="circle"
                     style={{ backgroundColor: '#FCEE21', borderColor: '#FCEE21' }}
@@ -453,58 +496,57 @@ const RekapSelfAssessment = () => {
                 </Popover>
               </Col>
               <Col span={12} style={{ textAlign: 'center' }}>
-               <Popover content={<div>Lihat penilaian self assessment</div>}>
-                 <Button
-                   id="button-pencil"
-                   htmlType="submit"
-                   shape="circle"
-                   style={{ backgroundColor: '#FCEE21', borderColor: '#FCEE21' }}
-                   onClick={() => {
-                     actionGradeSelfAssessment(record.self_assessment_id)
-                   }}
-                 >
-                   <FontAwesomeIcon icon={faPencil} style={{ color: 'black' }} />
-                 </Button>
-               </Popover>
-             </Col>
+                <Popover content={<div>Lihat penilaian self assessment</div>}>
+                  <Button
+                    id="button-pencil"
+                    htmlType="submit"
+                    shape="circle"
+                    style={{ backgroundColor: '#FCEE21', borderColor: '#FCEE21' }}
+                    onClick={() => {
+                      actionGradeSelfAssessment(record.self_assessment_id)
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faPencil} style={{ color: 'black' }} />
+                  </Button>
+                </Popover>
+              </Col>
             </Row>
           )}
 
-          {(rolePengguna === '4' && record.actual_id !== null) && (
-             <Row>
-             <Col span={12} style={{ textAlign: 'center' }}>
-               <Popover content={<div>Lihat isi detail self assessment</div>}>
-                 <Button
-                   id="button-pencil"
-                   htmlType="submit"
-                   shape="circle"
-                   style={{ backgroundColor: '#FCEE21', borderColor: '#FCEE21' }}
-                   onClick={() => {
-                     lihatDetailSelfAssessment(record.self_assessment_id)
-                   }}
-                 >
-                   <FontAwesomeIcon icon={faEye} style={{ color: 'black' }} />
-                 </Button>
-               </Popover>
-             </Col>
+          {rolePengguna === '4' && record.actual_id !== null && (
+            <Row>
+              <Col span={12} style={{ textAlign: 'center' }}>
+                <Popover content={<div>Lihat isi detail self assessment</div>}>
+                  <Button
+                    id="button-pencil"
+                    htmlType="submit"
+                    shape="circle"
+                    style={{ backgroundColor: '#FCEE21', borderColor: '#FCEE21' }}
+                    onClick={() => {
+                      lihatDetailSelfAssessment(record.self_assessment_id)
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faEye} style={{ color: 'black' }} />
+                  </Button>
+                </Popover>
+              </Col>
 
-             <Col span={12} style={{ textAlign: 'center' }}>
-               <Popover content={<div>Lakukan penilaian self assessment</div>}>
-                 <Button
-                   id="button-pencil"
-                   htmlType="submit"
-                   shape="circle"
-                   style={{ backgroundColor: '#FCEE21', borderColor: '#FCEE21' }}
-                   onClick={() => {
-                     actionGradeSelfAssessment(record.self_assessment_id)
-                   }}
-                 >
-                   <FontAwesomeIcon icon={faPencil} style={{ color: 'black' }} />
-                 </Button>
-               </Popover>
-             </Col>
-           </Row>
-           
+              <Col span={12} style={{ textAlign: 'center' }}>
+                <Popover content={<div>Lakukan penilaian self assessment</div>}>
+                  <Button
+                    id="button-pencil"
+                    htmlType="submit"
+                    shape="circle"
+                    style={{ backgroundColor: '#FCEE21', borderColor: '#FCEE21' }}
+                    onClick={() => {
+                      actionGradeSelfAssessment(record.self_assessment_id)
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faPencil} style={{ color: 'black' }} />
+                  </Button>
+                </Popover>
+              </Col>
+            </Row>
           )}
         </>
       ),
@@ -549,8 +591,7 @@ const RekapSelfAssessment = () => {
         return <Tag color={color}>{record.status}</Tag>
       },
     },
-      
-    
+
     {
       title: 'AKSI',
       width: '5%',
@@ -558,25 +599,25 @@ const RekapSelfAssessment = () => {
       dataIndex: 'action',
       render: (text, record) => (
         <>
-        {record.actual_id !== null && (
+          {record.actual_id !== null && (
             <Row>
-            <Col span={6} style={{ textAlign: 'center' }}>
-              <Popover content={<div>Lihat isi detail self assessment</div>}>
-                <Button
-                  id="button-pencil"
-                  htmlType="submit"
-                  shape="circle"
-                  style={{ backgroundColor: '#FCEE21', borderColor: '#FCEE21' }}
-                  onClick={() => {
-                    lihatDetailSelfAssessment(record.self_assessment_id)
-                  }}
-                >
-                  <FontAwesomeIcon icon={faEye} style={{ color: 'black' }} />
-                </Button>
-              </Popover>
-            </Col>
-          </Row>
-        )}
+              <Col span={6} style={{ textAlign: 'center' }}>
+                <Popover content={<div>Lihat isi detail self assessment</div>}>
+                  <Button
+                    id="button-pencil"
+                    htmlType="submit"
+                    shape="circle"
+                    style={{ backgroundColor: '#FCEE21', borderColor: '#FCEE21' }}
+                    onClick={() => {
+                      lihatDetailSelfAssessment(record.self_assessment_id)
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faEye} style={{ color: 'black' }} />
+                  </Button>
+                </Popover>
+              </Col>
+            </Row>
+          )}
         </>
       ),
     },
@@ -603,8 +644,8 @@ const RekapSelfAssessment = () => {
   }
   return isLoading ? (
     <Spin tip="Loading" size="large">
-        <div className="content" />
-      </Spin>
+      <div className="content" />
+    </Spin>
   ) : (
     <>
       <div>
@@ -642,67 +683,74 @@ const RekapSelfAssessment = () => {
           </Space>
         )}
       </div>
-      {rolePengguna === '1'&& (
+      {rolePengguna === '1' && (
         <Alert
-        className='spacebottom2'
-        message="Informasi Pengumpulan Self Assessment"
-        description={
-          <div>
-          <ul>
-          <li>Akses Pengumpulan Self Assessment dimulai dari tanggal &nbsp;&nbsp; <b>{dataDeadlineSelfAssessment.start_date}</b> &nbsp;&nbsp; dan akses akan ditutup pada tanggal &nbsp;&nbsp; <b>{dataDeadlineSelfAssessment.finish_date}</b></li>
-          <li>Peserta tidak dapat melakukan pengeditan self assessment</li>
-          <li>Self Assessment dikumpulkan seminggu sekali</li>
-          <li>Batas pengumpulan terakhir self assessment adalah hari ke - &nbsp;&nbsp;<b>{5+dataDeadlineSelfAssessment.day_range}</b>&nbsp;&nbsp;terhitung dari senin(minggu dari tanggal dokumen yang dikumpulkan)</li>
-          <li>Isilah field <b>keterangan</b> pada self assessement sedetail mungkin</li>
-          </ul>
-          </div>
-        }
-        type="info"
-        showIcon
-      />
+          className="spacebottom2"
+          message="Informasi Pengumpulan Self Assessment"
+          description={
+            <div>
+              <ul>
+                <li>
+                  Akses Pengumpulan Self Assessment dimulai dari tanggal &nbsp;&nbsp;{' '}
+                  <b>{dataDeadlineSelfAssessment.start_date}</b> &nbsp;&nbsp; dan akses akan ditutup
+                  pada tanggal &nbsp;&nbsp; <b>{dataDeadlineSelfAssessment.finish_date}</b>
+                </li>
+                <li>Peserta tidak dapat melakukan pengeditan self assessment</li>
+                <li>Self Assessment dikumpulkan seminggu sekali</li>
+                <li>
+                  Batas pengumpulan terakhir self assessment adalah hari ke - &nbsp;&nbsp;
+                  <b>{5 + dataDeadlineSelfAssessment.day_range}</b>&nbsp;&nbsp;terhitung dari
+                  senin(minggu dari tanggal dokumen yang dikumpulkan)
+                </li>
+                <li>
+                  Isilah field <b>keterangan</b> pada self assessement sedetail mungkin
+                </li>
+              </ul>
+            </div>
+          }
+          type="info"
+          showIcon
+        />
       )}
 
       <CCard className="mb-4">
         {title('REKAP SELF ASSESSMENT PESERTA')}
         <CCardBody>
-          {(rolePengguna === '1' && isParticipantAllowedToAccessThisPage)&& (
+          {rolePengguna === '1' && isParticipantAllowedToAccessThisPage && (
             <Row>
               <Col span={24} style={{ textAlign: 'right' }}>
-                {(!isFinishDateToAssignSelfAssessment) && (
+                {!isFinishDateToAssignSelfAssessment && (
                   <>
-                  <Button
-                  id="create-logbook"
-                  size="sm"
-                  shape="round"
-                  style={{ color: 'white', background: '#339900', marginBottom: 16 }}
-                  onClick={handleCreateSelfAssessment}
-                >
-                  Tambahkan Self Assessment Baru
-                </Button>
-
-             
+                    <Button
+                      id="create-logbook"
+                      size="sm"
+                      shape="round"
+                      style={{ color: 'white', background: '#339900', marginBottom: 16 }}
+                      onClick={handleCreateSelfAssessment}
+                    >
+                      Tambahkan Self Assessment Baru
+                    </Button>
                   </>
-                
                 )}
-                {isFinishDateToAssignSelfAssessment &&( 
-               <Popover content={<div>Pengumpulan sudah tidak dizinkan</div>}>
-                 <Button
-                  id="create-logbook"
-                  size="sm"
-                  disabled
-                  shape="round"
-                  style={{ color: 'white', background: '#339900', marginBottom: 16 }}
-                  onClick={handleCreateSelfAssessment}
-                >
-                  Tambahkan Self Assessment Baru
-                </Button>
-               </Popover>
+                {isFinishDateToAssignSelfAssessment && (
+                  <Popover content={<div>Pengumpulan sudah tidak dizinkan</div>}>
+                    <Button
+                      id="create-logbook"
+                      size="sm"
+                      disabled
+                      shape="round"
+                      style={{ color: 'white', background: '#339900', marginBottom: 16 }}
+                      onClick={handleCreateSelfAssessment}
+                    >
+                      Tambahkan Self Assessment Baru
+                    </Button>
+                  </Popover>
                 )}
               </Col>
             </Row>
           )}
 
-          {(rolePengguna === '1' && isParticipantAllowedToAccessThisPage) && (
+          {rolePengguna === '1' && isParticipantAllowedToAccessThisPage && (
             <CRow>
               <CCol sm={12}>
                 <hr />
@@ -717,45 +765,42 @@ const RekapSelfAssessment = () => {
             </CRow>
           )}
 
-          {(rolePengguna === '1' && !isParticipantAllowedToAccessThisPage) && (
+          {rolePengguna === '1' && !isParticipantAllowedToAccessThisPage && (
             <Result
-            icon={<SmileOutlined />}
-            title="Maaf Akses Untuk Halaman Ini Belum Dibuka"
-            subTitle="Anda dapat melakukan akses setelah memasuki tanggal yang telah ditentukan"
-          
-          />
+              icon={<SmileOutlined />}
+              title="Maaf Akses Untuk Halaman Ini Belum Dibuka"
+              subTitle="Anda dapat melakukan akses setelah memasuki tanggal yang telah ditentukan"
+            />
           )}
 
           {rolePengguna !== '1' && (
             <>
-              
               <CRow>
-              <CCol sm={24}>
-           
-                <Button
-                  id="create-logbook"
-                  size="sm"
-                  shape="round"
-                  style={{ color: 'white', background: '#339900', marginBottom: 16 }}
-                  onClick={handleRekapProgres}
-                >
-                  Rekap Progres Keseluruhan
-                </Button>
-              </CCol>
-            </CRow>
-            
-            <CRow>
-              <CCol sm={12}>
-                <div className="spacebottom"></div>
-                <Table
-                  scroll={{ x: 'max-content' }}
-                  columns={columnsPanitiaPembimbing}
-                  dataSource={selfAssessmentPeserta}
-                  rowKey="id"
-                  bordered
-                />
-              </CCol>
-            </CRow>
+                <CCol sm={24}>
+                  <Button
+                    id="create-logbook"
+                    size="sm"
+                    shape="round"
+                    style={{ color: 'white', background: '#339900', marginBottom: 16 }}
+                    onClick={handleRekapProgres}
+                  >
+                    Rekap Progres Keseluruhan
+                  </Button>
+                </CCol>
+              </CRow>
+
+              <CRow>
+                <CCol sm={12}>
+                  <div className="spacebottom"></div>
+                  <Table
+                    scroll={{ x: 'max-content' }}
+                    columns={columnsPanitiaPembimbing}
+                    dataSource={selfAssessmentPeserta}
+                    rowKey="id"
+                    bordered
+                  />
+                </CCol>
+              </CRow>
             </>
           )}
         </CCardBody>

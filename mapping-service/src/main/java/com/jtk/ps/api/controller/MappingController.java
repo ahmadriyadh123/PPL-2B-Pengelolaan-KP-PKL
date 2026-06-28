@@ -41,6 +41,7 @@ public class MappingController {
     }
     
     @GetMapping("/final")
+    @PreAuthorize("hasAnyAuthority('COMMITTEE', 'HEAD_STUDY_PROGRAM')")
     public ResponseEntity<Object> getFinalMapping(HttpServletRequest request) {
         try {
             Integer idRole = (Integer) Objects.requireNonNull(request.getAttribute(Constant.VerifyConstant.ID_ROLE));
@@ -195,6 +196,7 @@ public class MappingController {
     }
     
     @GetMapping("/get-is-final/{id}")
+    @PreAuthorize("hasAnyAuthority('COMMITTEE', 'HEAD_STUDY_PROGRAM', 'PARTICIPANT', 'COMPANY')")
     public ResponseEntity<Object> getIsFinalMapping(@PathVariable("id") Integer id) {
         try {
             return ResponseHandler.generateResponse("Get is final mapping succeed", HttpStatus.OK, mappingService.getIsFinalMapping(id));
@@ -206,12 +208,14 @@ public class MappingController {
     }
 
     @DeleteMapping("/final/delete-company/{id_company}")
+    @PreAuthorize("hasAuthority('COMMITTEE')")
     public ResponseEntity<Object> deleteCompany(@PathVariable("id_company") Integer idCompany, @RequestParam(name = "prodi", required = false) Integer idProdi) {
         try {
             if(idProdi == null) {
                 mappingService.deleteCompany(idCompany);
+            } else {
+                mappingService.deleteCompanyByProdi(idCompany, idProdi);
             }
-            mappingService.deleteCompanyByProdi(idCompany, idProdi);
             return ResponseHandler.generateResponse("Delete company succeed", HttpStatus.OK);
         } catch (HttpClientErrorException ex) {
             return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
@@ -221,6 +225,7 @@ public class MappingController {
     }
 
     @GetMapping("/get-participant-by-company/{id_company}")
+    @PreAuthorize("hasAnyAuthority('COMMITTEE', 'COMPANY')")
     public ResponseEntity<Object> getParticipantByCompany(@PathVariable("id_company") Integer idCompany, HttpServletRequest request) {
         try {
             Integer idProdi = (Integer) Objects.requireNonNull(request.getAttribute(Constant.VerifyConstant.ID_PRODI));

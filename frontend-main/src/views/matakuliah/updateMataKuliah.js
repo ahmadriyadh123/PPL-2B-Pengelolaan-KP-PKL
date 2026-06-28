@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import 'antd/dist/antd.css'
+import 'antd/dist/reset.css'
 import 'src/scss/_custom.scss'
 import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import { Col, Row, Form, Input, Button, DatePicker, Select, notification, Spin, Modal } from 'antd'
@@ -40,7 +40,7 @@ const UpdateMataKuliah = () => {
             // console.log(data)
           })
           .catch(function (error) {
-            if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
               history.push({
                 pathname: '/login',
                 state: {
@@ -71,7 +71,7 @@ const UpdateMataKuliah = () => {
   //   console.log(data)
   // }, [data])
   const detailMataKuliah = (id) => {
-    history.push(`/matakuliah/listmatakuliah/detailmatakuliah/${parseInt(id)}`)
+    history.push(`/mataKuliah/listMatakuliah/detailMatakuliah/${parseInt(id)}`)
   }
 
   const prodiJurusan = [
@@ -330,3 +330,4 @@ const UpdateMataKuliah = () => {
   )
 }
 export default UpdateMataKuliah
+

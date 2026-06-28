@@ -62,105 +62,111 @@ const ListDokumenPeserta = () => {
     handleSearch(selectedKeys, confirm, dataIndex, index)
   }
 
-  const refreshData = async (index) =>{
+  const refreshData = async (index) => {
     await axios
-    .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/rpp/rekap`)
-    .then((result) => {
-      let dataRpp = result.data.data
-      let dataRppIdx = []
-      if (dataRpp != null) {
-        for (let iterateRpp in dataRpp) {
-          dataRppIdx.push({
-            idx: parseInt(iterateRpp),
-            nim: dataRpp[iterateRpp].nim,
-            name: dataRpp[iterateRpp].name,
-            company: dataRpp[iterateRpp].company,
-            status: dataRpp[iterateRpp].status,
-          })
-        }
-
-        setRekapRpp(dataRppIdx)
-      } else {
-        setRekapRpp(result.data.data)
-      }
-      axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/rekap`)
-        .then((result) => {
-          let dataLogbook = result.data.data
-          let dataLogbookIdx = []
-          if (dataLogbook != null) {
-            for (let iterateLogbook in dataLogbook) {
-              dataLogbookIdx.push({
-                idx: parseInt(iterateLogbook),
-                nim: dataLogbook[iterateLogbook].nim,
-                name: dataLogbook[iterateLogbook].name,
-                company: dataLogbook[iterateLogbook].company,
-                status: dataLogbook[iterateLogbook].status,
-              })
-            }
-
-            setRekapLogbook(dataLogbookIdx)
-          } else {
-            setRekapLogbook(result.data.data)
-          }
-          axios
-            .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/rekap`)
-            .then((result) => {
-              let dataSelfAssessment = result.data.data
-              let dataSelfAssessmentIdx = []
-              if (dataSelfAssessment != null) {
-                for (let iterateSelfAssessment in dataSelfAssessment) {
-                  dataSelfAssessmentIdx.push({
-                    idx: parseInt(iterateSelfAssessment),
-                    nim: dataSelfAssessment[iterateSelfAssessment].nim,
-                    name: dataSelfAssessment[iterateSelfAssessment].name,
-                    company: dataSelfAssessment[iterateSelfAssessment].company,
-                    status: dataSelfAssessment[iterateSelfAssessment].status,
-                  })
-                }
-    
-                setRekapSelfAssessment(dataSelfAssessmentIdx)
-              } else {
-                setRekapSelfAssessment(result.data.data)
-              }
-              axios
-                .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/laporan/rekap`)
-                .then((result) => {
-                  let dataLaporan = result.data.data
-                  let dataLaporanIdx = []
-                  if (dataLaporan != null) {
-                    for (let iterateLaporan in dataLaporan) {
-                      dataLaporanIdx.push({
-                        idx: parseInt(iterateLaporan),
-                        nim: dataLaporan[iterateLaporan].nim,
-                        name: dataLaporan[iterateLaporan].name,
-                        company: dataLaporan[iterateLaporan].company,
-                        status: dataLaporan[iterateLaporan].status,
-                      })
-                    }
-        
-                    setRekapLaporan(dataLaporanIdx)
-                  } else {
-                    setRekapLaporan(result.data.data)
-                  }
-                  setIsLoading(false)
-                })
+      .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/rpp/rekap`)
+      .then((result) => {
+        let dataRpp = result.data.data
+        let dataRppIdx = []
+        if (dataRpp != null) {
+          for (let iterateRpp in dataRpp) {
+            dataRppIdx.push({
+              id: dataRpp[iterateRpp].id,
+              idx: parseInt(iterateRpp),
+              nim: dataRpp[iterateRpp].nim,
+              name: dataRpp[iterateRpp].name,
+              company: dataRpp[iterateRpp].company,
+              status: dataRpp[iterateRpp].status,
             })
-        })
-    }).catch(function (error) {
-      if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-        history.push({
-          pathname: '/login',
-          state: {
-            session: true,
-          },
-        })
-      } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-        history.push('/404')
-      } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
-        history.push('/500')
-      }
-    })
+          }
+
+          setRekapRpp(dataRppIdx)
+        } else {
+          setRekapRpp(result.data.data)
+        }
+        axios
+          .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/rekap`)
+          .then((result) => {
+            let dataLogbook = result.data.data
+            let dataLogbookIdx = []
+            if (dataLogbook != null) {
+              for (let iterateLogbook in dataLogbook) {
+                dataLogbookIdx.push({
+                  id: dataLogbook[iterateLogbook].id,
+                  idx: parseInt(iterateLogbook),
+                  nim: dataLogbook[iterateLogbook].nim,
+                  name: dataLogbook[iterateLogbook].name,
+                  company: dataLogbook[iterateLogbook].company,
+                  status: dataLogbook[iterateLogbook].status,
+                })
+              }
+
+              setRekapLogbook(dataLogbookIdx)
+            } else {
+              setRekapLogbook(result.data.data)
+            }
+            axios
+              .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/rekap`)
+              .then((result) => {
+                let dataSelfAssessment = result.data.data
+                let dataSelfAssessmentIdx = []
+                if (dataSelfAssessment != null) {
+                  for (let iterateSelfAssessment in dataSelfAssessment) {
+                    dataSelfAssessmentIdx.push({
+                      id: dataSelfAssessment[iterateSelfAssessment].id,
+                      idx: parseInt(iterateSelfAssessment),
+                      nim: dataSelfAssessment[iterateSelfAssessment].nim,
+                      name: dataSelfAssessment[iterateSelfAssessment].name,
+                      company: dataSelfAssessment[iterateSelfAssessment].company,
+                      status: dataSelfAssessment[iterateSelfAssessment].status,
+                    })
+                  }
+
+                  setRekapSelfAssessment(dataSelfAssessmentIdx)
+                } else {
+                  setRekapSelfAssessment(result.data.data)
+                }
+                axios
+                  .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/laporan/rekap`)
+                  .then((result) => {
+                    let dataLaporan = result.data.data
+                    let dataLaporanIdx = []
+                    if (dataLaporan != null) {
+                      for (let iterateLaporan in dataLaporan) {
+                        dataLaporanIdx.push({
+                          id: dataLaporan[iterateLaporan].id,
+                          idx: parseInt(iterateLaporan),
+                          nim: dataLaporan[iterateLaporan].nim,
+                          name: dataLaporan[iterateLaporan].name,
+                          company: dataLaporan[iterateLaporan].company,
+                          status: dataLaporan[iterateLaporan].status,
+                        })
+                      }
+
+                      setRekapLaporan(dataLaporanIdx)
+                    } else {
+                      setRekapLaporan(result.data.data)
+                    }
+                    setIsLoading(false)
+                  })
+              })
+          })
+      })
+      .catch(function (error) {
+        setIsLoading(false)
+        if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+          history.push({
+            pathname: '/login',
+            state: {
+              session: true,
+            },
+          })
+        } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+          history.push('/404')
+        } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
+          history.push('/500')
+        }
+      })
   }
 
   const getColumnSearchProps = (dataIndex) => ({
@@ -195,7 +201,7 @@ const ListDokumenPeserta = () => {
             Search
           </Button>
           <Button
-            onClick={() =>  handleReset(clearFilters, '', confirm, dataIndex, 99)}
+            onClick={() => handleReset(clearFilters, '', confirm, dataIndex, 99)}
             size="small"
             style={{
               width: 90,
@@ -261,15 +267,20 @@ const ListDokumenPeserta = () => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const getAllRekap = async (record, index) => {
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/rpp/rekap`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/rpp/rekap`, {
+          signal: controller.signal,
+        })
         .then((result) => {
           let dataRpp = result.data.data
           let dataRppIdx = []
           if (dataRpp != null) {
             for (let iterateRpp in dataRpp) {
               dataRppIdx.push({
+                id: dataRpp[iterateRpp].id,
                 idx: parseInt(iterateRpp),
                 nim: dataRpp[iterateRpp].nim,
                 name: dataRpp[iterateRpp].name,
@@ -282,80 +293,93 @@ const ListDokumenPeserta = () => {
           } else {
             setRekapRpp(result.data.data)
           }
-        
-        }).then(()=>{
+        })
+        .then(() => {
           axios
-          .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/rekap`)
-          .then((result) => {
-            let dataLogbook = result.data.data
-            let dataLogbookIdx = []
-            if (dataLogbook != null) {
-              for (let iterateLogbook in dataLogbook) {
-                dataLogbookIdx.push({
-                  idx: parseInt(iterateLogbook),
-                  nim: dataLogbook[iterateLogbook].nim,
-                  name: dataLogbook[iterateLogbook].name,
-                  company: dataLogbook[iterateLogbook].company,
-                  status: dataLogbook[iterateLogbook].status,
-                })
-              }
-  
-              setRekapLogbook(dataLogbookIdx)
-            } else {
-              setRekapLogbook(result.data.data)
-            }
-          
-          })
-        }).then(()=>{
-          axios
-          .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/rekap`)
-          .then((result) => {
-            let dataSelfAssessment = result.data.data
-            let dataSelfAssessmentIdx = []
-            if (dataSelfAssessment != null) {
-              for (let iterateSelfAssessment in dataSelfAssessment) {
-                dataSelfAssessmentIdx.push({
-                  idx: parseInt(iterateSelfAssessment),
-                  nim: dataSelfAssessment[iterateSelfAssessment].nim,
-                  name: dataSelfAssessment[iterateSelfAssessment].name,
-                  company: dataSelfAssessment[iterateSelfAssessment].company,
-                  status: dataSelfAssessment[iterateSelfAssessment].status,
-                })
-              }
-  
-              setRekapSelfAssessment(dataSelfAssessmentIdx)
-            } else {
-              setRekapSelfAssessment(result.data.data)
-            }
-        
-          })
-        }).then(()=>{
-          axios
-              .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/laporan/rekap`)
-              .then((result) => {
-                let dataLaporan = result.data.data
-                let dataLaporanIdx = []
-                if (dataLaporan != null) {
-                  for (let iterateLaporan in dataLaporan) {
-                    dataLaporanIdx.push({
-                      idx: parseInt(iterateLaporan),
-                      nim: dataLaporan[iterateLaporan].nim,
-                      name: dataLaporan[iterateLaporan].name,
-                      company: dataLaporan[iterateLaporan].company,
-                      status: dataLaporan[iterateLaporan].status,
-                    })
-                  }
-      
-                  setRekapLaporan(dataLaporanIdx)
-                } else {
-                  setRekapLaporan(result.data.data)
-                }
-             
-              })
-          
-            setIsLoading(false)
+            .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/rekap`, {
+              signal: controller.signal,
             })
+            .then((result) => {
+              let dataLogbook = result.data.data
+              let dataLogbookIdx = []
+              if (dataLogbook != null) {
+                for (let iterateLogbook in dataLogbook) {
+                  dataLogbookIdx.push({
+                    id: dataLogbook[iterateLogbook].id,
+                    idx: parseInt(iterateLogbook),
+                    nim: dataLogbook[iterateLogbook].nim,
+                    name: dataLogbook[iterateLogbook].name,
+                    company: dataLogbook[iterateLogbook].company,
+                    status: dataLogbook[iterateLogbook].status,
+                  })
+                }
+
+                setRekapLogbook(dataLogbookIdx)
+              } else {
+                setRekapLogbook(result.data.data)
+              }
+            })
+        })
+        .then(() => {
+          axios
+            .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/rekap`, {
+              signal: controller.signal,
+            })
+            .then((result) => {
+              let dataSelfAssessment = result.data.data
+              let dataSelfAssessmentIdx = []
+              if (dataSelfAssessment != null) {
+                for (let iterateSelfAssessment in dataSelfAssessment) {
+                  dataSelfAssessmentIdx.push({
+                    id: dataSelfAssessment[iterateSelfAssessment].id,
+                    idx: parseInt(iterateSelfAssessment),
+                    nim: dataSelfAssessment[iterateSelfAssessment].nim,
+                    name: dataSelfAssessment[iterateSelfAssessment].name,
+                    company: dataSelfAssessment[iterateSelfAssessment].company,
+                    status: dataSelfAssessment[iterateSelfAssessment].status,
+                  })
+                }
+
+                setRekapSelfAssessment(dataSelfAssessmentIdx)
+              } else {
+                setRekapSelfAssessment(result.data.data)
+              }
+            })
+        })
+        .then(() => {
+          axios
+            .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/laporan/rekap`, {
+              signal: controller.signal,
+            })
+            .then((result) => {
+              let dataLaporan = result.data.data
+              let dataLaporanIdx = []
+              if (dataLaporan != null) {
+                for (let iterateLaporan in dataLaporan) {
+                  dataLaporanIdx.push({
+                    id: dataLaporan[iterateLaporan].id,
+                    idx: parseInt(iterateLaporan),
+                    nim: dataLaporan[iterateLaporan].nim,
+                    name: dataLaporan[iterateLaporan].name,
+                    company: dataLaporan[iterateLaporan].company,
+                    status: dataLaporan[iterateLaporan].status,
+                  })
+                }
+
+                setRekapLaporan(dataLaporanIdx)
+              } else {
+                setRekapLaporan(result.data.data)
+              }
+            })
+
+          setIsLoading(false)
+        })
         .catch(function (error) {
+          setIsLoading(false)
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -372,6 +396,11 @@ const ListDokumenPeserta = () => {
     }
 
     getAllRekap()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const columnsRpp = [
@@ -430,7 +459,7 @@ const ListDokumenPeserta = () => {
                 <Button
                   type="primary"
                   style={{ borderColor: 'white' }}
-                  onClick={() => actionSeeListRPPParticipant(record.nim)}
+                  onClick={() => actionSeeListRPPParticipant(record.id)}
                   size="small"
                 >
                   <Text style={{ fontSize: '3', color: 'white' }}>Lihat Detail</Text>
@@ -496,7 +525,7 @@ const ListDokumenPeserta = () => {
                   type="primary"
                   style={{ borderColor: 'white' }}
                   onClick={() => {
-                    actionSeeListLogbookParticipant(record.nim)
+                    actionSeeListLogbookParticipant(record.id)
                   }}
                   size="small"
                 >
@@ -512,7 +541,7 @@ const ListDokumenPeserta = () => {
 
   const columnsSelfAssessment = [
     {
-     title: 'NO',
+      title: 'NO',
       dataIndex: 'idx',
       width: '5%',
       align: 'center',
@@ -570,7 +599,7 @@ const ListDokumenPeserta = () => {
                   type="primary"
                   style={{ borderColor: 'white' }}
                   size="small"
-                  onClick={() => actionSeeListSelfAssessmentPeserta(record.nim)}
+                  onClick={() => actionSeeListSelfAssessmentPeserta(record.id)}
                 >
                   <Text style={{ fontSize: '3', color: 'white' }}>Lihat Detail</Text>
                 </Button>
@@ -584,7 +613,7 @@ const ListDokumenPeserta = () => {
 
   const columnsLaporan = [
     {
-     title: 'NO',
+      title: 'NO',
       dataIndex: 'idx',
       width: '5%',
       align: 'center',
@@ -641,7 +670,7 @@ const ListDokumenPeserta = () => {
                     <div>(form penilaian pembimbing)</div>
                   </>
                 }
-                onClick={() => actionSeeListLaporan(record.nim)}
+                onClick={() => actionSeeListLaporan(record.id)}
               >
                 <Button type="primary" style={{ borderColor: 'white' }} size="small">
                   <Text style={{ fontSize: '3', color: 'white' }}>Lihat Detail</Text>

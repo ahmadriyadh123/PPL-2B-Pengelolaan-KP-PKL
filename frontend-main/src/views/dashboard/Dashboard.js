@@ -67,7 +67,7 @@ const Dashboard = () => {
         })
         .catch(function (error) {
           if (axios.isCancel(error)) return;
-          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+          if (error.toJSON().status === 401 || error.toJSON().status === 403 || (error.toJSON().status >= 300 && error.toJSON().status <= 399)) {
             history.push({
               pathname: "/login",
               state: {
@@ -119,7 +119,7 @@ const Dashboard = () => {
         setIsLoading(false);
       } catch (error) {
         if (axios.isCancel(error)) return;
-        if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+        if (error.toJSON().status === 401 || error.toJSON().status === 403 || (error.toJSON().status >= 300 && error.toJSON().status <= 399)) {
           history.push({
             pathname: "/login",
             state: {

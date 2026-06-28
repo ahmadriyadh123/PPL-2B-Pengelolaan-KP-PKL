@@ -61,7 +61,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 HttpHeaders headers = new HttpHeaders();
                 headers.add("Cookie", accessTokenCookieName + " = " + getJwtAccessTokenFromCookie(request) + ";" + refreshTokenCookieName + " = " + getJwtRefreshTokenFromCookie(request));
                 HttpEntity<String> req = new HttpEntity<>(headers);
-                verifyResponse = restTemplates.exchange("http://account-service/account/verify", HttpMethod.POST, req, VerifyResponse.class);
+                verifyResponse = restTemplates.exchange("http://account-service/verify", HttpMethod.POST, req, VerifyResponse.class);
                 statusCode = verifyResponse.getStatusCode();
             }
 
@@ -144,3 +144,4 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         }
     }
 }
+

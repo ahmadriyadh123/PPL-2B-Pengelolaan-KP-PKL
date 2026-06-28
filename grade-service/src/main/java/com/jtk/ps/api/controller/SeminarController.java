@@ -5,12 +5,13 @@ import java.util.List;
 import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
-// import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,8 +36,6 @@ import org.springframework.http.MediaType;
 @RestController
 @RequestMapping("/seminar")
 public class SeminarController {
-    
-    // private static final Logger LOGGER = LoggerFactory.getLogger(SeminarService.class);
 
     @Autowired
     private ISeminarService seminarService;
@@ -59,18 +58,21 @@ public class SeminarController {
     }
 
     @PostMapping("/criteria") // checked
-    public ResponseEntity<Object> createSeminarCriteria(@RequestBody SeminarCriteriaRequestDto newCriteria){
+    @PreAuthorize("hasAuthority('COMMITTEE')")
+    public ResponseEntity<Object> createSeminarCriteria(@Valid @RequestBody SeminarCriteriaRequestDto newCriteria){
         seminarService.createSeminarCriteria(newCriteria);
         return ResponseHandler.generateResponse("Create Criteria Seminar Form succeed",HttpStatus.OK);
     }
 
     @PutMapping("/criteria/update/{id_criteria}") // checked
-    public ResponseEntity<Object> updateSeminarCriteria(@PathVariable("id_criteria") Integer idCriteria,@RequestBody SeminarCriteriaRequestDto newCriteria){
+    @PreAuthorize("hasAuthority('COMMITTEE')")
+    public ResponseEntity<Object> updateSeminarCriteria(@PathVariable("id_criteria") Integer idCriteria, @Valid @RequestBody SeminarCriteriaRequestDto newCriteria){
         seminarService.updateSeminarCriteria(idCriteria, newCriteria);
         return ResponseHandler.generateResponse("Update Criteria Seminar Form succeed",HttpStatus.OK);
     }
 
     @DeleteMapping("/criteria/delete/{id_criteria}") // checked
+    @PreAuthorize("hasAuthority('COMMITTEE')")
     public ResponseEntity<Object> deleteSeminarCriteria(@PathVariable("id_criteria") Integer idCriteria){
         seminarService.deleteSeminarCriteria(idCriteria);
         return ResponseHandler.generateResponse("Deleted Criteria Seminar Form succeed",HttpStatus.OK);
@@ -82,13 +84,15 @@ public class SeminarController {
     }
 
     @PutMapping("/form/{id_form}/values") // checked (update n insert)
+    @PreAuthorize("hasAuthority('COMMITTEE')")
     public ResponseEntity<Object> updateValueSeminarByFormId(@PathVariable("id_form") Integer id_form, @RequestBody List<SeminarValuesDto> seminarvalues){
         seminarService.updateSeminarValues(id_form, seminarvalues);
         return ResponseHandler.generateResponse("Update Seminar Values succeed",HttpStatus.OK);
     }
 
     @PutMapping("/form/{id_form}") // checked (update n insert)
-    public ResponseEntity<Object> updateSeminarForm(@PathVariable("id_form") Integer id_form, @RequestBody SeminarFormRequestDto seminarForm){
+    @PreAuthorize("hasAuthority('COMMITTEE')")
+    public ResponseEntity<Object> updateSeminarForm(@PathVariable("id_form") Integer id_form, @Valid @RequestBody SeminarFormRequestDto seminarForm){
         seminarService.updateSeminarForm(id_form, seminarForm);
         return ResponseHandler.generateResponse("Update Seminar Form succeed",HttpStatus.OK);
     }

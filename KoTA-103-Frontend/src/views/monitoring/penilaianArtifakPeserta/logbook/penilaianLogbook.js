@@ -62,7 +62,7 @@ const PenilaianLogbook = () => {
   const [choose, setChoose] = useState([])
   const [loadings, setLoadings] = useState([])
   const [logbookCurrentComplete, setLogbookCurrentComplete] = useState([])
-  const [idDataRPP,setIdDataRPP] = useState()
+  const [idDataRPP, setIdDataRPP] = useState()
   const [showArrow, setShowArrow] = useState(true)
   const [arrowAtCenter, setArrowAtCenter] = useState(false)
   const [penilaianBefore, setPenilaianBefore] = useState()
@@ -72,13 +72,11 @@ const PenilaianLogbook = () => {
   const [logbookPeserta, setLogbookPeserta] = useState([])
   const [nilaiSelfAssessment, setNilaiSelfAssessment] = useState([])
 
-
   const [isRppAvailable, setIsRppAvailable] = useState()
   const [isLogbookAvailable, setIsLogbookAvailable] = useState()
   const [isSelfAssessmentAvailable, setIsSelfAssessmentAvailable] = useState()
   const [rppComplete, setRppComplete] = useState()
   const [aspectGradeSelfAssessmentPeserta, setAspectGradeSelfAssessmentPeserta] = useState([])
-
 
   /** HANDLE SAAT NILAI SA DI UBAH */
   const handleChangeNilaiSelfAssessment = (
@@ -189,9 +187,6 @@ const PenilaianLogbook = () => {
     }
   }
 
-  
-
- 
   const convertDate = (date) => {
     let temp_date_split = date.split('-')
     const month = [
@@ -214,6 +209,8 @@ const PenilaianLogbook = () => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     console.log(window.location.href)
     const getAssociatedLogbookRppSelfAssessmentBasedOnLogbook = async () => {
       axios.defaults.withCredentials = true
@@ -222,6 +219,9 @@ const PenilaianLogbook = () => {
       await axios
         .get(
           `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/associated/logbook?logbook_id=${LOGBOOK_PESERTA}&participant_id=${NIM_PESERTA}`,
+          {
+            signal: controller.signal,
+          },
         )
         .then((result) => {
           const data_rpp = result.data.data.rpp
@@ -239,28 +239,27 @@ const PenilaianLogbook = () => {
           } else {
             setIsLogbookAvailable(true)
             // setLogbookPeserta(data_logbook)
-            let dataLogbookHasConvertDate 
-            let getDataLogbookWithConvertDate = function (data){
-                dataLogbookHasConvertDate = {
-                  id : data.data,
-                  date : convertDate(data.date),
-                  task : data.task,
-                  tools : data.tools,
-                  description : data.description,
-                  grade : data.grade,
-                  status : data.status.status,
-                  participant_id : data.participant_id,
-                  project_name : data.project_name,
-                  project_manager : data.project_manager,
-                  technical_leader : data.technical_leader,
-                  time_and_activity : data.time_and_activity,
-                  work_result : data.work_result,
-                  encountered_problem : data.encountered_problem
-                }
-     
+            let dataLogbookHasConvertDate
+            let getDataLogbookWithConvertDate = function (data) {
+              dataLogbookHasConvertDate = {
+                id: data.data,
+                date: convertDate(data.date),
+                task: data.task,
+                tools: data.tools,
+                description: data.description,
+                grade: data.grade,
+                status: data.status.status,
+                participant_id: data.participant_id,
+                project_name: data.project_name,
+                project_manager: data.project_manager,
+                technical_leader: data.technical_leader,
+                time_and_activity: data.time_and_activity,
+                work_result: data.work_result,
+                encountered_problem: data.encountered_problem,
+              }
             }
             getDataLogbookWithConvertDate(data_logbook)
-            
+
             setLogbookPeserta(dataLogbookHasConvertDate)
           }
 
@@ -297,6 +296,10 @@ const PenilaianLogbook = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -316,6 +319,11 @@ const PenilaianLogbook = () => {
     }
 
     getAssociatedLogbookRppSelfAssessmentBasedOnLogbook()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const customizeTooltip = (arg) => {
@@ -346,17 +354,18 @@ const PenilaianLogbook = () => {
       </>
     )
   }
- function getColorStatusPengumpulan (status){
-  if (status === 'Terlambat') {
-   return 'volcano'
-  } else if (status === 'Tepat Waktu') {
-   return 'green'
+  function getColorStatusPengumpulan(status) {
+    if (status === 'Terlambat') {
+      return 'volcano'
+    } else if (status === 'Tepat Waktu') {
+      return 'green'
+    }
   }
- }
- const lihatIsiDetailRPP = () => {
-  history.push(`/rekapDokumenPeserta/logbookPeserta/${NIM_PESERTA}/nilai/${LOGBOOK_PESERTA}/detailRPP/${idDataRPP}`)
-}
-
+  const lihatIsiDetailRPP = () => {
+    history.push(
+      `/rekapDokumenPeserta/logbookPeserta/${NIM_PESERTA}/nilai/${LOGBOOK_PESERTA}/detailRPP/${idDataRPP}`,
+    )
+  }
 
   const textSangatBaik = <text>Deskripsi Penilaian</text>
 
@@ -436,30 +445,28 @@ const PenilaianLogbook = () => {
           setIsLogbookAvailable(false)
         } else {
           setIsLogbookAvailable(true)
-          let dataLogbookHasConvertDate 
-          let getDataLogbookWithConvertDate = function (data){
-              dataLogbookHasConvertDate = {
-                id : data.data,
-                date : convertDate(data.date),
-                task : data.task,
-                tools : data.tools,
-                description : data.description,
-                grade : data.grade,
-                status : data.status.status,
-                participant_id : data.participant_id,
-                project_name : data.project_name,
-                project_manager : data.project_manager,
-                technical_leader : data.technical_leader,
-                time_and_activity : data.time_and_activity,
-                work_result : data.work_result,
-                encountered_problem : data.encountered_problem
-              }
-   
+          let dataLogbookHasConvertDate
+          let getDataLogbookWithConvertDate = function (data) {
+            dataLogbookHasConvertDate = {
+              id: data.data,
+              date: convertDate(data.date),
+              task: data.task,
+              tools: data.tools,
+              description: data.description,
+              grade: data.grade,
+              status: data.status.status,
+              participant_id: data.participant_id,
+              project_name: data.project_name,
+              project_manager: data.project_manager,
+              technical_leader: data.technical_leader,
+              time_and_activity: data.time_and_activity,
+              work_result: data.work_result,
+              encountered_problem: data.encountered_problem,
+            }
           }
           getDataLogbookWithConvertDate(data_logbook)
-          
+
           setLogbookPeserta(dataLogbookHasConvertDate)
-          
         }
 
         if (data_self_assessment === null) {
@@ -509,49 +516,53 @@ const PenilaianLogbook = () => {
         {title('RENCANA PENGERJAAN PROYEK ( RPP )')}
 
         {isRppAvailable && (
-         <>
-          <div style={{ padding: 10 }}>
-            <div style={{ background: '#fff', padding: 24 }}>
-              <div style={{ overflowX: 'scroll' }}>
-                <Chart
-                  id="chart"
-                  dataSource={getData(timeline)}
-                  barGroupPadding={0}
-                  barPadding={0}
-                  rotated={true}
-                >
-                  <ArgumentAxis>
-                    <Tick visible={false} />
-                  </ArgumentAxis>
-                  <ValueAxis></ValueAxis>
-                  <Title
-                    horizontalAlignment={'left'}
-                    text="Timeline Rencana Pengerjaan Proyek Peserta"
-                  />
-                  <CommonSeriesSettings
-                    type="rangeBar"
-                    argumentField="name"
-                    rangeValue1Field="end_date"
-                    rangeValue2Field="start_date"
-                    barOverlapGroup="description"
-                    barWidth="25"
+          <>
+            <div style={{ padding: 10 }}>
+              <div style={{ background: '#fff', padding: 24 }}>
+                <div style={{ overflowX: 'scroll' }}>
+                  <Chart
+                    id="chart"
+                    dataSource={getData(timeline)}
+                    barGroupPadding={0}
                     barPadding={0}
-                  />
-                  <Legend
-                    visible={false}
-                    orientation="horizontal"
-                    verticalAlignment="bottom"
-                    horizontalAlignment="left"
-                  />
-                  <Tooltip enabled={true} customizeTooltip={customizeTooltip} />
-                  <SeriesTemplate nameField="name" />
-                  <Animation enabled={true} />
-                </Chart>
+                    rotated={true}
+                  >
+                    <ArgumentAxis>
+                      <Tick visible={false} />
+                    </ArgumentAxis>
+                    <ValueAxis></ValueAxis>
+                    <Title
+                      horizontalAlignment={'left'}
+                      text="Timeline Rencana Pengerjaan Proyek Peserta"
+                    />
+                    <CommonSeriesSettings
+                      type="rangeBar"
+                      argumentField="name"
+                      rangeValue1Field="end_date"
+                      rangeValue2Field="start_date"
+                      barOverlapGroup="description"
+                      barWidth="25"
+                      barPadding={0}
+                    />
+                    <Legend
+                      visible={false}
+                      orientation="horizontal"
+                      verticalAlignment="bottom"
+                      horizontalAlignment="left"
+                    />
+                    <Tooltip enabled={true} customizeTooltip={customizeTooltip} />
+                    <SeriesTemplate nameField="name" />
+                    <Animation enabled={true} />
+                  </Chart>
+                </div>
               </div>
             </div>
-          </div>
-          <div className='spacetop'><Button type='primary' onClick={lihatIsiDetailRPP}>Lihat Detail RPP</Button></div>
-         </>
+            <div className="spacetop">
+              <Button type="primary" onClick={lihatIsiDetailRPP}>
+                Lihat Detail RPP
+              </Button>
+            </div>
+          </>
         )}
 
         {!isRppAvailable && <Result icon={<FileOutlined />} title="Tidak Ada RPP Yang Terkait" />}
@@ -564,8 +575,11 @@ const PenilaianLogbook = () => {
                 <tr>
                   <td>Status Pengumpulan</td>
                   <td>:</td>
-                  <td>&nbsp;&nbsp;
-                  <Tag color={getColorStatusPengumpulan(logbookPeserta.status)}>{logbookPeserta.status}</Tag>
+                  <td>
+                    &nbsp;&nbsp;
+                    <Tag color={getColorStatusPengumpulan(logbookPeserta.status)}>
+                      {logbookPeserta.status}
+                    </Tag>
                   </td>
                 </tr>
                 <tr>
@@ -661,7 +675,7 @@ const PenilaianLogbook = () => {
         <div style={{ marginTop: 150 }}>
           {title('SELF ASSESSMENT')}
 
-          {(isSelfAssessmentAvailable && rolePengguna ==='4') &&(
+          {isSelfAssessmentAvailable && rolePengguna === '4' && (
             <ul className="list-group mb-4">
               <div>
                 <div>
@@ -705,44 +719,42 @@ const PenilaianLogbook = () => {
                             <td width={'10%'}>
                               {data.description !== '-' && (
                                 <Input
-                                onChange={(e) =>
-                                  handleChangeNilaiSelfAssessment(
-                                    index,
-                                    'grade',
-                                    e.target.value,
-                                    data.description,
-                                    data.aspect_id,
-                                    data.grade_id,
-                                  )
-                                }
-                                defaultValue={data.grade}
-                                type="number"
-                                placeholder="Input a number"
-                                maxLength={2}
-                              ></Input>
+                                  onChange={(e) =>
+                                    handleChangeNilaiSelfAssessment(
+                                      index,
+                                      'grade',
+                                      e.target.value,
+                                      data.description,
+                                      data.aspect_id,
+                                      data.grade_id,
+                                    )
+                                  }
+                                  defaultValue={data.grade}
+                                  type="number"
+                                  placeholder="Input a number"
+                                  maxLength={2}
+                                ></Input>
                               )}
 
-{data.description === '-' && (
+                              {data.description === '-' && (
                                 <Input
-                                disabled
-                                onChange={(e) =>
-                                  handleChangeNilaiSelfAssessment(
-                                    index,
-                                    'grade',
-                                    e.target.value,
-                                    data.description,
-                                    data.aspect_id,
-                                    data.grade_id,
-                                  )
-                                }
-                                defaultValue={data.grade}
-                                type="number"
-                                placeholder="Input a number"
-                                maxLength={2}
-                              ></Input>
+                                  disabled
+                                  onChange={(e) =>
+                                    handleChangeNilaiSelfAssessment(
+                                      index,
+                                      'grade',
+                                      e.target.value,
+                                      data.description,
+                                      data.aspect_id,
+                                      data.grade_id,
+                                    )
+                                  }
+                                  defaultValue={data.grade}
+                                  type="number"
+                                  placeholder="Input a number"
+                                  maxLength={2}
+                                ></Input>
                               )}
-
-
                             </td>
                             <td>{data.description}</td>
                           </tr>
@@ -751,17 +763,16 @@ const PenilaianLogbook = () => {
                     </tbody>
                   </Table>
                 </div>
-             
-                  <Button type="primary" onClick={SimpanPenilaianSelfAssessment} variant="contained">
+
+                <Button type="primary" onClick={SimpanPenilaianSelfAssessment} variant="contained">
                   Simpan Nilai
                 </Button>
-               
               </div>
               <br />
             </ul>
           )}
 
-{(isSelfAssessmentAvailable && rolePengguna!=='4')&& (
+          {isSelfAssessmentAvailable && rolePengguna !== '4' && (
             <ul className="list-group mb-4">
               <div>
                 <div>
@@ -804,7 +815,7 @@ const PenilaianLogbook = () => {
                             <td>{data.aspect_name}</td>
                             <td width={'10%'}>
                               <Input
-                              disabled
+                                disabled
                                 onChange={(e) =>
                                   handleChangeNilaiSelfAssessment(
                                     index,
@@ -828,8 +839,6 @@ const PenilaianLogbook = () => {
                     </tbody>
                   </Table>
                 </div>
-             
-               
               </div>
               <br />
             </ul>

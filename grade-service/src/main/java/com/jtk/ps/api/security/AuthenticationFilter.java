@@ -3,6 +3,8 @@ package com.jtk.ps.api.security;
 import com.jtk.ps.api.dto.PayloadJwt;
 import com.jtk.ps.api.dto.VerifyResponse;
 import com.jtk.ps.api.util.Constant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -32,6 +34,8 @@ import java.util.Objects;
 @Component
 public class AuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationFilter.class);
+
     @Value("${jwt.accessTokenCookieName}")
     private String accessTokenCookieName;
 
@@ -52,7 +56,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             HttpHeaders headers = new HttpHeaders();
             headers.add("Cookie", accessTokenCookieName + " = " + getJwtAccessTokenFromCookie(request)+"; "+refreshTokenCookieName+" = "+getJwtRefreshTokenFromCookie(request));
             HttpEntity<String> req = new HttpEntity<>(headers);
-            ResponseEntity<VerifyResponse> verifyResponse = restTemplates.exchange("http://account-service/account/verify", HttpMethod.POST, req, VerifyResponse.class);
+            ResponseEntity<VerifyResponse> verifyResponse = restTemplates.exchange("http://account-service/verify", HttpMethod.POST, req, VerifyResponse.class);
             HttpStatus statusCode = verifyResponse.getStatusCode();
 
             if(statusCode.is3xxRedirection()){
@@ -89,8 +93,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 request.setAttribute(Constant.VerifyConstant.STATUS, 400);
             }
         } catch (Exception e) {
+            LOGGER.error("Authentication failed for request to {}", request.getRequestURI(), e);
             request.setAttribute(Constant.VerifyConstant.STATUS, 500);
-            e.printStackTrace();
         }
         filterChain.doFilter(request, response);
     }
@@ -136,3 +140,4 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
 
 }
+

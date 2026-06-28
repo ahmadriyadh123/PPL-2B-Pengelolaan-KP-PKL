@@ -44,15 +44,27 @@ const RekapPenilaianLogbook = () => {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+
     async function getDataInformasiPeserta() {
       await axios
-        .post(`${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`, {
-          id: [ID_PARTICIPANT],
-        })
+        .post(
+          `${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`,
+          {
+            id: [ID_PARTICIPANT],
+          },
+          {
+            signal: controller.signal,
+          },
+        )
         .then((result) => {
           setDataPeserta(result.data.data[0])
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -69,9 +81,13 @@ const RekapPenilaianLogbook = () => {
     }
     const getDataLogbookPeserta = async () => {
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/get-all/${ID_PARTICIPANT}`)
+        .get(
+          `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/logbook/get-all/${ID_PARTICIPANT}`,
+          {
+            signal: controller.signal,
+          },
+        )
         .then((result) => {
-        
           if (result.data.data.length > 0) {
             setIsPesertaHaveLogbook(true)
             console.log(result.data.data)
@@ -129,6 +145,9 @@ const RekapPenilaianLogbook = () => {
           axios
             .get(
               `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor/grade/statistic/${ID_PARTICIPANT}`,
+              {
+                signal: controller.signal,
+              },
             )
             .then((res) => {
               setDataStatistikPeserta(res.data.data)
@@ -136,6 +155,10 @@ const RekapPenilaianLogbook = () => {
             })
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -154,6 +177,11 @@ const RekapPenilaianLogbook = () => {
 
     getDataInformasiPeserta()
     getDataLogbookPeserta()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const tagColorStatusHandling = (status) => {
@@ -194,8 +222,6 @@ const RekapPenilaianLogbook = () => {
     </Spin>
   ) : (
     <>
-      
-
       <div>
         <Space
           className="spacebottom"

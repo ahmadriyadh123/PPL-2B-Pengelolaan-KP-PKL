@@ -1,15 +1,17 @@
 /* eslint-disable no-restricted-globals */
 import React, { useState, useEffect } from 'react'
-import 'antd/dist/antd.css'
+import 'antd/dist/reset.css'
 import 'src/scss/_custom.scss'
 import Highlighter from 'react-highlight-words'
 import { LoadingOutlined } from '@ant-design/icons'
 import axios from 'axios'
 import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import { Button, Col, Row, Table, Spin, Form, Modal, Input, notification } from 'antd'
+import { useHistory } from 'react-router-dom'
 
 const antIcon = <LoadingOutlined style={{ fontSize: 40 }} spin />
 const ListKafka = () => {
+  const history = useHistory()
   const [isLoading, setIsLoading] = useState(true)
   const [loadings, setLoadings] = useState([])
   const [data, setData] = useState([])
@@ -30,17 +32,23 @@ const ListKafka = () => {
         setIsLoading(false)
       })
       .catch(function (error) {
-        if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-          history.push({
-            pathname: '/login',
-            state: {
-              session: true,
-            },
-          })
-        } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-          history.push('/404')
-        } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
-          history.push('/500')
+        const status = error.response ? error.response.status : (error.toJSON && typeof error.toJSON === 'function' ? error.toJSON().status : null);
+        if (status) {
+          if (status >= 300 && status <= 399) {
+            history.push({
+              pathname: '/login',
+              state: {
+                session: true,
+              },
+            })
+          } else if (status >= 400 && status <= 499) {
+            history.push('/404')
+          } else if (status >= 500 && status <= 599) {
+            history.push('/500')
+          }
+        } else {
+          console.error(error)
+          setIsLoading(false)
         }
       })
   }

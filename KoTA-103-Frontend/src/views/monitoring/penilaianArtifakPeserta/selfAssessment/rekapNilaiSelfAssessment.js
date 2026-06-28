@@ -36,7 +36,6 @@ const RekapSelfAssessment = () => {
     // console.log(data)
   }
 
-
   const convertDate = (date) => {
     let temp_date_split = date.split('-')
     const month = [
@@ -67,9 +66,13 @@ const RekapSelfAssessment = () => {
 
   useEffect(
     () => {
+      const controller = new AbortController()
+
       async function getSelfAssessmentAspect() {
         await axios
-          .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/aspect/get`)
+          .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/aspect/get`, {
+            signal: controller.signal,
+          })
           .then((result) => {
             console.log('komponen', result.data.data)
             setKomponenPenilaianSelfAssessment(result.data.data)
@@ -77,6 +80,9 @@ const RekapSelfAssessment = () => {
             axios
               .get(
                 `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/get-final-grade/${ID_PARTICIPANT}`,
+                {
+                  signal: controller.signal,
+                },
               )
               .then((result) => {
                 console.log('RES', result.data.data)
@@ -113,12 +119,11 @@ const RekapSelfAssessment = () => {
                 let total_final_grade = 0
                 let getFinalGrade = function (data) {
                   for (var i in data) {
-                    
                     tempfinalGrade.push({
                       grade: data[i].grade,
                     })
                     total_final_grade = total_final_grade + data[i].grade
-                    console.log("total",data[i].grade, typeof data[i].grade)
+                    console.log('total', data[i].grade, typeof data[i].grade)
                   }
                 }
                 getFinalGrade(final_grade)
@@ -128,6 +133,9 @@ const RekapSelfAssessment = () => {
                 axios
                   .get(
                     `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/supervisor-grade/statistic/${ID_PARTICIPANT}`,
+                    {
+                      signal: controller.signal,
+                    },
                   )
                   .then((res) => {
                     setDataStatistikPeserta(res.data.data)
@@ -137,6 +145,10 @@ const RekapSelfAssessment = () => {
               })
           })
           .catch(function (error) {
+            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+              return
+            }
+
             if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
               history.push({
                 pathname: '/login',
@@ -150,18 +162,27 @@ const RekapSelfAssessment = () => {
               history.push('/500')
             }
           })
-   
       }
 
       async function getDataInformasiPeserta() {
         await axios
-          .post(`${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`, {
-            id: [ID_PARTICIPANT],
-          })
+          .post(
+            `${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`,
+            {
+              id: [ID_PARTICIPANT],
+            },
+            {
+              signal: controller.signal,
+            },
+          )
           .then((result) => {
             setDataPeserta(result.data.data[0])
           })
           .catch(function (error) {
+            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+              return
+            }
+
             if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
               history.push({
                 pathname: '/login',
@@ -181,6 +202,9 @@ const RekapSelfAssessment = () => {
         await axios
           .get(
             `${process.env.REACT_APP_API_GATEWAY_URL}monitoring/self-assessment/get-all/${ID_PARTICIPANT}`,
+            {
+              signal: controller.signal,
+            },
           )
           .then((result) => {
             console.log('sa', result.data.data)
@@ -191,20 +215,19 @@ const RekapSelfAssessment = () => {
               // setSelfAssessmentPeserta(temp)
               let dataSelfAssessmentPesertaSubmitted = []
               let getDataSelfAssessmentPesertaSubmitted = function (data) {
-            
                 for (var i in data) {
                   console.log('DDD', data[i])
                   if (data[i].self_assessment_id !== null) {
                     let data_sa = {
-                      start_date : convertDate(data[i].start_date),
-                      grade : data[i].grade,
-                      self_assessment_id : data[i].self_assessment_id,
-                      participant_id :data[i].participant_id,
-                      finish_date :data[i].finish_date
+                      start_date: convertDate(data[i].start_date),
+                      grade: data[i].grade,
+                      self_assessment_id: data[i].self_assessment_id,
+                      participant_id: data[i].participant_id,
+                      finish_date: data[i].finish_date,
                     }
                     console.log('datasa', data_sa)
                     dataSelfAssessmentPesertaSubmitted.push(data_sa)
-                  } 
+                  }
                 }
               }
               getDataSelfAssessmentPesertaSubmitted(result.data.data)
@@ -216,6 +239,10 @@ const RekapSelfAssessment = () => {
             setIsLoading(false)
           })
           .catch(function (error) {
+            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+              return
+            }
+
             if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
               history.push({
                 pathname: '/login',
@@ -239,7 +266,10 @@ const RekapSelfAssessment = () => {
       getDataInformasiPeserta()
       getSelfAssessmentAspect()
 
-      return () => contoller_abort.abort()
+      return () => {
+        console.log('ABORTED')
+        controller.abort()
+      }
     },
     [history],
     [],
@@ -363,19 +393,17 @@ const RekapSelfAssessment = () => {
                 {selfAssessmentPeserta.map((data, index) => {
                   return (
                     <tr key={data.self_assessment_id}>
-                    <td>
-                      {data.start_date}
-                    </td>
-                    {data.grade.map((grades,index)=>{
-                      return (
-                      <td key={grades.grade_id}>
-                          <Tooltip title={grades.description} color="gold">
-                        {grades.grade}
-                      </Tooltip>
-                      </td>
-                      )
-                    })}
-                  </tr>
+                      <td>{data.start_date}</td>
+                      {data.grade.map((grades, index) => {
+                        return (
+                          <td key={grades.grade_id}>
+                            <Tooltip title={grades.description} color="gold">
+                              {grades.grade}
+                            </Tooltip>
+                          </td>
+                        )
+                      })}
+                    </tr>
                   )
                 })}
 

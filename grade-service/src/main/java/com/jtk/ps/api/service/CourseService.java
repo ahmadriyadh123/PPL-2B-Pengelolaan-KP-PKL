@@ -177,7 +177,8 @@ public class CourseService implements ICourseService{
 
             eventStoreRepository.save(eventStore);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("Failed to store event for entityId: {}, eventType: {}", entityId, eventType, e);
+            throw new RuntimeException("Event store operation failed", e);
         }
     }
 

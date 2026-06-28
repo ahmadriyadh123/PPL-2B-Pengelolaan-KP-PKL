@@ -29,7 +29,7 @@ const RekapLaporanPeserta = () => {
   let searchInput
   const [state, setState] = useState({ searchText: '', searchedColumn: '' })
   const [isLoading, setIsLoading] = useState(true)
-  const  NIM_PESERTA_USER = localStorage.username
+  const NIM_PESERTA_USER = localStorage.username
   const [dataLaporanPeserta, setDataLaporanPeserta] = useState([])
   const [dataPeserta, setDataPeserta] = useState([])
   let rolePengguna = localStorage.id_role
@@ -40,13 +40,13 @@ const RekapLaporanPeserta = () => {
   const [infoDeadlineLaporan, setInfoDeadlineLaporan] = useState([])
   const [totalLaporanPhase, setTotalLaporanPhase] = useState()
   const [isStartDateToAccessThisPage, setIsStartDateToAccessThisPage] = useState()
-  const [messageApi, contextHolder] = message.useMessage();
+  const [messageApi, contextHolder] = message.useMessage()
   const success = (link) => {
     navigator.clipboard.writeText(link)
     messageApi.open({
       type: 'success',
       content: 'Link berhasil disalin',
-    });
+    })
   }
 
   const getColumnSearchProps = (dataIndex, name) => ({
@@ -194,7 +194,7 @@ const RekapLaporanPeserta = () => {
   }
 
   useEffect(() => {
-    
+    const controller = new AbortController()
 
     async function getLaporanPeserta(record, index) {
       let PESERTA
@@ -205,51 +205,58 @@ const RekapLaporanPeserta = () => {
       }
 
       await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/laporan/get-all/${PESERTA}`)
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/laporan/get-all/${PESERTA}`, {
+          signal: controller.signal,
+        })
         .then((res) => {
           let temp = res.data.data
-         if(temp !== null && temp.length>0){
-          let temp_after = []
-          let funcGetTempAfter = function (obj) {
-            for (var i in obj) {
-              temp_after.push({
-                id: obj[i].id,
-                uri: obj[i].uri,
-                phase: obj[i].phase,
-                upload_date: convertDate(obj[i].upload_date),
-                supervisor_grade : obj[i].supervisor_grade
-              })
+          if (temp !== null && temp.length > 0) {
+            let temp_after = []
+            let funcGetTempAfter = function (obj) {
+              for (var i in obj) {
+                temp_after.push({
+                  id: obj[i].id,
+                  uri: obj[i].uri,
+                  phase: obj[i].phase,
+                  upload_date: convertDate(obj[i].upload_date),
+                  supervisor_grade: obj[i].supervisor_grade,
+                })
+              }
             }
+            funcGetTempAfter(temp)
+
+            setDataLaporanPeserta(temp_after)
+          } else {
+            setDataLaporanPeserta(undefined)
           }
-          funcGetTempAfter(temp)
-        
-          setDataLaporanPeserta(temp_after)
-         }else{
-          setDataLaporanPeserta(undefined)
-         }
 
-        axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all/laporan`).then((response)=>{
-          let dataDeadlineLaporan =[]
-          let getInfoDeadlineLaporan = function(data){
-            for(var i in data){
-              dataDeadlineLaporan.push({
-                id : data[i].id,
-                day_range : data[i].day_range,
-                start_assignment_date : convertDate(data[i].start_assignment_date),
-                finish_assignment_date : convertDate(data[i].finish_assignment_date),
-
-              })
-            }
-          }
-          getInfoDeadlineLaporan(response.data.data)
-          setInfoDeadlineLaporan(dataDeadlineLaporan)
-          setTotalLaporanPhase(response.data.data.length)
-          setIsLoading(false)
-        })
-
-   
+          axios
+            .get(`${process.env.REACT_APP_API_GATEWAY_URL}monitoring/deadline/get-all/laporan`, {
+              signal: controller.signal,
+            })
+            .then((response) => {
+              let dataDeadlineLaporan = []
+              let getInfoDeadlineLaporan = function (data) {
+                for (var i in data) {
+                  dataDeadlineLaporan.push({
+                    id: data[i].id,
+                    day_range: data[i].day_range,
+                    start_assignment_date: convertDate(data[i].start_assignment_date),
+                    finish_assignment_date: convertDate(data[i].finish_assignment_date),
+                  })
+                }
+              }
+              getInfoDeadlineLaporan(response.data.data)
+              setInfoDeadlineLaporan(dataDeadlineLaporan)
+              setTotalLaporanPhase(response.data.data.length)
+              setIsLoading(false)
+            })
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -261,7 +268,7 @@ const RekapLaporanPeserta = () => {
             history.push('/404')
           } else if (error.toJSON().status > 500 && error.toJSON().status <= 500) {
             history.push('/500')
-          } else if (error.toJSON().status===500){
+          } else if (error.toJSON().status === 500) {
             setDataLaporanPeserta(undefined)
           }
         })
@@ -275,14 +282,24 @@ const RekapLaporanPeserta = () => {
         PESERTA = parseInt(NIM_PESERTA_FROM_PARAMS)
       }
       await axios
-        .post(`${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`, {
-          id: [PESERTA],
-        })
+        .post(
+          `${process.env.REACT_APP_API_GATEWAY_URL}participant/get-by-id`,
+          {
+            id: [PESERTA],
+          },
+          {
+            signal: controller.signal,
+          },
+        )
         .then((result) => {
           setDataPeserta(result.data.data[0])
           setIsLoading(false)
         })
         .catch(function (error) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
@@ -298,12 +315,14 @@ const RekapLaporanPeserta = () => {
         })
     }
 
-
-
     GetDataInfoPeserta()
 
-
     getLaporanPeserta()
+
+    return () => {
+      console.log('ABORTED')
+      controller.abort()
+    }
   }, [history])
 
   const actionPenilaianFormPembimbingJurusan = (idLaporan) => {
@@ -363,16 +382,14 @@ const RekapLaporanPeserta = () => {
                   </Button>
                 </Popover>
               </Col>
-           
+
               <Col span={12} style={{ textAlign: 'center' }}>
-              <Popover content={<div>Kunjungi Link</div>}>
-              <a href={record.uri} target="_blank" rel="noopener noreferrer">
-              <Button type="primary">
-                  Kunjungi Link
-                </Button>
-              </a>
-              </Popover>
-            </Col>
+                <Popover content={<div>Kunjungi Link</div>}>
+                  <a href={record.uri} target="_blank" rel="noopener noreferrer">
+                    <Button type="primary">Kunjungi Link</Button>
+                  </a>
+                </Popover>
+              </Col>
             </Row>
           )}
         </>
@@ -400,7 +417,7 @@ const RekapLaporanPeserta = () => {
       width: '10%',
       ...getColumnSearchProps('upload_date', 'Tanggal Pengumpulan'),
     },
-  
+
     {
       title: 'Link Drive',
       dataIndex: 'uri',
@@ -423,14 +440,12 @@ const RekapLaporanPeserta = () => {
                 </Button>
               </Popover>
             </Col>
-           
+
             <Col span={12} style={{ textAlign: 'center' }}>
               <Popover content={<div>Kunjungi Link</div>}>
-              <a href={record.uri} target="_blank" rel="noopener noreferrer">
-              <Button type="primary">
-                  Kunjungi Link
-                </Button>
-              </a>
+                <a href={record.uri} target="_blank" rel="noopener noreferrer">
+                  <Button type="primary">Kunjungi Link</Button>
+                </a>
               </Popover>
             </Col>
           </Row>
@@ -462,7 +477,7 @@ const RekapLaporanPeserta = () => {
     </Spin>
   ) : (
     <>
-    <div>
+      <div>
         {rolePengguna !== '1' && (
           <Space
             className="spacebottom"
@@ -505,17 +520,27 @@ const RekapLaporanPeserta = () => {
             <div>
               <ul>
                 <li>
-                  Pengisian dapat dilakukan mulai &nbsp;&nbsp; <b>{tanggalLaporanDibuka}</b>&nbsp;&nbsp;
+                  Pengisian dapat dilakukan mulai &nbsp;&nbsp; <b>{tanggalLaporanDibuka}</b>
+                  &nbsp;&nbsp;
                 </li>
-                <li>Peserta dapat melakukan edit link laporan selama masih memiliki akses untuk pengeditan</li>
+                <li>
+                  Peserta dapat melakukan edit link laporan selama masih memiliki akses untuk
+                  pengeditan
+                </li>
                 <li>Laporan dikumpulkan dalam bentuk link Gdrive</li>
-                <li>Dalam pelaksanaan pengumpulan laporan memiliki &nbsp;&nbsp; <b>{totalLaporanPhase}</b> &nbsp;&nbsp; fase </li>
-                {infoDeadlineLaporan.map((data,index)=>{
-                  return(
-                    <li key={data.id}><b>Fase {index+1}</b> Akses pengumpulan akan dimulai dari tanggal &nbsp;&nbsp; <b>{data.start_assignment_date}</b>&nbsp;&nbsp; dan pengumpulan akan ditutup akses pada &nbsp;&nbsp;<b>{data.finish_assignment_date}</b></li>
+                <li>
+                  Dalam pelaksanaan pengumpulan laporan memiliki &nbsp;&nbsp;{' '}
+                  <b>{totalLaporanPhase}</b> &nbsp;&nbsp; fase{' '}
+                </li>
+                {infoDeadlineLaporan.map((data, index) => {
+                  return (
+                    <li key={data.id}>
+                      <b>Fase {index + 1}</b> Akses pengumpulan akan dimulai dari tanggal
+                      &nbsp;&nbsp; <b>{data.start_assignment_date}</b>&nbsp;&nbsp; dan pengumpulan
+                      akan ditutup akses pada &nbsp;&nbsp;<b>{data.finish_assignment_date}</b>
+                    </li>
                   )
                 })}
-            
               </ul>
             </div>
           }
@@ -526,25 +551,21 @@ const RekapLaporanPeserta = () => {
 
       <CCard className="mb-4">
         {title('REKAP LAPORAN PESERTA')}
-    {rolePengguna === '1' && (
+        {rolePengguna === '1' && (
           <Row>
-          <Col span={24} style={{ textAlign: 'right' }}>
-          
+            <Col span={24} style={{ textAlign: 'right' }}>
               <Button
                 id="create-laporan"
-              
                 size="sm"
                 shape="round"
-                style={{ color: 'white', background: '#339900', marginBottom: 16, margin:5 }}
-                onClick={()=>history.push(`/laporan/submissionLaporan`)}
+                style={{ color: 'white', background: '#339900', marginBottom: 16, margin: 5 }}
+                onClick={() => history.push(`/laporan/submissionLaporan`)}
               >
                 Tambahkan Laporan
               </Button>
-        
-          
-          </Col>
-        </Row>
-    )}
+            </Col>
+          </Row>
+        )}
         <CCardBody>
           {rolePengguna !== '1' && (
             <FloatButton

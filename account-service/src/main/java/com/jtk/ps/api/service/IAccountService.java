@@ -34,4 +34,10 @@ public interface IAccountService {
     CommitteeResponse getCommittee(Integer id);
 
     RefreshResponse refresh(String refreshToken);
+
+    List<AccountResponse> getSupervisor();
+
+    List<AccountResponse> getSupervisorByProdi(Integer idProdi);
+
+    AccountResponse getSupervisor(Integer id);
 }

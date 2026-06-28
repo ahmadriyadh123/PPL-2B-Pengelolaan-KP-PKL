@@ -99,6 +99,14 @@ const _nav = [
     index: 1,
   },
   {
+    component: CNavItem,
+    name: 'Dashboard',
+    to: '/dashboard',
+    icon: <FontAwesomeIcon icon={faHouse} size="lg" />,
+    role: '4',
+    index: 1,
+  },
+  {
     component: CNavTitle,
     name: 'Pengelolaan Nilai',
     role: '0',
@@ -107,7 +115,7 @@ const _nav = [
   {
     component: CNavGroup,
     name: 'Mata Kuliah',
-    to: '/matakuliah',
+    to: '/mataKuliah',
     role: '0',
     index: 20,
     icon: <FontAwesomeIcon icon={faBook} size="lg" />,
@@ -116,13 +124,13 @@ const _nav = [
         component: CNavItem,
         index: 20.1,
         name: 'List Mata Kuliah',
-        to: '/matakuliah/listmatakuliah',
+        to: '/mataKuliah/listMatakuliah',
       },
       {
         component: CNavItem,
         index: 20.2,
         name: 'Rekapitulasi Nilai',
-        to: '/matakuliah/rekapitulasinilai',
+        to: '/mataKuliah/rekapitulasiNilai',
       },
     ],
   },
@@ -150,14 +158,14 @@ const _nav = [
         component: CNavItem,
         index: 21.3,
         name: 'Rekap Nilai Seminar',
-        to: '/nilaiseminar/rekapitulasinilaiseminar',
+        to: '/nilaiSeminar/rekapitulasiNilaiSeminar',
       },
     ],
   },
   {
     component: CNavItem,
     name: 'Nilai Industri',
-    to: '/nilaiindustri',
+    to: '/nilaiIndustri',
     role: '0',
     index: 22,
     icon: <FontAwesomeIcon icon={faIndustry} size="lg" />,
@@ -273,13 +281,13 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Perangkingan Mahasiswa',
-        // to: '/pemetaan/perangkingan',
+        to: '/pemetaan/perangkingan',
         index: 5.1,
       },
       {
         component: CNavItem,
         name: 'Finalisasi Pemetaan',
-        // to: '/pemetaan/finalisasi',
+        to: '/pemetaan/finalisasi',
         index: 5.2,
       },
     ],
@@ -287,7 +295,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Evaluasi Peserta',
-    // to: '/evaluasiPeserta',
+    to: '/evaluasiPeserta',
     icon: <FontAwesomeIcon icon={faBuildingCircleCheck} size="lg" />,
     role: '0',
     index: 9,
@@ -301,7 +309,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'List Perusahaan',
-    // to: '/listPerusahaan',
+    to: '/listPerusahaan',
     icon: <FontAwesomeIcon icon={faCity} size="lg" />,
     role: '0',
     index: 7,
@@ -309,7 +317,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Pengajuan Perusahaan',
-    // to: '/pengajuanPerusahaan',
+    to: '/pengajuanPerusahaan',
     icon: <FontAwesomeIcon icon={faBuildingUser} size="lg" />,
     role: '0',
     index: 8,
@@ -331,7 +339,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Pengelolaan Akun',
-    // to: '/pengelolaanAkun',
+    to: '/pengelolaanAkun',
     icon: <FontAwesomeIcon icon={faSliders} size="lg" />,
     role: '0',
     index: 12,
@@ -339,7 +347,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Pengelolaan Cakupan Pekerjaan & Kompetensi',
-    // to: '/pengelolaanKompetensi',
+    to: '/pengelolaanKompetensi',
     icon: <FontAwesomeIcon icon={faGears} size="lg" />,
     role: '0',
     index: 13,
@@ -347,7 +355,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Pengelolaan Bobot Kriteria Perangkingan',
-    // to: '/pengelolaanBobotKriteria',
+    to: '/pengelolaanBobotKriteria',
     icon: <FontAwesomeIcon icon={faScaleUnbalancedFlip} size="lg" />,
     role: '0',
     index: 14,
@@ -355,7 +363,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Pengelolaan Kriteria Perusahaan',
-    // to: '/pengelolaanKriteriaPerusahaan',
+    to: '/pengelolaanKriteriaPerusahaan',
     icon: <FontAwesomeIcon icon={faBuilding} size="lg" />,
     role: '0',
     index: 15,
@@ -363,7 +371,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Pengelolaan Aspek Penilaian Evaluasi',
-    // to: '/pengelolaanAspekPenilaianEvaluasi',
+    to: '/pengelolaanAspekPenilaianEvaluasi',
     icon: <FontAwesomeIcon icon={faMedal} size="lg" />,
     role: '0',
     index: 16,
@@ -379,7 +387,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Pengelolaan Kegiatan',
-    // to: '/pengelolaanKegiatan',
+    to: '/pengelolaanKegiatan',
     icon: <FontAwesomeIcon icon={faTimeline} size="lg" />,
     role: '0',
     index: 18,
@@ -403,7 +411,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Biodata Mahasiswa',
-    // to: '/CV',
+    to: '/CV',
     icon: <FontAwesomeIcon icon={faScroll} size="lg" />,
     role: '1',
     index: 22,
@@ -411,7 +419,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Pemilihan Perusahaan',
-    // to: '/pemilihanPerusahaan',
+    to: '/pemilihanPerusahaan',
     icon: <FontAwesomeIcon icon={faBuildingUser} size="lg" />,
     role: '1',
     index: 23,
@@ -419,7 +427,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Prerequisite Perusahaan',
-    // to: '/prerequisitePerusahaan',
+    to: '/prerequisitePerusahaan',
     icon: <FontAwesomeIcon icon={faClipboard} size="lg" />,
     role: '1',
     index: 24,
@@ -427,7 +435,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Hasil Pemetaan',
-    // to: '/hasilPemetaan',
+    to: '/hasilPemetaan',
     icon: <FontAwesomeIcon icon={faSitemap} size="lg" />,
     role: '1',
     index: 25,
@@ -435,7 +443,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Hasil Evaluasi Perusahaan',
-    // to: '/hasilEvaluasiPerusahaan',
+    to: '/hasilEvaluasiPerusahaan',
     icon: <FontAwesomeIcon icon={faBuildingCircleCheck} size="lg" />,
     role: '1',
     index: 26,
@@ -449,7 +457,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Pengelolaan Minat & Kompetensi',
-    // to: '/pengelolaanKompetensi',
+    to: '/pengelolaanKompetensi',
     icon: <FontAwesomeIcon icon={faGears} size="lg" />,
     role: '1',
     index: 28,
@@ -473,7 +481,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Profil Perusahaan',
-    // to: '/profilPerusahaan',
+    to: '/profilPerusahaan',
     icon: <FontAwesomeIcon icon={faCity} size="lg" />,
     role: '2',
     index: 31,
@@ -481,7 +489,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Formulir Kesediaan Perusahaan',
-    // to: '/formulirKesediaan',
+    to: '/formulirKesediaan',
     icon: <FontAwesomeIcon icon={faClipboard} size="lg" />,
     role: '2',
     index: 32,
@@ -489,7 +497,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Biodata Mahasiswa',
-    // to: '/dataMahasiswa',
+    to: '/dataMahasiswa',
     icon: <FontAwesomeIcon icon={faScroll} size="lg" />,
     role: '2',
     index: 33,
@@ -497,19 +505,19 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Formulir Evaluasi Peserta',
-    // to: '/dataEvaluasiPerusahaan',
+    to: '/dataEvaluasiPerusahaan',
     icon: <FontAwesomeIcon icon={faBuildingCircleCheck} size="lg" />,
     role: '2',
     index: 34,
   },
-  // {
-  //   component: CNavItem,
-  //   name: 'Formulir Feedback Pelaksanaan KP/PKL',
-  //   to: '/dataFeedbackPerusahaan',
-  //   icon: <FontAwesomeIcon icon={faBuildingCircleArrowRight} />,
-  //   role: '2',
-  //   index: 35,
-  // },
+  {
+    component: CNavItem,
+    name: 'Formulir Feedback Pelaksanaan KP/PKL',
+    to: '/dataFeedbackPerusahaan',
+    icon: <FontAwesomeIcon icon={faBuildingCircleArrowRight} />,
+    role: '2',
+    index: 35,
+  },
   {
     component: CNavTitle,
     name: 'Lain - lain',
@@ -519,7 +527,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Pengelolaan Cakupan Pekerjaan & Kompetensi',
-    // to: '/pengelolaanKompetensi',
+    to: '/pengelolaanKompetensi',
     icon: <FontAwesomeIcon icon={faGears} size="lg" />,
     role: '2',
     index: 37,
@@ -543,7 +551,7 @@ const _nav = [
   {
     component: CNavGroup,
     name: 'Mata Kuliah',
-    to: '/matakuliah',
+    to: '/mataKuliah',
     role: '3',
     index: 20,
     icon: <FontAwesomeIcon icon={faBook} size="lg" />,
@@ -552,13 +560,13 @@ const _nav = [
         component: CNavItem,
         index: 20.1,
         name: 'List Mata Kuliah',
-        to: '/matakuliah/listmatakuliah',
+        to: '/mataKuliah/listMatakuliah',
       },
       {
         component: CNavItem,
         index: 20.2,
         name: 'Rekapitulasi Nilai',
-        to: '/matakuliah/rekapitulasinilai',
+        to: '/mataKuliah/rekapitulasiNilai',
       },
     ],
   },
@@ -586,7 +594,7 @@ const _nav = [
         component: CNavItem,
         index: 21.3,
         name: 'Rekap Nilai Seminar',
-        to: '/nilaiseminar/rekapitulasinilaiseminar',
+        to: '/nilaiSeminar/rekapitulasiNilaiSeminar',
       },
     ],
   },
@@ -629,7 +637,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Rekap CV',
-    // to: '/rekapCV',
+    to: '/rekapCV',
     icon: <FontAwesomeIcon icon={faScroll} size="lg" />,
     role: '3',
     index: 47,
@@ -637,7 +645,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Rekap Minat',
-    // to: '/rekapMinat',
+    to: '/rekapMinat',
     icon: <FontAwesomeIcon icon={faClipboard} size="lg" />,
     role: '3',
     index: 48,
@@ -645,7 +653,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Hasil Pemetaan',
-    // to: '/hasilPemetaan',
+    to: '/hasilPemetaan',
     icon: <FontAwesomeIcon icon={faSitemap} size="lg" />,
     role: '3',
     index: 49,
@@ -653,7 +661,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Evaluasi Peserta',
-    // to: '/evaluasiPeserta',
+    to: '/evaluasiPeserta',
     icon: <FontAwesomeIcon icon={faBuildingCircleCheck} size="lg" />,
     role: '3',
     index: 41,
@@ -667,7 +675,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'List Perusahaan',
-    // to: '/listPerusahaan',
+    to: '/listPerusahaan',
     icon: <FontAwesomeIcon icon={faCity} size="lg" />,
     role: '3',
     index: 40,
@@ -689,7 +697,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Pengelolaan Akun',
-    // to: '/pengelolaanAkun',
+    to: '/pengelolaanAkun',
     icon: <FontAwesomeIcon icon={faSliders} size="lg" />,
     role: '3',
     index: 45,
@@ -697,10 +705,156 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Pengelolaan Cakupan Pekerjaan & Kompetensi',
-    // to: '/pengelolaanKompetensi',
+    to: '/pengelolaanKompetensi',
     icon: <FontAwesomeIcon icon={faGears} size="lg" />,
     role: '3',
     index: 44,
+  },
+  // MONITORING PELAKSANAAN
+  {
+    component: CNavTitle,
+    name: 'Monitoring Pelaksanaan',
+    role: '0',
+    index: 50,
+  },
+  {
+    component: CNavItem,
+    name: 'Monitoring Dashboard',
+    to: '/dashboardPanitia',
+    icon: <FontAwesomeIcon icon={faScaleUnbalancedFlip} size="lg" />,
+    role: '0',
+    index: 51,
+  },
+  {
+    component: CNavTitle,
+    name: 'Pelaksanaan KP/PKL',
+    role: '1',
+    index: 52,
+  },
+  {
+    component: CNavItem,
+    name: 'Pengaturan Pembimbing Jurusan',
+    to: '/pengaturanDaftarPembimbingJurusan',
+    icon: <FontAwesomeIcon icon={faSliders}  size="lg" />,
+    role: '0',
+    index: 53,
+  },
+  {
+    component: CNavItem,
+    name: 'Daftar Peserta',
+    to: '/daftarPeserta',
+    icon: <FontAwesomeIcon icon={faSliders}  size="lg" />,
+    role: '0',
+    index: 54,
+  },
+ 
+  //PESERTA
+  {
+    component: CNavItem,
+    name: 'Dashboard Peserta',
+    to: '/dashboardPeserta',
+    icon: <FontAwesomeIcon icon={faScaleUnbalancedFlip} size="lg" />,
+    role: '1',
+    index: 57,
+  },
+  {
+    component: CNavGroup,
+    name: 'Dokumen Peserta',
+    icon: <FontAwesomeIcon icon={faSitemap} size="lg" />,
+    role: '1',
+    index: 59,
+    items: [
+      {
+        component: CNavItem,
+        name: 'Rencana Penyelesaian Proyek',
+        to: '/rencanaPenyelesaianProyek',
+        index: 59.1
+      },
+      {
+        component: CNavItem,
+        name: 'Logbook',
+        to: '/logbook',
+        index: 59.2
+      },
+      {
+        component: CNavItem,
+        name: 'Self Assessment',
+        to: '/selfAssessment',
+        index: 59.3
+      },
+      {
+        component: CNavItem,
+        name: 'Dokumen Laporan',
+        to: '/laporan',
+        index: 59.4
+      }
+    ],
+  },
+  {
+    component: CNavGroup,
+    name: 'Pengelolaan Monitoring',
+    icon: <FontAwesomeIcon icon={faSitemap} size="lg" />,
+    role: '0',
+    index: 56,
+    items: [
+      {
+        component: CNavItem,
+        name: 'Poin Penilaian Self Assessment',
+        to: '/pembobotanSelfAssessment',
+        index: 56.1
+      },
+      {
+        component: CNavItem,
+        name: 'Poin Penilaian Pembimbing Jurusan',
+        to: '/pengelolaanPoinFormPembimbing',
+        index: 56.2
+      },
+      {
+        component: CNavItem,
+        name: 'Pengelolaan Deadline',
+        to: '/pengelolaanDeadline',
+        index: 56.3
+      },
+    
+    ],
+  },
+  {
+    component: CNavItem,
+    name: 'Rekap Dokumen Peserta',
+    to: '/rekapDokumenPeserta',
+    icon: <FontAwesomeIcon icon={faSliders}  size="lg" />,
+    role: '0',
+    index: 60,
+  },
+  {
+    component: CNavTitle,
+    name: 'Monitoring Pelaksanaan',
+    role: '4',
+    index: 63,
+  },
+  {
+    component: CNavItem,
+    name: 'Monitoring Dashboard',
+    to: '/dashboardPembimbing',
+    icon: <FontAwesomeIcon icon={faScaleUnbalancedFlip} size="lg" />,
+    role: '4',
+    index: 64,
+  },
+  {
+    component: CNavItem,
+    name: 'Daftar Peserta',
+    to: '/daftarPeserta',
+    icon: <FontAwesomeIcon icon={faSliders}  size="lg" />,
+    role: '4',
+    index: 65,
+  },
+  {
+    component: CNavItem,
+    name: 'Rekap Dokumen Peserta',
+    to: '/rekapDokumenPeserta',
+    icon: <FontAwesomeIcon icon={faSliders}  size="lg" />,
+    role: '4',
+    index: 66,
   },
 ]
 

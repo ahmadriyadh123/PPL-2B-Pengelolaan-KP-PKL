@@ -1,5 +1,6 @@
 package com.jtk.ps.api.controller;
 import com.jtk.ps.api.dto.SubmissionRequest;
+import com.jtk.ps.api.dto.CreateCompanyResponse;
 import com.jtk.ps.api.service.ICompanyService;
 import com.jtk.ps.api.util.Constant;
 import com.jtk.ps.api.util.ResponseHandler;
@@ -69,9 +70,9 @@ public class SubmissionController {
             HttpServletRequest request)
     {
         try {
-            companyService.acceptCompanySubmission(id,
+            CreateCompanyResponse result = companyService.acceptCompanySubmission(id,
                     request.getHeader(Constant.PayloadResponseConstant.COOKIE));
-            return ResponseHandler.generateResponse("Accept company submission succeed", HttpStatus.OK);
+            return ResponseHandler.generateResponse("Accept company submission succeed", HttpStatus.OK, result);
         }catch (HttpClientErrorException ex){
             return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
