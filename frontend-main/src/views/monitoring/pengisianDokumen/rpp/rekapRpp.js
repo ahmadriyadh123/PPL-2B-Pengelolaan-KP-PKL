@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/reset.css'
 import { CCard, CCardBody, CCol, CRow } from '@coreui/react'
@@ -5,7 +7,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { ArrowLeftOutlined, SmileOutlined } from '@ant-design/icons'
 import { Alert, Result } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import { Table, Button, Row, Col, Input, Space, Spin, Popconfirm, Popover, Card } from 'antd'
 import axios from 'axios'
 import { SearchOutlined } from '@ant-design/icons'
@@ -145,6 +146,7 @@ const RekapRPP = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -187,6 +189,7 @@ const RekapRPP = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -249,6 +252,7 @@ const RekapRPP = () => {
           }
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -780,3 +784,4 @@ const RekapRPP = () => {
 }
 
 export default RekapRPP
+

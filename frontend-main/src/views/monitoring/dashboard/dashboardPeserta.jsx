@@ -1,6 +1,7 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useEffect, useState } from 'react'
 import { Button, Card, Col, Modal, Popover, Progress, Row, Space, Table } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import { ClockCircleOutlined, ArrowLeftOutlined, FileDoneOutlined } from '@ant-design/icons'
 import { Timeline } from 'antd'
 import '../pengisianDokumen/rpp/rpp.css'

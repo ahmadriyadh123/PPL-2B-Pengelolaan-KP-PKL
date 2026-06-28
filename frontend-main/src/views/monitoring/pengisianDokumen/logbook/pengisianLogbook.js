@@ -1,9 +1,11 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useEffect, useState } from 'react'
 import Box from '@mui/material/Box'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import '../rpp/rpp.css'
-import { Document, Page } from 'react-pdf/dist/esm/entry.webpack'
+import { Document, Page } from 'react-pdf'
 import Table from 'react-bootstrap/Table'
 import { Refresh } from '@mui/icons-material'
 import {
@@ -26,7 +28,6 @@ import { Space } from 'antd'
 import axios from 'axios'
 import { Route, Router, useHistory, useParams } from 'react-router-dom'
 import { Popover, message, notification } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap'
 import TextArea from 'antd/es/input/TextArea'
 import moment from 'moment'

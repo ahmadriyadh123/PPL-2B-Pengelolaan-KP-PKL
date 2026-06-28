@@ -3,8 +3,8 @@ import 'antd/dist/reset.css'
 import { CCard, CCardBody, CCol, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons'
-import dayjs from 'dayjs'
-import customParseFormat from 'dayjs/plugin/customParseFormat'
+import moment from 'moment'
+
 
 import {
   Table,
@@ -31,7 +31,7 @@ import { Box, Typography } from '@mui/material'
 
 const antIcon = <LoadingOutlined style={{ fontSize: 40 }} spin />
 const PengelolaanPoinPenilaianSelfAssessment = () => {
-  dayjs.extend(customParseFormat)
+  
   const { RangePicker } = DatePicker
   const dateFormat = 'YYYY-MM-DD'
   let searchInput
@@ -160,17 +160,21 @@ const PengelolaanPoinPenilaianSelfAssessment = () => {
             return
           }
 
-          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-            history.push({
-              pathname: '/login',
-              state: {
-                session: true,
-              },
-            })
-          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-            history.push('/404')
-          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
-            history.push('/500')
+          if (error && typeof error.toJSON === 'function') {
+            if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+              history.push({
+                pathname: '/login',
+                state: {
+                  session: true,
+                },
+              })
+            } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+              history.push('/404')
+            } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
+              history.push('/500')
+            }
+          } else {
+            console.error('Error in API call:', error);
           }
         })
     }
@@ -611,7 +615,7 @@ const PengelolaanPoinPenilaianSelfAssessment = () => {
 
 
             <DatePicker
-              defaultValue={dayjs(ePoinTanggal, dateFormat)}
+              defaultValue={moment(ePoinTanggal, dateFormat)}
               onChange={
                 (date, datestring) => setEPoinTanggal(datestring)
                 // console.log(datestring)
@@ -625,3 +629,4 @@ const PengelolaanPoinPenilaianSelfAssessment = () => {
 }
 
 export default PengelolaanPoinPenilaianSelfAssessment
+

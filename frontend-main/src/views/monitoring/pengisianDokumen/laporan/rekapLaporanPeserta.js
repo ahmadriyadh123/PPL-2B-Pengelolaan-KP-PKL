@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/reset.css'
 import '../rpp/rpp.css'
@@ -14,7 +16,6 @@ import {
   Card,
   Alert,
 } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import axios from 'axios'
 import { SearchOutlined } from '@ant-design/icons'
 import Highlighter from 'react-highlight-words'
@@ -613,3 +614,4 @@ const RekapLaporanPeserta = () => {
 }
 
 export default RekapLaporanPeserta
+

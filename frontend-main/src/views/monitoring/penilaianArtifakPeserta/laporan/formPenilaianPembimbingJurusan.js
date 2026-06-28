@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useEffect, useRef, useState } from 'react'
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
@@ -22,7 +24,6 @@ import {
   notification,
   spin,
 } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import { InputNumber } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 

@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useEffect, useState } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import '../rpp/rpp.css'
@@ -16,7 +18,7 @@ import {
   TableRow,
 } from '@mui/material'
 import Paper from '@mui/material/Paper'
-import FloatButton from 'antd/es/float-button'
+import {} from 'antd'
 
 const DetailSelfAssessment = (props) => {
   let params = useParams()

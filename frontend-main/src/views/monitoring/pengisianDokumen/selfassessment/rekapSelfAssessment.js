@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/reset.css'
 import { CCard, CCardBody, CCol, CRow } from '@coreui/react'
@@ -18,7 +20,6 @@ import {
   Result,
   Tag,
 } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import axios from 'axios'
 import { SearchOutlined } from '@ant-design/icons'
 import Highlighter from 'react-highlight-words'
@@ -133,6 +134,7 @@ const RekapSelfAssessment = () => {
           }
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -177,6 +179,7 @@ const RekapSelfAssessment = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -239,6 +242,7 @@ const RekapSelfAssessment = () => {
           }
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -815,3 +819,4 @@ const RekapSelfAssessment = () => {
 }
 
 export default RekapSelfAssessment
+

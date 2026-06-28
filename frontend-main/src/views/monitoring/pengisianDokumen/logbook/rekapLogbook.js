@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/reset.css'
 import '../rpp/rpp.css'
@@ -20,7 +22,6 @@ import {
   Result,
   Alert,
 } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import axios from 'axios'
 import { SearchOutlined } from '@ant-design/icons'
 import Highlighter from 'react-highlight-words'
@@ -239,6 +240,7 @@ const RekapLogbook = () => {
           setDataPeserta(result.data.data[0])
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -327,6 +329,7 @@ const RekapLogbook = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -416,6 +419,7 @@ const RekapLogbook = () => {
           // setFinishDateThisPageAllowedToAccess(response.data.data.finish_assignment_date)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -887,3 +891,4 @@ const RekapLogbook = () => {
 }
 
 export default RekapLogbook
+

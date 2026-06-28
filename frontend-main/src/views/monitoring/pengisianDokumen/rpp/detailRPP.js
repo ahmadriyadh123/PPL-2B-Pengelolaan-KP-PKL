@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useEffect, useState } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import '../rpp/rpp.css'
@@ -17,7 +19,6 @@ import {
 } from '@mui/material'
 import Paper from '@mui/material/Paper'
 import { Button, Popover, Space, Spin } from 'antd'
-import FloatButton from 'antd/es/float-button'
 
 const DetailRPP = (props) => {
   var params = useParams()

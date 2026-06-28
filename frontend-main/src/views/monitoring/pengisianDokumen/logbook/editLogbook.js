@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useEffect, useState } from 'react'
 import Box from '@mui/material/Box'
 import { ArrowLeftOutlined } from '@ant-design/icons'
@@ -13,7 +15,6 @@ import { Refresh } from '@mui/icons-material'
 import axios from 'axios'
 import { Route, Router, useHistory, useParams } from 'react-router-dom'
 import { Popover, notification } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import routes from 'src/routes'
 
 const FormEditLogbook = (props) => {

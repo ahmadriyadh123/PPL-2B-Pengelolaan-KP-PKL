@@ -122,153 +122,79 @@ const DashboardPanitia = () => {
           signal: controller.signal,
         })
         .then((result) => {
-          let data = result.data.data
-          let listPesertaAllRPPMissing = result.data.data.all.rpp_missing
+          let data = result.data.data || {};
+          let allData = {
+              rpp_submitted: data.rpp_submitted || 0,
+              rpp_total: (data.rpp_submitted || 0) + (data.rpp_missing || 0),
+              rpp_missing: [],
+              logbook_submitted: data.logbook_submitted || 0,
+              logbook_total: (data.logbook_submitted || 0) + (data.logbook_missing || 0),
+              logbook_missing: [],
+              laporan_submitted: data.laporan_submitted || 0,
+              laporan_total: (data.laporan_submitted || 0) + (data.laporan_missing || 0),
+              laporan_missing: []
+          };
+          let weeklyData = {
+              logbook_submitted: data.logbook_submitted || 0,
+              logbook_total: (data.logbook_submitted || 0) + (data.logbook_missing || 0),
+              logbook_missing: [],
+              self_assessment_submitted: data.self_assessment_submitted || 0,
+              self_assessment_total: (data.self_assessment_submitted || 0) + (data.self_assessment_missing || 0),
+              self_assessment_missing: [],
+              laporan_submitted: data.laporan_submitted || 0,
+              laporan_total: (data.laporan_submitted || 0) + (data.laporan_missing || 0),
+              laporan_missing: [],
+              rpp_submitted: data.rpp_submitted || 0,
+              rpp_total: (data.rpp_submitted || 0) + (data.rpp_missing || 0),
+              rpp_missing: []
+          };
+
+          let listPesertaAllRPPMissing = []
           let listPesertaAllRPPMissingIdx = []
-          let listPesertaLogbookMingguanMissing = result.data.data.weekly.logbook_missing
+          let listPesertaLogbookMingguanMissing = []
           let listPesertaLogbookMingguanMissingIdx = []
-          let listPesertaSelfAssessmentMingguanMissing =
-            result.data.data.weekly.self_assessment_missing
+          let listPesertaSelfAssessmentMingguanMissing = []
           let listPesertaSelfAssessmentMingguanMissingIdx = []
-          let listPesertaLaporanMingguanMissing = result.data.data.weekly.laporan_missing
+          let listPesertaLaporanMingguanMissing = []
           let listPesertaLaporanMingguanMissingIdx = []
-          let listPesertaLogbookAllMissing = result.data.data.all.logbook_missing
+          let listPesertaLogbookAllMissing = []
           let listPesertaLogbookAllMissingIdx = []
-          let listPesertaLaporanAllMissing = result.data.data.all.laporan_missing
+          let listPesertaLaporanAllMissing = []
           let listPesertaLaporanAllMissingIdx = []
-          setTotalParticipantMappingDone(data.supervisor_mapping_done)
-          setTotalParticipantMappingUndone(data.supervisor_mapping_undone)
 
-          setDataDashboard(result.data.data)
-          setTotalProgressPesertaKeseluruhan(result.data.data.all)
-          setTotalPesertaProgresMingguan(result.data.data.weekly)
-          //setListPesertaAllRPPMissing(result.data.data.all.rpp_missing)
-          if (listPesertaAllRPPMissing != null) {
-            for (let iterateListPesertaAllRPPMissing in listPesertaAllRPPMissing) {
-              listPesertaAllRPPMissingIdx.push({
-                nim: listPesertaAllRPPMissing[iterateListPesertaAllRPPMissing].nim,
-                name: listPesertaAllRPPMissing[iterateListPesertaAllRPPMissing].name,
-                company: listPesertaAllRPPMissing[iterateListPesertaAllRPPMissing].company,
-                idx: parseInt(iterateListPesertaAllRPPMissing),
-              })
-            }
-            setListPesertaAllRPPMissing(listPesertaAllRPPMissingIdx)
-          } else {
-            setListPesertaAllRPPMissing(result.data.data.all.rpp_missing)
-          }
+          setTotalParticipantMappingDone(data.supervisor_mapping_done || 0)
+          setTotalParticipantMappingUndone(data.supervisor_mapping_undone || 0)
 
-          //setListPesertaLogbookMingguanMissing(result.data.data.weekly.logbook_missing)
-          if (listPesertaLogbookMingguanMissing != null) {
-            for (let iterateListPesertaLogbookMingguanMissing in listPesertaLogbookMingguanMissing) {
-              listPesertaLogbookMingguanMissingIdx.push({
-                nim: listPesertaLogbookMingguanMissing[iterateListPesertaLogbookMingguanMissing]
-                  .nim,
-                name: listPesertaLogbookMingguanMissing[iterateListPesertaLogbookMingguanMissing]
-                  .name,
-                company:
-                  listPesertaLogbookMingguanMissing[iterateListPesertaLogbookMingguanMissing]
-                    .company,
-                idx: parseInt(iterateListPesertaLogbookMingguanMissing),
-              })
-            }
-            setListPesertaLogbookMingguanMissing(listPesertaLogbookMingguanMissingIdx)
-          } else {
-            setListPesertaLogbookMingguanMissing(result.data.data.weekly.logbook_missing)
-          }
+          setDataDashboard(data)
+          setTotalProgressPesertaKeseluruhan(allData)
+          setTotalPesertaProgresMingguan(weeklyData)
 
-          // setListPesertaSelfAssessmentMingguanMissing(
-          //   result.data.data.weekly.self_assessment_missing,
-          // )
-          if (listPesertaSelfAssessmentMingguanMissing != null) {
-            for (let iterateListPesertaSelfAssessmentMingguanMissing in listPesertaSelfAssessmentMingguanMissing) {
-              listPesertaSelfAssessmentMingguanMissingIdx.push({
-                nim: listPesertaSelfAssessmentMingguanMissing[
-                  iterateListPesertaSelfAssessmentMingguanMissing
-                ].nim,
-                name: listPesertaSelfAssessmentMingguanMissing[
-                  iterateListPesertaSelfAssessmentMingguanMissing
-                ].name,
-                company:
-                  listPesertaSelfAssessmentMingguanMissing[
-                    iterateListPesertaSelfAssessmentMingguanMissing
-                  ].company,
-                idx: parseInt(iterateListPesertaSelfAssessmentMingguanMissing),
-              })
-            }
-            setListPesertaSelfAssessmentMingguanMissing(listPesertaSelfAssessmentMingguanMissingIdx)
-          } else {
-            setListPesertaSelfAssessmentMingguanMissing(
-              result.data.data.weekly.self_assessment_missing,
-            )
-          }
-
-          // setListPesertaLaporanMingguanMissing(result.data.data.weekly.laporan_missing)
-          if (listPesertaLaporanMingguanMissing != null) {
-            for (let iterateListPesertaLaporanMingguanMissing in listPesertaLaporanMingguanMissing) {
-              listPesertaLaporanMingguanMissingIdx.push({
-                nim: listPesertaLaporanMingguanMissing[iterateListPesertaLaporanMingguanMissing]
-                  .nim,
-                name: listPesertaLaporanMingguanMissing[iterateListPesertaLaporanMingguanMissing]
-                  .name,
-                company:
-                  listPesertaLaporanMingguanMissing[iterateListPesertaLaporanMingguanMissing]
-                    .company,
-                idx: parseInt(iterateListPesertaLaporanMingguanMissing),
-              })
-            }
-            setListPesertaLaporanMingguanMissing(listPesertaLaporanMingguanMissingIdx)
-          } else {
-            setListPesertaLaporanMingguanMissing(result.data.data.weekly.laporan_missing)
-          }
-
-          // setListPesertaLogbookAllMissing(result.data.data.all.logbook_missing)
-          if (listPesertaLogbookAllMissing != null) {
-            for (let iterateListPesertaLogbookAllMissing in listPesertaLogbookAllMissing) {
-              listPesertaLogbookAllMissingIdx.push({
-                nim: listPesertaLogbookAllMissing[iterateListPesertaLogbookAllMissing].nim,
-                name: listPesertaLogbookAllMissing[iterateListPesertaLogbookAllMissing].name,
-                company: listPesertaLogbookAllMissing[iterateListPesertaLogbookAllMissing].company,
-                idx: parseInt(iterateListPesertaLogbookAllMissing),
-              })
-            }
-            setListPesertaLogbookAllMissing(listPesertaLogbookAllMissingIdx)
-          } else {
-            setListPesertaLogbookAllMissing(result.data.data.all.logbook_missing)
-          }
-
-          // setListPesertaLaporanAllMissing(result.data.data.all.laporan_missing)
-          if (listPesertaLaporanAllMissing != null) {
-            for (let iterateListPesertaLaporanAllMissing in listPesertaLaporanAllMissing) {
-              listPesertaLaporanAllMissingIdx.push({
-                nim: listPesertaLaporanAllMissing[iterateListPesertaLaporanAllMissing].nim,
-                name: listPesertaLaporanAllMissing[iterateListPesertaLaporanAllMissing].name,
-                company: listPesertaLaporanAllMissing[iterateListPesertaLaporanAllMissing].company,
-                idx: parseInt(iterateListPesertaLaporanAllMissing),
-              })
-            }
-            setListPesertaLaporanAllMissing(listPesertaLaporanAllMissingIdx)
-          } else {
-            setListPesertaLaporanAllMissing(result.data.data.all.laporan_missing)
-          }
+          // We skip the loops since the lists are empty anyway
+          // Since lists are empty, no loops are needed
           // console.log(result.data.data.weekly.logbook_missing)
           setIsLoading(false)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
 
-          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-            history.push({
-              pathname: '/login',
-              state: {
-                session: true,
-              },
-            })
-          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-            history.push('/404')
-          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
-            history.push('/500')
+          if (error && typeof error.toJSON === 'function') {
+            if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+              history.push({
+                pathname: '/login',
+                state: {
+                  session: true,
+                },
+              })
+            } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+              history.push('/404')
+            } else if (error.toJSON().status >= 500 && error.toJSON().status <= 500) {
+              history.push('/500')
+            }
+          } else {
+            console.error('Error fetching dashboard data:', error);
           }
         })
     }

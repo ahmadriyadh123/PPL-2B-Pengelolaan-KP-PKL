@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useEffect, useState } from 'react'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import moment from 'moment'
@@ -12,11 +14,10 @@ import {
   Space,
   notification,
 } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import './rpp.css'
 import { Form, Modal, message } from 'antd'
 import { SentimentVeryDissatisfiedOutlined, TextSnippetSharp } from '@mui/icons-material'
-import { Document, Page } from 'react-pdf/dist/esm/entry.webpack'
+import { Document, Page } from 'react-pdf'
 import { useHistory } from 'react-router-dom'
 import dayjs from 'dayjs'
 import weekOfYear from 'dayjs'

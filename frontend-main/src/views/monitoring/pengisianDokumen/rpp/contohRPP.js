@@ -1,9 +1,10 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useState } from 'react'
-import { Document, Page } from 'react-pdf/dist/esm/entry.webpack'
+import { Document, Page } from 'react-pdf'
 import './rpp.css'
 import {ArrowLeftOutlined } from '@ant-design/icons';
 import { Button, Space } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import { useHistory } from 'react-router-dom'
 function ContohRPP() {
   const [numPages, setNumPages] = useState(null)

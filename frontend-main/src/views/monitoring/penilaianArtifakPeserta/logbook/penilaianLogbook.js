@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useHistory, useParams } from 'react-router-dom'
@@ -34,7 +36,6 @@ import {
   Tag,
   notification,
 } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import '../../pengisianDokumen/rpp/rpp.css'
 import { AppBar, Box, IconButton, Toolbar, Typography } from '@mui/material'
 

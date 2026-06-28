@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useState, useEffect, useMemo } from 'react'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import axios from 'axios'
@@ -8,7 +10,6 @@ import { Table } from 'react-bootstrap'
 import Popover from '@mui/material/Popover'
 import Typography from '@mui/material/Typography'
 import { Card, Col, Progress, Result, Row, Space, Spin, Tooltip } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import { Box } from '@mui/material'
 
 const antIcon = <LoadingOutlined style={{ fontSize: 40 }} spin />

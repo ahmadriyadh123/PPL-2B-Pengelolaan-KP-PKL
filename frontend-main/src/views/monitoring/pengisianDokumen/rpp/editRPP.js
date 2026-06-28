@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useEffect, useState } from 'react'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import {
@@ -15,21 +17,20 @@ import {
   Table,
   notification,
 } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import './rpp.css'
 import 'antd/dist/reset.css'
 import { Form, Modal, message } from 'antd'
 
 import { PoweroffOutlined } from '@ant-design/icons'
-import { Document, Page } from 'react-pdf/dist/esm/entry.webpack'
+import { Document, Page } from 'react-pdf'
 import { useHistory } from 'react-router-dom'
-import dayjs from 'dayjs'
-import customParseFormat from 'dayjs/plugin/customParseFormat'
+
+
 import { SpaceContext } from 'antd/lib/space'
 import { Box } from '@mui/material'
 import { useParams } from 'react-router-dom/cjs/react-router-dom.min'
 import axios from 'axios'
-import { render } from 'enzyme'
+
 import moment from 'moment'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faPencil } from '@fortawesome/free-solid-svg-icons'
@@ -43,7 +44,7 @@ const EditRPP = () => {
   const dateFormat = 'YYYY-MM-DD'
   let params = useParams()
   let RPP_ID = params.id
-  dayjs.extend(customParseFormat)
+  
   let history = useHistory()
   const { RangePicker } = DatePicker
   const [form] = Form.useForm()
@@ -1983,7 +1984,7 @@ const EditRPP = () => {
             ]}
           >
             <DatePicker
-              defaultValue={dayjs(dataDeliverablesEdit.due_date, dateFormat)}
+              defaultValue={moment(dataDeliverablesEdit.due_date, dateFormat)}
               onChange={(date, datestring) => {
                 setDataDeliverablesEditChangeDueDate(datestring)
               }}
@@ -2073,7 +2074,7 @@ const EditRPP = () => {
           >
             <Popover content={<div>{popoverStartDate}</div>}>
               <DatePicker
-                defaultValue={dayjs(dataMilestonesEdit.start_date, dateFormat)}
+                defaultValue={moment(dataMilestonesEdit.start_date, dateFormat)}
                 onChange={(date, datestring) => setDataMilestonesEditTanggalMulai(datestring)}
                 disabledDate={(current) => {
                   let minusToGetLimit = new Date().getDay()
@@ -2106,7 +2107,7 @@ const EditRPP = () => {
           >
             <Popover content={<div>Tanggal selesai masih dapat diedit</div>}>
               <DatePicker
-                defaultValue={dayjs(dataMilestonesEdit.finish_date, dateFormat)}
+                defaultValue={moment(dataMilestonesEdit.finish_date, dateFormat)}
                 onChange={(date, datestring) => setDataMilestonesEditTanggalSelesai(datestring)}
                 disabledDate={(current) => {
                   let minusToGetLimit = new Date().getDay()
@@ -2451,3 +2452,4 @@ const EditRPP = () => {
 }
 
 export default EditRPP
+

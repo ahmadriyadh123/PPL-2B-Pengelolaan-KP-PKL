@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/reset.css'
 import '../../pengisianDokumen/rpp/rpp.css'
@@ -5,7 +7,6 @@ import { CCard, CCardBody, CCol, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Row, Col, Space, Card, Tag, Spin } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import axios from 'axios'
 import { SearchOutlined } from '@ant-design/icons'
 import Highlighter from 'react-highlight-words'
@@ -263,3 +264,4 @@ const RekapPenilaianLogbook = () => {
 }
 
 export default RekapPenilaianLogbook
+

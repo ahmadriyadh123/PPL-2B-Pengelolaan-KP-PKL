@@ -1,7 +1,9 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useState, useEffect } from 'react'
 import 'antd/dist/reset.css'
 import { ArrowLeftOutlined, FileTextOutlined } from '@ant-design/icons'
-import { Document, Page } from 'react-pdf/dist/esm/entry.webpack'
+import { Document, Page } from 'react-pdf'
 import {
   Steps,
   Form,
@@ -19,7 +21,6 @@ import {
   Alert,
   Modal,
 } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import { MinusCircleOutlined } from '@ant-design/icons'
 import { PlusOutlined } from '@ant-design/icons'
 import { useHistory } from 'react-router-dom'
@@ -585,3 +586,4 @@ const PengisianSelfAssessment = () => {
 }
 
 export default PengisianSelfAssessment
+

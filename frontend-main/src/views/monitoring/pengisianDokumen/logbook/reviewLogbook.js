@@ -1,3 +1,5 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useEffect, useState } from 'react'
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
@@ -10,7 +12,6 @@ import { Col, Row } from 'react-bootstrap'
 import axios from 'axios'
 import { Route, Router, useHistory, useParams } from 'react-router-dom'
 import { Button, Card, Popover, Space, Spin, Tag, notification } from 'antd'
-import FloatButton from 'antd/es/float-button'
 
 const ReviewLogbook = (props) => {
   var params = useParams()

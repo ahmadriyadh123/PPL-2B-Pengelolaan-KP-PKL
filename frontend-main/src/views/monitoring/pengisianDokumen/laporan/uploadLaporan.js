@@ -1,9 +1,10 @@
+
+import FloatButton from 'src/views/monitoring/components/FloatButton';
 import React, { useEffect, useState } from 'react'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { UploadOutlined } from '@ant-design/icons'
 import { Button, Form, Input, Result, Space, Upload, notification } from 'antd'
-import FloatButton from 'antd/es/float-button'
 import '../rpp/rpp.css'
 import Text from 'antd/lib/typography/Text'
 import './sample.css'
