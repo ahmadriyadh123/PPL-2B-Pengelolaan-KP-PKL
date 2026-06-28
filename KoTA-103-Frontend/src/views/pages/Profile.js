@@ -66,6 +66,10 @@ const Profile = () => {
         notification.error({
           message: 'Password baru dan konfirmasi password berbeda'
         });
+      } else if (error.response.data.message.search("New password is not the same as the old password") >= 0) {
+        notification.error({
+          message: 'Password baru tidak boleh sama dengan password lama'
+        });
       } else {
         notification.error({
           message: 'Ganti password gagal'

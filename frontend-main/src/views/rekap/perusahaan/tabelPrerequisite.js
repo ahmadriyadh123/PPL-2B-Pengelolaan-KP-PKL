@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import 'antd/dist/reset.css';
+import 'antd/dist/antd.css';
 import {
   CCard,
   CCardBody,
@@ -121,29 +121,35 @@ const TabelPrerequisite = () => {
   }
 
   useEffect(() => {
+    let isMounted = true;
     axios.defaults.withCredentials = true;
     async function getDataPrerequisite() {
       await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}company/prerequisite/prerequisites-company`)
         .then(function (result) {
-          setDataPrerequisite(result.data.data)
-          setIsLoading(false)
+          if (isMounted) {
+            setDataPrerequisite(result.data.data)
+            setIsLoading(false)
+          }
         })
         .catch(function (error) {
-          if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-            history.push({
-              pathname: "/login",
-              state: {
-                session: true,
-              }
-            });
-          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-            history.push("/404");
-          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
-            history.push("/500");
+          if (isMounted) {
+            if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+              history.push({
+                pathname: "/login",
+                state: {
+                  session: true,
+                }
+              });
+            } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+              history.push("/404");
+            } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
+              history.push("/500");
+            }
           }
         });
     }
     getDataPrerequisite()
+    return () => { isMounted = false; };
   }, [history]);
 
   const columns = [{
@@ -341,4 +347,3 @@ const TabelPrerequisite = () => {
 }
 
 export default TabelPrerequisite
-

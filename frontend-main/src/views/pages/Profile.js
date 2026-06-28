@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import 'antd/dist/reset.css';
-import { Modal, Form, Input, Button, notification } from 'antd';
+import 'antd/dist/antd.css';
+import { Modal, Form, Input, Button, notification, Upload, Avatar } from 'antd';
+import { UploadOutlined, UserOutlined, LoadingOutlined } from '@ant-design/icons';
 import {
   CButton,
   CCard,
@@ -19,7 +20,49 @@ const Profile = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [form] = Form.useForm();
   const [loadings, setLoadings] = useState([]);
+  const [imageUrl, setImageUrl] = useState(localStorage.getItem('profile_picture') || '');
+  const [uploadLoading, setUploadLoading] = useState(false);
   axios.defaults.withCredentials = true;
+
+  const getBase64 = (img, callback) => {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => callback(reader.result));
+    reader.readAsDataURL(img);
+  };
+
+  const beforeUpload = (file) => {
+    const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+    if (!isJpgOrPng) {
+      notification.error({ message: 'Anda hanya bisa mengunggah file JPG/PNG!' });
+    }
+    const isLt2M = file.size / 1024 / 1024 < 2;
+    if (!isLt2M) {
+      notification.error({ message: 'Ukuran gambar harus lebih kecil dari 2MB!' });
+    }
+    return isJpgOrPng && isLt2M;
+  };
+
+  const handleUploadChange = (info) => {
+    if (info.file.status === 'uploading') {
+      setUploadLoading(true);
+      return;
+    }
+    if (info.file.status === 'done' || info.file.status === 'error' || info.file.originFileObj) {
+      getBase64(info.file.originFileObj || info.file, (url) => {
+        setImageUrl(url);
+        localStorage.setItem('profile_picture', url);
+        setUploadLoading(false);
+        notification.success({ message: 'Foto profil berhasil diperbarui!' });
+        window.dispatchEvent(new Event('profilePictureUpdated'));
+      });
+    }
+  };
+
+  const customUploadRequest = ({ file, onSuccess }) => {
+    setTimeout(() => {
+      onSuccess("ok");
+    }, 0);
+  };
 
   const enterLoading = index => {
     setLoadings(prevLoadings => {
@@ -100,6 +143,25 @@ const Profile = () => {
           <h5><b>Profil Saya</b></h5>
         </CCardHeader>
         <CCardBody style={{ paddingLeft: "20px" }}>
+          <div className="d-flex mb-4 align-items-center">
+            <div style={{ marginRight: '20px' }}>
+              <Avatar size={100} src={imageUrl} icon={<UserOutlined />} style={{ border: '1px solid #d9d9d9' }}/>
+            </div>
+            <div>
+              <Upload
+                name="avatar"
+                showUploadList={false}
+                beforeUpload={beforeUpload}
+                onChange={handleUploadChange}
+                customRequest={customUploadRequest}
+              >
+                <Button icon={uploadLoading ? <LoadingOutlined /> : <UploadOutlined />}>
+                  Ubah Foto Profil
+                </Button>
+              </Upload>
+              <div style={{ marginTop: '8px', color: '#888', fontSize: '12px' }}>Format JPG/PNG, Maks. 2MB</div>
+            </div>
+          </div>
           <div>
             <CRow><CCol span={24}><b> Nama </b> </CCol></CRow>
             <CRow className="card-title mb-2"><CCol span={24}> {localStorage.getItem('name')} </CCol></CRow>

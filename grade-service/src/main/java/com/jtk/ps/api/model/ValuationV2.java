@@ -35,4 +35,7 @@ public class ValuationV2 {
 
     @Column(name = "is_core")
     private Integer isCore;
+
+    @Version
+    private Long version;
 }

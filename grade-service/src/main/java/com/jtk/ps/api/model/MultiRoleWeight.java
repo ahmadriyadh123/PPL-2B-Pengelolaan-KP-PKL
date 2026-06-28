@@ -7,27 +7,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "valuation")
+@Table(name = "multi_role_weight")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Valuation {
+public class MultiRoleWeight {
     @Id
     @Column(unique = true, nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "aspect_name")
-    private String aspectName;
+    @Column(name = "participant_id")
+    private Integer participantId;
 
-    @Column(name = "value")
-    private Integer value;
+    @Column(name = "job_scope_name")
+    private String jobScopeName;
 
-    @Column(name = "evaluation_id")
-    private Integer evaluationId;
-
-    @Column(name = "is_core")
-    private Integer isCore;
+    @Column(name = "proportional_weight")
+    private Float proportionalWeight; // e.g. 0.5 for 50%
 
     @Version
     private Long version;

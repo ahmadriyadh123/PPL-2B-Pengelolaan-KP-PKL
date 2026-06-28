@@ -41,4 +41,7 @@ public class Evaluation {
 
     @Column(name = "participant_id")
     private Integer participantId;
+
+    @Version
+    private Long version;
 }
