@@ -11,8 +11,8 @@ import {
 import Chart, {
   CommonSeriesSettings, Legend, SeriesTemplate, Animation, ArgumentAxis, Tick, Title, Tooltip, ValueAxis
 } from 'devextreme-react/chart';
-import { LoadingOutlined } from '@ant-design/icons';
-import { Spin, Table } from 'antd'
+import { LoadingOutlined, TeamOutlined, BankOutlined, FileDoneOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Spin, Table, Row, Col, Card, Statistic } from 'antd'
 const antIcon = <LoadingOutlined style={{ fontSize: 40 }} spin />;
 
 const Dashboard = () => {
@@ -155,31 +155,76 @@ const Dashboard = () => {
     };
   }
 
-  return isLoading ? (<Spin indicator={antIcon} />) : (
+  return isLoading ? (<div style={{ display: 'flex', justifyContent: 'center', marginTop: '100px' }}><Spin indicator={antIcon} /></div>) : (
     <>
+      <div className="mb-4">
+        <h3 style={{ fontWeight: 700, color: '#333' }}>Dashboard Overview</h3>
+        <p style={{ color: '#666' }}>Ringkasan aktivitas {localStorage.getItem("id_prodi") === "0" ? "Kerja Praktik" : "Praktik Kerja Lapangan"}</p>
+      </div>
+
+      <Row gutter={[16, 16]} className="mb-4">
+        <Col xs={24} sm={12} md={6}>
+          <Card hoverable style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #1890ff 0%, #0050b3 100%)', color: 'white', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} bodyStyle={{ padding: '20px' }}>
+            <Statistic
+              title={<span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontWeight: 600 }}>Total Mahasiswa</span>}
+              value={142}
+              valueStyle={{ color: 'white', fontSize: '32px', fontWeight: 'bold' }}
+              prefix={<TeamOutlined style={{ opacity: 0.8 }} />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card hoverable style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #52c41a 0%, #237804 100%)', color: 'white', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} bodyStyle={{ padding: '20px' }}>
+            <Statistic
+              title={<span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontWeight: 600 }}>Perusahaan Mitra</span>}
+              value={45}
+              valueStyle={{ color: 'white', fontSize: '32px', fontWeight: 'bold' }}
+              prefix={<BankOutlined style={{ opacity: 0.8 }} />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card hoverable style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #faad14 0%, #ad6800 100%)', color: 'white', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} bodyStyle={{ padding: '20px' }}>
+            <Statistic
+              title={<span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontWeight: 600 }}>Dokumen Masuk</span>}
+              value={230}
+              valueStyle={{ color: 'white', fontSize: '32px', fontWeight: 'bold' }}
+              prefix={<FileDoneOutlined style={{ opacity: 0.8 }} />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card hoverable style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #722ed1 0%, #391085 100%)', color: 'white', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} bodyStyle={{ padding: '20px' }}>
+            <Statistic
+              title={<span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontWeight: 600 }}>Telah Dievaluasi</span>}
+              value={98}
+              suffix="%"
+              valueStyle={{ color: 'white', fontSize: '32px', fontWeight: 'bold' }}
+              prefix={<CheckCircleOutlined style={{ opacity: 0.8 }} />}
+            />
+          </Card>
+        </Col>
+      </Row>
+
       {localStorage.getItem("id_role") === "2" ? (
-        <>
-          <CCard className="mb-4">
-            <CCardHeader style={{ paddingLeft: "20px", textAlign: "center" }}>
-              <h5><b>Selamat datang di aplikasi KP/PKL <br />Terimakasih telah bersedia menjadi mitra kami.</b></h5>
-            </CCardHeader>
-            <CCardBody style={{ paddingLeft: "20px" }}>
-              <h6>Tabel jadwal penting kegiatan KP/PKL</h6>
-              <Table columns={columns} dataSource={date} rowKey="id" pagination={false} bordered scroll={{x: "max-content"}}/>
-            </CCardBody>
-          </CCard>
-        </>
+        <CCard className="mb-4 shadow-sm" style={{ borderRadius: '12px', border: 'none' }}>
+          <CCardHeader style={{ paddingLeft: "20px", textAlign: "center", backgroundColor: '#fff', borderBottom: '1px solid #f0f0f0', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
+            <h5 style={{ margin: 0, fontWeight: 600, color: '#1890ff' }}>Tabel Jadwal Penting Kegiatan</h5>
+          </CCardHeader>
+          <CCardBody style={{ padding: "24px" }}>
+            <Table columns={columns} dataSource={date} rowKey="id" pagination={false} bordered scroll={{ x: "max-content" }} />
+          </CCardBody>
+        </CCard>
       ) : (
-        <>
-          <div style={{ background: '#fff', padding: 24, minHeight: 700 }}>
+        <CCard className="shadow-sm" style={{ borderRadius: '12px', overflow: 'hidden', border: 'none' }}>
+          <CCardBody style={{ padding: 24, minHeight: 400 }}>
+            <h5 style={{ fontWeight: 600, marginBottom: '24px', color: '#333' }}>Timeline Kegiatan</h5>
             <div style={{ overflowX: "scroll" }}>
               <Chart id="chart" dataSource={(getData(timeline).sort((a, b) => a.start_date < b.start_date ? 1 : -1))} barGroupPadding={0.4} rotated={true}>
                 <ArgumentAxis>
                   <Tick visible={false} />
                 </ArgumentAxis>
-                <ValueAxis>
-                </ValueAxis>
-                <Title horizontalAlignment={"left"} text={`Kegiatan ${localStorage.getItem("id_prodi") === "0" ? "Kerja Praktik" : "Praktik Kerja Lapangan"}`} />
+                <ValueAxis />
                 <CommonSeriesSettings
                   type="rangeBar"
                   argumentField="name"
@@ -187,14 +232,15 @@ const Dashboard = () => {
                   rangeValue2Field="end_date"
                   barOverlapGroup="description"
                 />
-                <Legend visible={false} orientation="horizontal" verticalAlignment="bottom" horizontalAlignment="left" />
+                <Legend visible={false} />
                 <Tooltip enabled={true} customizeTooltip={customizeTooltip} />
                 <SeriesTemplate nameField="name" />
                 <Animation enabled={true} />
               </Chart>
             </div>
-          </div>
-        </>)}
+          </CCardBody>
+        </CCard>
+      )}
     </>
   )
 }
