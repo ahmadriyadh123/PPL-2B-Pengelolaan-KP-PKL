@@ -208,4 +208,15 @@ public class RppController {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/rekap")
+    @PreAuthorize("hasAnyAuthority('COMMITTEE')")
+    public ResponseEntity<Object> getRekapRpp(HttpServletRequest request) {
+        try {
+            String cookie = request.getHeader(Constant.PayloadResponseConstant.COOKIE);
+            return ResponseHandler.generateResponse("Get rekap RPP succeed", HttpStatus.OK, monitoringService.getRekapRpp(cookie));
+        } catch (Exception e) {
+            return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

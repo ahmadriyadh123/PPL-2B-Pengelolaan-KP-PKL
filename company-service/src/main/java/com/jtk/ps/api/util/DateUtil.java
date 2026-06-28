@@ -38,15 +38,34 @@ public class DateUtil {
         return day + " " + monthString + " " + year;
     }
 
-    public static Date stringToDate(String date) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+public static Date stringToDate(String date) {
+    if (date == null || date.trim().isEmpty()) {
+        return null;
+    }
+    
+    // Coba beberapa format yang mungkin dikirim frontend
+    String[] formats = {
+        "yyyy-MM-dd",   // format browser date picker (HTML standard)
+        "yyyy/MM/dd",   // format lama
+        "dd-MM-yyyy",   // format alternatif
+        "dd/MM/yyyy"    // format alternatif
+    };
+    
+    Exception lastException = null;
+    for (String format : formats) {
         try {
+            DateFormat dateFormat = new SimpleDateFormat(format);
+            dateFormat.setLenient(false); // strict parsing
             return dateFormat.parse(date);
         } catch (Exception e) {
-            log.warn("[DateUtil] stringToDate() gagal memparse tanggal '{}': {}", date, e.getMessage());
-            return null;
+            // coba format berikutnya
+            lastException = e;
         }
     }
+    
+    log.warn("[DateUtil] stringToDate() gagal memparse tanggal '{}': {}", date, lastException != null ? lastException.getMessage() : "Unknown error");
+    return null; // semua format gagal
+}
 
     public static Boolean checkNowDate(String startDate, String endDate) {
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");

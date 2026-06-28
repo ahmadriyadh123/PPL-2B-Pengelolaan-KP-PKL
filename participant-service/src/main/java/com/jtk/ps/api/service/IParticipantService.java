@@ -26,7 +26,7 @@ public interface IParticipantService {
 
     CVGetResponse getCVDetail(Integer idCv, String cookie);
 
-    Boolean updateCV(Integer idCv, CVUpdateRequest cvUpdateRequest, Integer idParticipant);
+    Boolean updateCV(Integer idCv, CVUpdateRequest cvUpdateRequest, Integer idParticipant, String cookie);
 
     Boolean markAsDoneCv(Integer idParticipant);
 
@@ -64,4 +64,5 @@ public interface IParticipantService {
     List<AbsenceRecap> getAllAbsence(Integer idProdi);
 
     void exportCV(String cookie, Integer idCv, HttpServletResponse response) throws IOException;
+    Boolean isCVOwnedByParticipant(Integer idCv, Integer idParticipant);
 }

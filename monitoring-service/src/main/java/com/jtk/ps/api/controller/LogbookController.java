@@ -106,4 +106,15 @@ public class LogbookController {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/rekap")
+    @PreAuthorize("hasAnyAuthority('COMMITTEE')")
+    public ResponseEntity<Object> getRekapLogbook(HttpServletRequest request) {
+        try {
+            String cookie = request.getHeader(Constant.PayloadResponseConstant.COOKIE);
+            return ResponseHandler.generateResponse("Get rekap Logbook succeed", HttpStatus.OK, monitoringService.getRekapLogbook(cookie));
+        } catch (Exception e) {
+            return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

@@ -144,6 +144,7 @@ const RekapRPP = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -186,6 +187,7 @@ const RekapRPP = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -248,6 +250,7 @@ const RekapRPP = () => {
           }
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }

@@ -69,7 +69,7 @@ const CreatePerusahaan = () => {
             return
           }
 
-          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+          if (error.toJSON && error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
               state: {

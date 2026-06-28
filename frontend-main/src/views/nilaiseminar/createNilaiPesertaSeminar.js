@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 import React, { useState, useEffect } from 'react'
-import 'antd/dist/antd.css'
+import 'antd/dist/reset.css'
 import 'src/scss/_custom.scss'
 import { CCard, CCardBody, CCol, CRow } from '@coreui/react'
 import {
@@ -77,7 +77,7 @@ const CreateNilaiPesertaSeminar = () => {
             // console.log(res.data.data)
           })
           .catch(function (error) {
-            if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
               history.push({
                 pathname: '/login',
                 state: {
@@ -109,7 +109,7 @@ const CreateNilaiPesertaSeminar = () => {
             setDosenPenguji(res.data.data.penguji)
           })
           .catch(function (error) {
-            if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
               history.push({
                 pathname: '/login',
                 state: {
@@ -132,7 +132,7 @@ const CreateNilaiPesertaSeminar = () => {
             setDosenPembimbing(res.data.data.pembimbing)
           })
           .catch(function (error) {
-            if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+            if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
               history.push({
                 pathname: '/login',
                 state: {
@@ -172,7 +172,7 @@ const CreateNilaiPesertaSeminar = () => {
             setExaminerType3(foundForm3)
           }
         } catch (error) {
-          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+          if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
               state: {
@@ -910,3 +910,4 @@ const CreateNilaiPesertaSeminar = () => {
   )
 }
 export default CreateNilaiPesertaSeminar
+

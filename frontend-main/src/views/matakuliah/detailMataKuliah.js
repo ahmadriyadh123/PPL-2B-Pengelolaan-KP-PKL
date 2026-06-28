@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import 'antd/dist/antd.css'
+import 'antd/dist/reset.css'
 import 'src/scss/_custom.scss'
 import { Tabs } from 'antd'
 import IdentitasMataKuliah from './identitasMataKuliah'

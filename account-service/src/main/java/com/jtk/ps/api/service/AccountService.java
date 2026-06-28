@@ -485,6 +485,22 @@ public class AccountService implements UserDetailsService, IAccountService {
     }
 
     @Override
+    public List<AccountResponse> getSupervisor() {
+        return accountRepository.getAllSupervisor();
+    }
+
+    @Override
+    public List<AccountResponse> getSupervisorByProdi(Integer idProdi) {
+        EProdi prodi = EProdi.valueOfId(idProdi);
+        return accountRepository.getAllSupervisorByProdi(prodi);
+    }
+
+    @Override
+    public AccountResponse getSupervisor(Integer id) {
+        return accountRepository.getAllSupervisorById(id);
+    }
+
+    @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Account account = findAccountByUsername(username);
         if (account == null) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import 'antd/dist/antd.css';
+import 'antd/dist/reset.css';
 import {
     CCard,
     CCardBody,
@@ -92,7 +92,7 @@ const UpdateMinat = () => {
                         })
                 })
                 .catch(function (error) {
-                    if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+                    if (error.toJSON().status === 401 || error.toJSON().status === 403) { history.push({ pathname: "/login", state: { session: true } }); } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
                         history.push({
                             pathname: "/login",
                             state: {
@@ -259,3 +259,4 @@ const UpdateMinat = () => {
 }
 
 export default UpdateMinat
+

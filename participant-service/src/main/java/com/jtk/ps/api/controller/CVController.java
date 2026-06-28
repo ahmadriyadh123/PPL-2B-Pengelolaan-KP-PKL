@@ -10,14 +10,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/cv")
@@ -27,11 +31,37 @@ public class CVController {
     private IParticipantService participantService;
 
     @GetMapping("/detail/{id_cv}")
-    public ResponseEntity<Object> getCVDetail(@PathVariable("id_cv") Integer idCv, HttpServletRequest request) {
+    public ResponseEntity<Object> getCVDetail(
+            @PathVariable("id_cv") Integer idCv, 
+            HttpServletRequest request) {
         try {
-            CVGetResponse cv = participantService.getCVDetail(idCv, request.getHeader(Constant.PayloadResponseConstant.COOKIE));
+            // Ambil id dan role dari token JWT
+            Integer idFromToken = (Integer) request.getAttribute(Constant.VerifyConstant.ID);
+            Integer idRole = (Integer) request.getAttribute(Constant.VerifyConstant.ID_ROLE);
+            String cookie = request.getHeader(Constant.PayloadResponseConstant.COOKIE);
+
+            // Role 1 = PARTICIPANT → wajib validasi kepemilikan
+            if (idRole != null && idRole == 1) {
+                // Cek apakah cv ini milik participant yang login
+                boolean isOwner = participantService.isCVOwnedByParticipant(idCv, idFromToken);
+                if (!isOwner) {
+                    return ResponseHandler.generateResponse(
+                        "Access denied: CV does not belong to you", 
+                        HttpStatus.FORBIDDEN
+                    );
+                }
+            }
+
+            CVGetResponse cv = participantService.getCVDetail(idCv, cookie);
+            if (cv == null) {
+                return ResponseHandler.generateResponse(
+                    "CV not found", 
+                    HttpStatus.NOT_FOUND
+                );
+            }
             return ResponseHandler.generateResponse("Get CV succeed", HttpStatus.OK, cv);
-        } catch (HttpClientErrorException ex){
+
+        } catch (HttpClientErrorException ex) {
             return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -40,15 +70,42 @@ public class CVController {
 
     @PutMapping("/update/{id_cv}")
     @PreAuthorize("hasAuthority('PARTICIPANT')")
-    public ResponseEntity<Object> updateCV(@PathVariable("id_cv") Integer idCv, @RequestBody CVUpdateRequest cvUpdateRequest, HttpServletRequest request) {
+    public ResponseEntity<Object> updateCV(
+            @PathVariable("id_cv") Integer idCv, 
+            @Valid @RequestBody CVUpdateRequest cvUpdateRequest, 
+            BindingResult bindingResult,
+            HttpServletRequest request) {
         try {
-            Boolean isSuccess = participantService.updateCV(idCv, cvUpdateRequest, (Integer) Objects.requireNonNull(request.getAttribute(Constant.VerifyConstant.ID)));
+            // Handle validation errors
+            if (bindingResult.hasErrors()) {
+                Map<String, String> errors = new HashMap<>();
+                bindingResult.getFieldErrors().forEach(error -> 
+                    errors.put(error.getField(), error.getDefaultMessage())
+                );
+                return ResponseHandler.generateResponse(
+                    "Validation failed: " + errors.values().stream()
+                        .collect(Collectors.joining(", ")), 
+                    HttpStatus.BAD_REQUEST, 
+                    errors
+                );
+            }
+
+            Integer idParticipant = (Integer) Objects.requireNonNull(
+                request.getAttribute(Constant.VerifyConstant.ID),
+                "User ID not found in request"
+            );
+            String cookie = request.getHeader(Constant.PayloadResponseConstant.COOKIE);
+
+            Boolean isSuccess = participantService.updateCV(idCv, cvUpdateRequest, idParticipant, cookie);
+            
             if (Boolean.TRUE.equals(isSuccess)) {
                 return ResponseHandler.generateResponse("Update cv succeed", HttpStatus.OK);
             } else {
                 return ResponseHandler.generateResponse("Update cv failed", HttpStatus.BAD_REQUEST);
             }
-        } catch (HttpClientErrorException ex){
+        } catch (IllegalArgumentException ex) {
+            return ResponseHandler.generateResponse("Invalid input: " + ex.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (HttpClientErrorException ex) {
             return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -72,6 +129,7 @@ public class CVController {
         }
     }
     
+    @PreAuthorize("hasAuthority('PARTICIPANT')")
     @DeleteMapping(value = "/delete-competence/{id}")
     public ResponseEntity<Object> deleteCVCompetence(@PathVariable("id") Integer id) {
         try {
@@ -84,6 +142,7 @@ public class CVController {
         }
     }
     
+    @PreAuthorize("hasAuthority('PARTICIPANT')")
     @DeleteMapping(value = "/delete-jobscope/{id}")
     public ResponseEntity<Object> deleteCVJobscope(@PathVariable("id") Integer id) {
         try {
@@ -113,6 +172,8 @@ public class CVController {
     @GetMapping(value = "/{id_cv}/export", produces = MediaType.APPLICATION_PDF_VALUE)
     public void exportCV(HttpServletRequest request, HttpServletResponse response, @PathVariable("id_cv") Integer idCv) throws IOException {
         String cookie = request.getHeader(Constant.PayloadResponseConstant.COOKIE);
+        response.setHeader("Content-Disposition", "attachment; filename=\"CV_Mahasiswa_" + idCv + ".pdf\"");
+        response.setContentType(MediaType.APPLICATION_PDF_VALUE);
         participantService.exportCV(cookie, idCv, response);
     }
 }

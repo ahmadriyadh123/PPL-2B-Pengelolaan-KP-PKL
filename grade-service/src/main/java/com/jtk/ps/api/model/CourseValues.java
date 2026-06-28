@@ -42,4 +42,7 @@ public class CourseValues {
 
     @Column(name = "created_date")
     private LocalDate created_date;
+
+    @Version
+    private Long version;
 }

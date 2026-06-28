@@ -28,4 +28,7 @@ public class Valuation {
 
     @Column(name = "is_core")
     private Integer isCore;
+
+    @Version
+    private Long version;
 }

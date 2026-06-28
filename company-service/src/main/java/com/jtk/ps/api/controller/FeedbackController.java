@@ -117,6 +117,7 @@ public class FeedbackController {
 
 
     @GetMapping("/export-pdf")
+    @PreAuthorize("hasAnyAuthority('COMMITTEE', 'HEAD_STUDY_PROGRAM')")
     public ResponseEntity<Object> exportPdf(HttpServletRequest request, HttpServletResponse response) {
         try {
 //            companyService.generatePdfFeedback(idParticipant,response);

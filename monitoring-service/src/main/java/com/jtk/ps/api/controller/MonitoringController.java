@@ -50,6 +50,7 @@ public class MonitoringController {
         } catch (HttpClientErrorException ex){
             return ResponseHandler.generateResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

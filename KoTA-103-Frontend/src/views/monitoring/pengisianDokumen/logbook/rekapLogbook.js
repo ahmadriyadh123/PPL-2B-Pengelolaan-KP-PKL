@@ -239,6 +239,7 @@ const RekapLogbook = () => {
           setDataPeserta(result.data.data[0])
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -327,6 +328,7 @@ const RekapLogbook = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -416,6 +418,7 @@ const RekapLogbook = () => {
           // setFinishDateThisPageAllowedToAccess(response.data.data.finish_assignment_date)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }

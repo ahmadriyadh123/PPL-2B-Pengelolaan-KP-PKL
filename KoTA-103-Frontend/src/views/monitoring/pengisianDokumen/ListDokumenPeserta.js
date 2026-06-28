@@ -71,6 +71,7 @@ const ListDokumenPeserta = () => {
         if (dataRpp != null) {
           for (let iterateRpp in dataRpp) {
             dataRppIdx.push({
+              id: dataRpp[iterateRpp].id,
               idx: parseInt(iterateRpp),
               nim: dataRpp[iterateRpp].nim,
               name: dataRpp[iterateRpp].name,
@@ -91,6 +92,7 @@ const ListDokumenPeserta = () => {
             if (dataLogbook != null) {
               for (let iterateLogbook in dataLogbook) {
                 dataLogbookIdx.push({
+                  id: dataLogbook[iterateLogbook].id,
                   idx: parseInt(iterateLogbook),
                   nim: dataLogbook[iterateLogbook].nim,
                   name: dataLogbook[iterateLogbook].name,
@@ -111,6 +113,7 @@ const ListDokumenPeserta = () => {
                 if (dataSelfAssessment != null) {
                   for (let iterateSelfAssessment in dataSelfAssessment) {
                     dataSelfAssessmentIdx.push({
+                      id: dataSelfAssessment[iterateSelfAssessment].id,
                       idx: parseInt(iterateSelfAssessment),
                       nim: dataSelfAssessment[iterateSelfAssessment].nim,
                       name: dataSelfAssessment[iterateSelfAssessment].name,
@@ -131,6 +134,7 @@ const ListDokumenPeserta = () => {
                     if (dataLaporan != null) {
                       for (let iterateLaporan in dataLaporan) {
                         dataLaporanIdx.push({
+                          id: dataLaporan[iterateLaporan].id,
                           idx: parseInt(iterateLaporan),
                           nim: dataLaporan[iterateLaporan].nim,
                           name: dataLaporan[iterateLaporan].name,
@@ -149,6 +153,7 @@ const ListDokumenPeserta = () => {
           })
       })
       .catch(function (error) {
+        setIsLoading(false)
         if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
           history.push({
             pathname: '/login',
@@ -275,6 +280,7 @@ const ListDokumenPeserta = () => {
           if (dataRpp != null) {
             for (let iterateRpp in dataRpp) {
               dataRppIdx.push({
+                id: dataRpp[iterateRpp].id,
                 idx: parseInt(iterateRpp),
                 nim: dataRpp[iterateRpp].nim,
                 name: dataRpp[iterateRpp].name,
@@ -299,6 +305,7 @@ const ListDokumenPeserta = () => {
               if (dataLogbook != null) {
                 for (let iterateLogbook in dataLogbook) {
                   dataLogbookIdx.push({
+                    id: dataLogbook[iterateLogbook].id,
                     idx: parseInt(iterateLogbook),
                     nim: dataLogbook[iterateLogbook].nim,
                     name: dataLogbook[iterateLogbook].name,
@@ -324,6 +331,7 @@ const ListDokumenPeserta = () => {
               if (dataSelfAssessment != null) {
                 for (let iterateSelfAssessment in dataSelfAssessment) {
                   dataSelfAssessmentIdx.push({
+                    id: dataSelfAssessment[iterateSelfAssessment].id,
                     idx: parseInt(iterateSelfAssessment),
                     nim: dataSelfAssessment[iterateSelfAssessment].nim,
                     name: dataSelfAssessment[iterateSelfAssessment].name,
@@ -349,6 +357,7 @@ const ListDokumenPeserta = () => {
               if (dataLaporan != null) {
                 for (let iterateLaporan in dataLaporan) {
                   dataLaporanIdx.push({
+                    id: dataLaporan[iterateLaporan].id,
                     idx: parseInt(iterateLaporan),
                     nim: dataLaporan[iterateLaporan].nim,
                     name: dataLaporan[iterateLaporan].name,
@@ -366,6 +375,7 @@ const ListDokumenPeserta = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
+          setIsLoading(false)
           if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
             return
           }
@@ -449,7 +459,7 @@ const ListDokumenPeserta = () => {
                 <Button
                   type="primary"
                   style={{ borderColor: 'white' }}
-                  onClick={() => actionSeeListRPPParticipant(record.nim)}
+                  onClick={() => actionSeeListRPPParticipant(record.id)}
                   size="small"
                 >
                   <Text style={{ fontSize: '3', color: 'white' }}>Lihat Detail</Text>
@@ -515,7 +525,7 @@ const ListDokumenPeserta = () => {
                   type="primary"
                   style={{ borderColor: 'white' }}
                   onClick={() => {
-                    actionSeeListLogbookParticipant(record.nim)
+                    actionSeeListLogbookParticipant(record.id)
                   }}
                   size="small"
                 >
@@ -589,7 +599,7 @@ const ListDokumenPeserta = () => {
                   type="primary"
                   style={{ borderColor: 'white' }}
                   size="small"
-                  onClick={() => actionSeeListSelfAssessmentPeserta(record.nim)}
+                  onClick={() => actionSeeListSelfAssessmentPeserta(record.id)}
                 >
                   <Text style={{ fontSize: '3', color: 'white' }}>Lihat Detail</Text>
                 </Button>
@@ -660,7 +670,7 @@ const ListDokumenPeserta = () => {
                     <div>(form penilaian pembimbing)</div>
                   </>
                 }
-                onClick={() => actionSeeListLaporan(record.nim)}
+                onClick={() => actionSeeListLaporan(record.id)}
               >
                 <Button type="primary" style={{ borderColor: 'white' }} size="small">
                   <Text style={{ fontSize: '3', color: 'white' }}>Lihat Detail</Text>

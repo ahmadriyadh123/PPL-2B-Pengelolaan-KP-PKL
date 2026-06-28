@@ -1,236 +1,211 @@
-import React, { useState, useEffect } from 'react'
-import 'antd/dist/reset.css'
-import { CCard, CCardBody } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { useState, useEffect } from 'react';
+import 'antd/dist/reset.css';
 import {
-  faCheck,
-  faEye,
-  faPencil,
-  faScroll,
-  faFileDownload,
-} from '@fortawesome/free-solid-svg-icons'
-import { Row, Col, Button, notification, Alert, Spin } from 'antd'
-import { useHistory } from 'react-router-dom'
+  CCard,
+  CCardBody,
+} from '@coreui/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheck, faEye, faPencil, faScroll, faFileDownload } from '@fortawesome/free-solid-svg-icons';
+import { Row, Col, Button, notification, Alert, Spin } from 'antd';
+import { useHistory } from 'react-router-dom';
 import axios from 'axios'
-import { LoadingOutlined } from '@ant-design/icons'
+import { LoadingOutlined } from '@ant-design/icons';
 
-const FileDownload = require('js-file-download')
-const antIcon = <LoadingOutlined style={{ fontSize: 40 }} spin />
+const FileDownload = require('js-file-download');
+const antIcon = <LoadingOutlined style={{ fontSize: 40 }} spin />;
 const PengumpulanCV = () => {
-  let history = useHistory()
+  let history = useHistory();
   const [data, setData] = useState({})
   const [isLoading, setIsLoading] = useState(true)
-  const [loadings, setLoadings] = useState([])
-  axios.defaults.withCredentials = true
+  const [loadings, setLoadings] = useState([]);
+  axios.defaults.withCredentials = true;
 
-  const enterLoading = (index) => {
-    setLoadings((prevLoadings) => {
-      const newLoadings = [...prevLoadings]
-      newLoadings[index] = true
-      return newLoadings
-    })
+  const enterLoading = index => {
+    setLoadings(prevLoadings => {
+      const newLoadings = [...prevLoadings];
+      newLoadings[index] = true;
+      return newLoadings;
+    });
   }
   const updateCV = () => {
-    history.push(`/CV/updateCV/${data.id_cv}`)
+    history.push(`/CV/updateCV/${data.id_cv}`);
   }
   const detailCV = () => {
-    history.push(`/CV/detailCV/${data.id_cv}`)
+    history.push(`/CV/detailCV/${data.id_cv}`);
   }
-  const exportPDF = async (index) => {
-    enterLoading(index)
-    axios.defaults.withCredentials = true
-    await axios
-      .get(`${process.env.REACT_APP_API_GATEWAY_URL}participant/cv/${data.id_cv}/export`, {
-        responseType: 'blob',
-      })
-      .then((response) => {
-        // notification.success({
-        //   message: 'Ekspor CV berhasil',
-        // });
-        FileDownload(response.data, `Data CV ${localStorage.getItem('name')}`)
-        setLoadings((prevLoadings) => {
-          const newLoadings = [...prevLoadings]
-          newLoadings[index] = false
-          return newLoadings
-        })
-      })
-      .catch((error) => {
-        // notification.error({
-        //   message: 'Ekspor CV gagal'
-        // });
-        setLoadings((prevLoadings) => {
-          const newLoadings = [...prevLoadings]
-          newLoadings[index] = false
-          return newLoadings
-        })
-      })
+  const exportPDF = async (item, index) => {
+      enterLoading(index);
+      axios.defaults.withCredentials = true;
+      
+      try {
+          // We add the filename logic here, bypassing the faulty library
+          const response = await axios.get(
+              `${process.env.REACT_APP_API_GATEWAY_URL}participant/cv/${item.id_cv || item}/export`, 
+              {
+                  responseType: 'blob', // IMPORTANT: Keep this as blob
+              }
+          );
+
+          // Create a proper Blob with the correct type
+          const file = new Blob([response.data], { type: 'application/pdf' });
+          const fileURL = window.URL.createObjectURL(file);
+
+          // Force download with the correct extension
+          const tempLink = document.createElement('a');
+          tempLink.href = fileURL;
+          
+          // This naming logic ensures it has a .pdf extension
+          const fileName = item.name ? `Data CV ${item.name}.pdf` : `CV_${item}.pdf`;
+          tempLink.setAttribute('download', fileName);
+          
+          document.body.appendChild(tempLink);
+          tempLink.click();
+
+          // Cleanup
+          tempLink.remove();
+          window.URL.revokeObjectURL(fileURL);
+
+      } catch (error) {
+          console.error("Ekspor CV gagal:", error);
+      } finally {
+          setLoadings(prevLoadings => {
+              const newLoadings = [...prevLoadings];
+              newLoadings[index] = false;
+              return newLoadings;
+          });
+      }
   }
 
   const refreshData = (index) => {
-    axios
-      .get(`${process.env.REACT_APP_API_GATEWAY_URL}participant/cv-by-participant`)
-      .then(function (response) {
-        setData(response.data.data)
-        setLoadings((prevLoadings) => {
-          const newLoadings = [...prevLoadings]
-          newLoadings[index] = false
-          return newLoadings
-        })
-      })
+    axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}participant/cv-by-participant`).then(function (response) {
+      setData(response.data.data)
+      setLoadings(prevLoadings => {
+        const newLoadings = [...prevLoadings];
+        newLoadings[index] = false;
+        return newLoadings;
+      });
+    })
   }
 
   useEffect(() => {
-    const controller = new AbortController()
-
     const getCV = async () => {
-      axios.defaults.withCredentials = true
-      await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}participant/cv-by-participant`, {
-          signal: controller.signal,
-        })
+      axios.defaults.withCredentials = true;
+      await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}participant/cv-by-participant`)
         .then(function (response) {
           setData(response.data.data)
           setIsLoading(false)
         })
         .catch(function (error) {
-          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
-            return
-          }
-
           if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
-              pathname: '/login',
+              pathname: "/login",
               state: {
                 session: true,
-              },
-            })
+              }
+            });
           } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-            history.push('/404')
+            history.push("/404");
           } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
-            history.push('/500')
+            history.push("/500");
           }
-        })
+        });
     }
-    getCV()
-
-    return () => {
-      console.log('ABORTED')
-      controller.abort()
-    }
-  }, [history])
+    getCV();
+  }, [history]);
 
   const handleMark = async (index) => {
     enterLoading(index)
-    await axios
-      .put(`${process.env.REACT_APP_API_GATEWAY_URL}participant/cv/mark-as-done`, {})
-      .then((response) => {
-        refreshData(index)
-        notification.success({
-          message:
-            data.status_submit === false
-              ? 'Tandai selesai berhasil!'
-              : 'Tandai selesai telah dibatalkan!',
-        })
-      })
-      .catch((error) => {
-        notification.error({
-          message: 'Proses perubahan gagal!',
-        })
-        setLoadings((prevLoadings) => {
-          const newLoadings = [...prevLoadings]
-          newLoadings[index] = false
-          return newLoadings
-        })
-      })
+    await axios.put(`${process.env.REACT_APP_API_GATEWAY_URL}participant/cv/mark-as-done`, {
+    }).then((response) => {
+      refreshData(index)
+      notification.success({
+        message: data.status_submit === false ? 'Tandai selesai berhasil!' : 'Tandai selesai telah dibatalkan!'
+      });
+    }).catch((error) => {
+      notification.error({
+        message: 'Proses perubahan gagal!'
+      });
+      setLoadings(prevLoadings => {
+        const newLoadings = [...prevLoadings];
+        newLoadings[index] = false;
+        return newLoadings;
+      });
+    });
   }
 
-  return isLoading ? (
-    <Spin indicator={antIcon} />
-  ) : (
+  return isLoading ? (<Spin indicator={antIcon} />) : (
     <>
       {data.status_update === false ? (
-        <div style={{ paddingBottom: '20px' }}>
+        <div style={{ paddingBottom: "20px" }}>
           <Alert
             message="Catatan"
             description="Formulir Data CV tidak dapat diisi atau diubah karena diluar waktu yang telah ditetapkan."
             type="info"
             showIcon
-            closable
-          />
+            closable />
         </div>
-      ) : (
-        ''
-      )}
-      <CCard className="mb-4" style={{ overflowX: 'scroll' }}>
+      ) : ""}
+      <CCard className="mb-4" style={{ overflowX: "scroll" }}>
         <CCardBody>
-          <Row align="middle">
+          <Row align='middle'>
             <Col span={2}>
-              <FontAwesomeIcon icon={faScroll} style={{ width: '50px', height: '50px' }} />
+              <FontAwesomeIcon icon={faScroll} style={{ width: "50px", height: "50px" }} />
             </Col>
-            <Col span={data.status_update === true ? 7 : 16}>{localStorage.getItem('name')}</Col>
-            {data.status_update === true ? (
+            <Col span={data.status_update === true ? 7 : 16}>
+              {localStorage.getItem("name")}
+            </Col>
+            {true ? (
               <>
-                <Col span={5} style={{ textAlign: 'center' }}>
+                <Col span={5} style={{ textAlign: "center" }}>
                   <Button
-                    id={data.status_submit === false ? 'selesai' : 'batal'}
+                    id={data.status_submit === false ? "selesai" : "batal"}
                     size="small"
                     shape="round"
                     loading={loadings[0]}
-                    style={
-                      data.status_submit === false
-                        ? { color: 'white', background: '#339900' }
-                        : { color: 'white', background: '#CC0033' }
-                    }
+                    style={data.status_submit === false ? { color: "white", background: "#339900" } : { color: "white", background: "#CC0033" }}
                     onClick={() => handleMark(0)}
                   >
-                    <FontAwesomeIcon icon={faCheck} style={{ paddingRight: '5px' }} />{' '}
-                    {data.status_submit === false
-                      ? 'Tandai sebagai selesai'
-                      : 'Batal tandai selesai'}
+                    <FontAwesomeIcon icon={faCheck} style={{ paddingRight: "5px" }} /> {data.status_submit === false ? "Tandai sebagai selesai" : "Batal tandai selesai"}
                   </Button>
                 </Col>
               </>
-            ) : (
-              ''
-            )}
-            <Col span={3} style={{ textAlign: 'center' }}>
+            ) : ""}
+            <Col span={3} style={{ textAlign: "center" }}>
               <Button
                 id="detail"
                 size="small"
                 shape="round"
-                style={{ color: 'black', background: '#FBB03B' }}
+                style={{ color: "black", background: "#FBB03B" }}
                 onClick={detailCV}
               >
-                <FontAwesomeIcon icon={faEye} style={{ paddingRight: '5px' }} /> Detail
+                <FontAwesomeIcon icon={faEye} style={{ paddingRight: "5px" }} /> Detail
               </Button>
             </Col>
-            {data.status_update === true ? (
+            {true ? (
               <>
-                <Col span={4} style={{ textAlign: 'center' }}>
+                <Col span={4} style={{ textAlign: "center" }}>
                   <Button
                     id="update"
                     size="small"
                     shape="round"
-                    style={{ color: 'black', background: '#FCEE21' }}
+                    style={{ color: "black", background: "#FCEE21" }}
                     onClick={updateCV}
                   >
-                    <FontAwesomeIcon icon={faPencil} style={{ paddingRight: '5px' }} /> Ubah Data CV
+                    <FontAwesomeIcon icon={faPencil} style={{ paddingRight: "5px" }} /> Ubah Data CV
                   </Button>
                 </Col>
               </>
-            ) : (
-              ''
-            )}
-            <Col span={3} style={{ textAlign: 'center' }}>
+            ) : ""}
+            <Col span={3} style={{ textAlign: "center" }}>
               <Button
                 id="download"
                 size="small"
                 shape="round"
                 loading={loadings[1]}
-                style={{ color: 'white', background: '#3399FF' }}
+                style={{ color: "white", background: "#3399FF" }}
                 onClick={() => exportPDF(1)}
               >
-                <FontAwesomeIcon icon={faFileDownload} style={{ paddingRight: '5px' }} /> Ekspor
+                <FontAwesomeIcon icon={faFileDownload} style={{ paddingRight: "5px" }} /> Ekspor
               </Button>
             </Col>
           </Row>

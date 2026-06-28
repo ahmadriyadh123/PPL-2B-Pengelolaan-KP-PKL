@@ -1,3 +1,5 @@
+const path = require('path');
+
 module.exports = {
   webpack: {
     configure: (webpackConfig) => {
@@ -13,6 +15,12 @@ module.exports = {
       // ketika ada pilihan antara .mjs dan .js
       if (!webpackConfig.resolve.extensions.includes('.mjs')) {
         webpackConfig.resolve.extensions.push('.mjs')
+      }
+
+      // Alias antd/dist/antd.css to empty.css for antd v5 compatibility
+      webpackConfig.resolve.alias = {
+        ...webpackConfig.resolve.alias,
+        'antd/dist/antd.css': path.resolve(__dirname, 'src/empty.css'),
       }
 
       return webpackConfig

@@ -221,33 +221,33 @@ const DetailPengajuanPerusahaan = () => {
       })
   }
 
-  return isLoading ? (
-    <Spin indicator={antIcon} />
-  ) : (
-    <>
-      <CRow>
-        <CCol style={{ textAlign: 'right', paddingBottom: '15px' }}>
-          <Button
-            id="accept"
-            shape="round"
-            loading={loadings[0]}
-            style={{ backgroundColor: '#339900', borderColor: '#339900', color: 'white' }}
-            onClick={() => showModalAccept(0)}
-          >
-            Terima Pengajuan
-          </Button>
-          &nbsp;&nbsp;&nbsp;
-          <Button
-            id="decline"
-            shape="round"
-            loading={loadings[1]}
-            style={{ backgroundColor: '#CC0033', borderColor: '#CC0033', color: 'white' }}
-            onClick={() => showModalDelete(1)}
-          >
-            Tolak Pengajuan
-          </Button>
-        </CCol>
-      </CRow>
+    return isLoading ? (
+        <Spin indicator={antIcon} />
+    ) : (
+        <>
+            <CRow>
+                <CCol style={{ textAlign: "right", paddingBottom: "15px" }}>
+                    <Button
+                        id="accept"
+                        shape="round"
+                        loading={loadings[0]}
+                        style={{ backgroundColor: "#339900", borderColor: "#339900", color: "white" }}
+                        onClick={() => showModalAccept(0)}
+                    >
+                        Terima Pengajuan
+                    </Button>
+                    &nbsp;&nbsp;&nbsp;
+                    <Button
+                        id="decline"
+                        shape="round"
+                        loading={loadings[1]}
+                        style={{ backgroundColor: "#CC0033", borderColor: "#CC0033", color: "white" }}
+                        onClick={() => showModalDelete(1)}
+                    >
+                        Tolak Pengajuan
+                    </Button>
+                </CCol>
+            </CRow>
       <CCard className="mb-4">
         <CCardHeader style={{ paddingLeft: '20px', paddingRight: '20px' }}>
           <CRow>

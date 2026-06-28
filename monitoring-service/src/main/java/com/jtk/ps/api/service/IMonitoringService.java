@@ -106,4 +106,10 @@ public interface IMonitoringService {
     AssociatedDocumentSelfAssessment getAssociatedSelfAssessment(int participantId, int selfAsssessmentId);
     DocumentGradeStat getDocumentGradeStat(int participantId);
     HashMap<LocalDate, String> getHariLiburFromDate(LocalDate date);
+
+    // Rekap Dokumen
+    List<RekapDokumenResponse> getRekapRpp(String cookie);
+    List<RekapDokumenResponse> getRekapLogbook(String cookie);
+    List<RekapDokumenResponse> getRekapSelfAssessment(String cookie);
+    List<RekapDokumenResponse> getRekapLaporan(String cookie);
 }

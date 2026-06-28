@@ -12,14 +12,27 @@ import CIcon from '@coreui/icons-react'
 import axios from 'axios';
 import avatar8 from './../../assets/images/avatars/8.jpg'
 import { useHistory } from 'react-router-dom';
-import {notification, Spin} from 'antd'
-import { LoadingOutlined } from '@ant-design/icons';
+import { notification, Spin } from 'antd'
+import { LoadingOutlined, UserOutlined } from '@ant-design/icons';
+require('dotenv').config()
 
 const antIcon = <LoadingOutlined style={{ fontSize: 20 }} spin />;
 
 const AppHeaderDropdown = () => {
   let history = useHistory();
   const [isLoading, setIsLoading] = useState(false)
+  const [profilePic, setProfilePic] = useState(localStorage.getItem('profile_picture') || avatar8);
+
+  React.useEffect(() => {
+    const handleProfileUpdate = () => {
+      setProfilePic(localStorage.getItem('profile_picture') || avatar8);
+    };
+    window.addEventListener('profilePictureUpdated', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('profilePictureUpdated', handleProfileUpdate);
+    };
+  }, []);
+
   const logout = async () => {
     setIsLoading(true)
     axios.defaults.withCredentials = true;
@@ -46,7 +59,7 @@ const AppHeaderDropdown = () => {
   return (
     <CDropdown variant="nav-item">
       <CDropdownToggle placement="bottom-end" className="py-0" caret={false}>
-        <CAvatar src={avatar8} size="md" />
+        <CAvatar src={profilePic} size="md" />
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
         {/* <CDropdownItem href="#">

@@ -154,6 +154,11 @@ public class AccountController {
                     HttpStatus.BAD_REQUEST);
         }
 
+        // Validasi: password baru tidak boleh sama dengan password lama
+        if (newPasswordRequest.getNewPassword().equals(newPasswordRequest.getOldPassword())) {
+            return ResponseHandler.generateResponse("Password baru tidak boleh sama dengan password lama.", HttpStatus.BAD_REQUEST);
+        }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         final Account account = service.findAccountByUsername(username);
@@ -189,6 +194,12 @@ public class AccountController {
                     "No account found with id " + committeePasswordRequest.getIdAccount(),
                     HttpStatus.BAD_REQUEST);
         }
+
+        // Validasi: password baru tidak boleh sama dengan password lama (menggunakan BCrypt compare)
+        if (service.checkIfValidOldPassword(account, committeePasswordRequest.getNewPassword())) {
+            return ResponseHandler.generateResponse("Password baru tidak boleh sama dengan password lama.", HttpStatus.BAD_REQUEST);
+        }
+
         try {
             service.updatePassword(account, committeePasswordRequest.getNewPassword());
             return ResponseHandler.generateResponse("Password updated successfully", HttpStatus.OK);
@@ -235,4 +246,19 @@ public class AccountController {
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
+    @GetMapping("/get-supervisor")
+    public ResponseEntity<Object> getSupervisor(@RequestParam(value = "id", required = false) Integer id, @RequestParam(value = "id_prodi", required = false) Integer idProdi) {
+        try {
+            if (id != null) {
+                return ResponseHandler.generateResponse("Get supervisor succeed", HttpStatus.OK, service.getSupervisor(id));
+            } else if (idProdi != null) {
+                return ResponseHandler.generateResponse("Get supervisor by prodi succeed", HttpStatus.OK, service.getSupervisorByProdi(idProdi));
+            } else {
+                return ResponseHandler.generateResponse("Get all supervisor succeed", HttpStatus.OK, service.getSupervisor());
+            }
+        } catch (Exception e) {
+            return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }

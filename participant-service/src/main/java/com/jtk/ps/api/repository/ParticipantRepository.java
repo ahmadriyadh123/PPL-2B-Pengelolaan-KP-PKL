@@ -15,6 +15,10 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
             nativeQuery = true)
     List<Participant> findByYearAndProdiId(Integer year, Integer prodiId);
 
+    @Query(value = "SELECT * FROM participant p WHERE p.prodi_id = ?1 ORDER BY p.id DESC",
+            nativeQuery = true)
+    List<Participant> findByProdiIdOnly(Integer prodiId);
+
     List<Participant> findByAccountIdIn(@Param("account_id") List<Integer> accountId);
 
 

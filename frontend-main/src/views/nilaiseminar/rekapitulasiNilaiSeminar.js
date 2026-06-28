@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import 'antd/dist/antd.css'
+import 'antd/dist/reset.css'
 import 'src/scss/_custom.scss'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileDownload } from '@fortawesome/free-solid-svg-icons'

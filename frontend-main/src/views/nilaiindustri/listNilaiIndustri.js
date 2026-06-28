@@ -17,38 +17,43 @@ const ListNilaiIndustri = () => {
 
   // initial
   useEffect(() => {
-    getDataForm()
-  }, [history])
+    const source = axios.CancelToken.source();
+    let isMounted = true;
 
-  const getDataForm = async () => {
-    axios.defaults.withCredentials = true
-    await axios
-      .get(`${process.env.REACT_APP_API_GATEWAY_URL}grade/evaluation/`)
-      .then(function (response) {
-        setData(response.data.data)
-        setIsLoading(false)
-      })
-      .catch(function (error) {
-        const status = error.response ? error.response.status : (error.toJSON && typeof error.toJSON === 'function' ? error.toJSON().status : null);
-        if (status) {
-          if (status >= 300 && status <= 399) {
+    const getDataForm = async () => {
+      axios.defaults.withCredentials = true
+      await axios
+        .get(`${process.env.REACT_APP_API_GATEWAY_URL}grade/evaluation/`, { cancelToken: source.token })
+        .then(function (response) {
+          if (isMounted) {
+            setData(response.data.data)
+            setIsLoading(false)
+          }
+        })
+        .catch(function (error) {
+          if (axios.isCancel(error)) return;
+          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
               state: {
                 session: true,
               },
             })
-          } else if (status >= 400 && status <= 499) {
+          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
             history.push('/404')
-          } else if (status >= 500 && status <= 599) {
+          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
             history.push('/500')
           }
-        } else {
-          console.error(error)
-          setIsLoading(false)
-        }
-      })
-  }
+        })
+    }
+
+    getDataForm()
+
+    return () => {
+      isMounted = false;
+      source.cancel("Component unmounted");
+    }
+  }, [history])
   
   useEffect(() => {
     console.log("isi data =>>", data);
@@ -56,46 +61,31 @@ const ListNilaiIndustri = () => {
 
   const renderRows = () => {
     const rows = [];
-    if (!Array.isArray(data)) return rows;
   
     data.forEach((row, rowIndex) => {
-      const evaluations = row.evaluations || [];
-      const itemsCount = evaluations.length;
+      const itemsCount = row.evaluations.length;
   
-      if (itemsCount === 0) {
-        rows.push({
-          key: `${rowIndex}-0`,
-          no: rowIndex + 1,
-          id: row.id,
-          name: row.name,
-          nim: row.nim,
-          numEvaluation: '-',
-          idNumEvaluation: null,
-          rowSpan: 1
-        });
-      } else {
-        evaluations.forEach((evaluation, itemIndex) => {
-          if (itemIndex === 0) {
-            rows.push({
-              key: `${rowIndex}-${itemIndex}`,
-              no: rowIndex + 1,
-              id: row.id,
-              name: row.name,
-              nim: row.nim,
-              numEvaluation: `Evaluasi ${evaluation.numEvaluation}`,
-              idNumEvaluation: evaluation.id,
-              rowSpan: itemsCount
-            });
-          } else {
-            rows.push({
-              key: `${rowIndex}-${itemIndex}`,
-              numEvaluation: `Evaluasi ${evaluation.numEvaluation}`,
-              idNumEvaluation: evaluation.id,
-              rowSpan: 0
-            });
-          }
-        });
-      }
+      row.evaluations.forEach((evaluation, itemIndex) => {
+        if (itemIndex === 0) {
+          rows.push({
+            key: `${rowIndex}-${itemIndex}`,
+            no: rowIndex+1,
+            id: row.id,
+            name: row.name,
+            nim: row.nim,
+            numEvaluation: `Evaluasi ${evaluation.numEvaluation}`,
+            idNumEvaluation: evaluation.id,
+            rowSpan: itemsCount
+          });
+        } else {
+          rows.push({
+            key: `${rowIndex}-${itemIndex}`,
+            numEvaluation: `Evaluasi ${evaluation.numEvaluation}`,
+            idNumEvaluation: evaluation.id,
+            rowSpan: 0
+          });
+        }
+      });
     });
     return rows;
   };
@@ -143,11 +133,7 @@ const ListNilaiIndustri = () => {
       key: 'numEvaluation',
       align: 'center',
       render: (text, record) => (
-        record.idNumEvaluation ? (
-          <a href={`nilaiIndustri/${record.idNumEvaluation}`}>{record.numEvaluation}</a>
-        ) : (
-          record.numEvaluation
-        )
+        <a href={`nilaiIndustri/${record.idNumEvaluation}`}>{record.numEvaluation}</a>
       ),
     }
   ];
