@@ -3,8 +3,8 @@ import 'antd/dist/antd.css'
 import { CCard, CCardBody, CCol, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons'
-import dayjs from 'dayjs'
-import customParseFormat from 'dayjs/plugin/customParseFormat'
+import moment from 'moment'
+
 
 import {
   Table,
@@ -31,7 +31,7 @@ import { Box, Typography } from '@mui/material'
 
 const antIcon = <LoadingOutlined style={{ fontSize: 40 }} spin />
 const PengelolaanPoinPenilaianSelfAssessment = () => {
-  dayjs.extend(customParseFormat)
+  
   const { RangePicker } = DatePicker
   const dateFormat = 'YYYY-MM-DD'
   let searchInput
@@ -615,7 +615,7 @@ const PengelolaanPoinPenilaianSelfAssessment = () => {
 
 
             <DatePicker
-              defaultValue={dayjs(ePoinTanggal, dateFormat)}
+              defaultValue={moment(ePoinTanggal, dateFormat)}
               onChange={
                 (date, datestring) => setEPoinTanggal(datestring)
                 // console.log(datestring)

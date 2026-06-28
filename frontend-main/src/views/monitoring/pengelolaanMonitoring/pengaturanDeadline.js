@@ -9,9 +9,9 @@ import { useHistory } from 'react-router-dom'
 import '../pengisianDokumen/rpp/rpp.css'
 
 import { Box, Typography } from '@mui/material'
-import dayjs from 'dayjs'
-import customParseFormat from 'dayjs/plugin/customParseFormat'
-dayjs.extend(customParseFormat)
+import moment from 'moment'
+
+
 
 const PengelolaanDeadline = () => {
   axios.defaults.withCredentials = true
@@ -526,7 +526,7 @@ const PengelolaanDeadline = () => {
 
             <Form.Item label="Tanggal Pengumpulan Dibuka">
               <DatePicker
-                defaultValue={dayjs(startAssignmentDateDeadlineEdit, dateFormat)}
+                defaultValue={moment(startAssignmentDateDeadlineEdit, dateFormat)}
                 onChange={(date, datestring) => setStartAssignmentDateDeadlineEdit(datestring)}
               />
             </Form.Item>
@@ -534,7 +534,7 @@ const PengelolaanDeadline = () => {
             {isLaporanEdit === 1 && (
               <Form.Item label="Tanggal Pengumpulan Ditutup">
                 <DatePicker
-                  defaultValue={dayjs(finishAssignmentDateDeadlineEdit, dateFormat)}
+                  defaultValue={moment(finishAssignmentDateDeadlineEdit, dateFormat)}
                   onChange={(date, datestring) => setFinishAssignmentDateDeadlineEdit(datestring)}
                 />
               </Form.Item>
