@@ -29,7 +29,7 @@ class DateUtilTest {
     @Test
     @DisplayName("stringToDate() - format salah harus mengembalikan null (bukan exception)")
     void stringToDate_invalidFormat_returnsNull() {
-        Date result = DateUtil.stringToDate("14-06-2024");
+        Date result = DateUtil.stringToDate("14.06.2024");
         assertNull(result, "Format tanggal salah harus menghasilkan null, bukan exception");
     }
 
