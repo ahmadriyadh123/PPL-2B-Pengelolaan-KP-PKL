@@ -52,18 +52,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticationEntryPoint(unauthorizedHandler)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/create","/account/create").permitAll()
-                .antMatchers("/login","/account/login").permitAll()
-                .antMatchers("/verify","/account/verify").permitAll()
+                // [BUG-003] /create dan /account/create DIHAPUS dari permitAll().
+                // Proteksi role dilakukan via @PreAuthorize di AccountController:
+                //   @PreAuthorize("hasAnyAuthority('COMMITTEE', 'HEAD_STUDY_PROGRAM')")
+                // Request tanpa token → 401 Unauthorized (ditangani JwtAuthenticationEntryPoint)
+                // Request dengan token tapi role salah → 403 Forbidden
+                .antMatchers("/login", "/account/login").permitAll()
+                .antMatchers("/verify", "/account/verify").permitAll()
                 .antMatchers("/v2/api-docs").permitAll()
                 .anyRequest()
                 .authenticated()
                 .and().logout().disable();
 
         http.addFilterBefore(customJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
     }
-
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) {

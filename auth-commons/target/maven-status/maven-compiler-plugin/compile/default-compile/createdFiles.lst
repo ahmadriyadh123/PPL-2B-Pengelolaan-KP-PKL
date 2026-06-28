@@ -1,0 +1,5 @@
+com\kppkl\authcommons\filter\StatelessJwtAuthenticationFilter.class
+com\kppkl\authcommons\constants\AuthorityConstants.class
+com\kppkl\authcommons\reader\CookieTokenReader.class
+com\kppkl\authcommons\validator\JwtTokenValidator.class
+com\kppkl\authcommons\config\AuthCommonsAutoConfiguration.class

@@ -1,10 +1,13 @@
 package com.jtk.ps.api.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+@Slf4j
 public class DateUtil {
     private DateUtil(){throw new IllegalStateException("Utility class");}
 
@@ -48,6 +51,7 @@ public static Date stringToDate(String date) {
         "dd/MM/yyyy"    // format alternatif
     };
     
+    Exception lastException = null;
     for (String format : formats) {
         try {
             DateFormat dateFormat = new SimpleDateFormat(format);
@@ -55,9 +59,11 @@ public static Date stringToDate(String date) {
             return dateFormat.parse(date);
         } catch (Exception e) {
             // coba format berikutnya
+            lastException = e;
         }
     }
     
+    log.warn("[DateUtil] stringToDate() gagal memparse tanggal '{}': {}", date, lastException != null ? lastException.getMessage() : "Unknown error");
     return null; // semua format gagal
 }
 
@@ -70,6 +76,7 @@ public static Date stringToDate(String date) {
 
             return nowDate.after(dateStart) && nowDate.before(dateEnd);
         } catch (Exception e) {
+            log.warn("[DateUtil] checkNowDate() gagal memparse rentang tanggal start='{}' end='{}': {}", startDate, endDate, e.getMessage());
             return null;
         }
     }

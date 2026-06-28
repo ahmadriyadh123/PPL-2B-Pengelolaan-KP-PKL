@@ -11,12 +11,15 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
 
+@Slf4j
 @Service
 public class JwtUtil {
     @Value("${jwt.secret}")
@@ -33,6 +36,43 @@ public class JwtUtil {
 
     @Autowired
     private LecturerRepository lecturerRepository;
+
+    /**
+     * Fail-fast validasi konfigurasi JWT. Aplikasi akan gagal start kalau
+     * JWT_SECRET tidak diset, terlalu pendek, atau masih memakai nilai default
+     * yang lemah. Ini mencegah token ditandatangani dengan secret yang bisa
+     * di-brute force dalam hitungan detik.
+     */
+    @PostConstruct
+    void validateJwtConfig() {
+        if (tokenSecret == null || tokenSecret.trim().isEmpty()) {
+            throw new IllegalStateException(
+                    "JWT_SECRET tidak diset. Set environment variable JWT_SECRET " +
+                            "dengan nilai base64 minimal 64 byte (mis. `openssl rand -base64 64`).");
+        }
+        // HS512 butuh kunci minimal 512 bit. 64 karakter aman sebagai batas bawah.
+        if (tokenSecret.length() < 64) {
+            throw new IllegalStateException(
+                    "JWT_SECRET terlalu pendek (" + tokenSecret.length() + " karakter). " +
+                            "Gunakan secret minimal 64 karakter (base64 dari 64 byte acak).");
+        }
+        if ("token".equalsIgnoreCase(tokenSecret.trim())) {
+            throw new IllegalStateException(
+                    "JWT_SECRET masih memakai nilai default yang tidak aman. Ganti dengan secret acak.");
+        }
+        if (tokenExpirationMsec == null || tokenExpirationMsec <= 0) {
+            throw new IllegalStateException("JWT_ACCESS_EXP_MS harus diset dengan nilai positif.");
+        }
+        if (refreshTokenExpirationMsec == null || refreshTokenExpirationMsec <= 0) {
+            throw new IllegalStateException("JWT_REFRESH_EXP_MS harus diset dengan nilai positif.");
+        }
+        if (refreshTokenExpirationMsec <= tokenExpirationMsec) {
+            throw new IllegalStateException(
+                    "JWT_REFRESH_EXP_MS (" + refreshTokenExpirationMsec + ") harus lebih besar dari " +
+                            "JWT_ACCESS_EXP_MS (" + tokenExpirationMsec + "). Refresh token harus berumur " +
+                            "lebih panjang dari access token.");
+        }
+    }
 
     public Token generateAccessToken(CustomUserDetails userDetails, Integer idProdi, Integer id) {
         Map<String, Object> claims = new HashMap<>();
@@ -131,18 +171,21 @@ public class JwtUtil {
         return new Token(Token.TokenType.REFRESH, token, duration, LocalDateTime.ofInstant(expiryDate.toInstant(), ZoneId.systemDefault()));
     }
 
-    public String getUsernameFromToken(String token){
-        Claims claims = Jwts.parser().setSigningKey(tokenSecret).parseClaimsJws(token).getBody();
-        String id = claims.getSubject();
-
-        Optional<Account> account = accountRepository.findById(Integer.parseInt(id));
-
-        Account user = account.orElse(null);
-        if(user != null){
-            return user.getUsername();
+    public Optional<String> getUsernameFromToken(String token){
+        if (token == null || token.isBlank()) {
+            return Optional.empty();
         }
+        try {
+            Claims claims = Jwts.parser().setSigningKey(tokenSecret).parseClaimsJws(token).getBody();
+            String id = claims.getSubject();
+            if (id == null) return Optional.empty();
 
-        return null;
+            return accountRepository.findById(Integer.parseInt(id))
+                    .map(Account::getUsername);
+        } catch (NumberFormatException | JwtException e) {
+            log.warn("Invalid token format: {}", e.getMessage());
+            return Optional.empty();
+        }
     }
 
     public String getIdAccountFromToken(String token) {

@@ -1,0 +1,8 @@
+# Environment files (jangan commit secrets)
+.env
+.env.*
+!.env.example
+
+# SQL and database dumps
+*.sql
+dump database/
