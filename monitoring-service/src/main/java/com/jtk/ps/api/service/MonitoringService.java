@@ -483,7 +483,8 @@ public class MonitoringService implements IMonitoringService {
         Deadline deadline = deadlineRepository.findByNameLike("self assessment");
         List<SelfAssessmentAspectResponse> response = new ArrayList<>();
         for(SelfAssessmentAspect temp:aspect){
-            response.add(new SelfAssessmentAspectResponse(temp.getId(), temp.getName(), temp.getStartAssessmentDate(), temp.getDescription(), temp.getStatus().getStatus(), deadline.getDayRange()));
+            String statusName = temp.getStatus() != null ? temp.getStatus().getStatus() : "Active";
+            response.add(new SelfAssessmentAspectResponse(temp.getId(), temp.getName(), temp.getStartAssessmentDate(), temp.getDescription(), statusName, deadline.getDayRange()));
         }
         return response;
     }
@@ -494,7 +495,8 @@ public class MonitoringService implements IMonitoringService {
         Deadline deadline = deadlineRepository.findByNameLike("self assessment");
         List<SelfAssessmentAspectResponse> response = new ArrayList<>();
         for(SelfAssessmentAspect temp:aspect){
-            response.add(new SelfAssessmentAspectResponse(temp.getId(), temp.getName(), temp.getStartAssessmentDate(), temp.getDescription(), temp.getStatus().getStatus(), deadline.getDayRange()));
+            String statusName = temp.getStatus() != null ? temp.getStatus().getStatus() : "Active";
+            response.add(new SelfAssessmentAspectResponse(temp.getId(), temp.getName(), temp.getStartAssessmentDate(), temp.getDescription(), statusName, deadline.getDayRange()));
         }
         return response;
     }

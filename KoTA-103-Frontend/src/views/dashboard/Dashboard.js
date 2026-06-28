@@ -68,18 +68,22 @@ const Dashboard = () => {
           setIsLoading(false)
         })
         .catch(function (error) {
-          if (error.toJSON().status === 401 || error.toJSON().status === 403) {
+          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            return
+          }
+          setIsLoading(false)
+          if (error.toJSON && (error.toJSON().status === 401 || error.toJSON().status === 403)) {
             history.push({ pathname: "/login", state: { session: true } });
-          } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+          } else if (error.toJSON && error.toJSON().status >= 300 && error.toJSON().status <= 399) {
             history.push({
               pathname: '/login',
               state: {
                 session: true,
               },
             })
-          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+          } else if (error.toJSON && error.toJSON().status >= 400 && error.toJSON().status <= 499) {
             history.push('/404')
-          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
+          } else if (error.toJSON && error.toJSON().status >= 500 && error.toJSON().status <= 599) {
             history.push('/500')
           }
         })
@@ -94,179 +98,49 @@ const Dashboard = () => {
 
     const getDate = async () => {
       let data = []
-      await axios
-        .get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/3`, {
-          signal: controller.signal,
-        })
-        .then(function (response) {
+      try {
+        const ids = [3, 11, 12, 5, 6, 7, 8, 9, 10];
+        const names = [
+          'Pengisian Prerequisite Perusahaan',
+          'Pelaksanaan Kegiatan KP',
+          'Pelaksanaan Kegiatan PKL',
+          'Evaluasi Peserta KP',
+          'Evaluasi 1 Peserta PKL',
+          'Evaluasi 2 Peserta PKL',
+          'Evaluasi 3 Peserta PKL'
+        ];
+        
+        for (let i = 0; i < ids.length; i++) {
+          const response = await axios.get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/${ids[i]}`, {
+            signal: controller.signal,
+          });
+          
+          let eventName = names[i] || response.data.data.name;
+          
           data.push({
-            id: 1,
-            name: 'Pengisian Prerequisite Perusahaan',
-            tanggal:
-              getDates(response.data.data.start_date) +
-              ' - ' +
-              getDates(response.data.data.end_date),
-          })
-          axios
-            .get(`${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/11`, {
-              signal: controller.signal,
-            })
-            .then(function (response) {
-              data.push({
-                id: 2,
-                name: 'Pelaksanaan Kegiatan KP',
-                tanggal:
-                  getDates(response.data.data.start_date) +
-                  ' - ' +
-                  getDates(response.data.data.end_date),
-              })
-              axios
-                .get(
-                  `${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/12`,
-                  {
-                    signal: controller.signal,
-                  },
-                )
-                .then(function (response) {
-                  data.push({
-                    id: 3,
-                    name: 'Pelaksanaan Kegiatan PKL',
-                    tanggal:
-                      getDates(response.data.data.start_date) +
-                      ' - ' +
-                      getDates(response.data.data.end_date),
-                  })
-                  axios
-                    .get(
-                      `${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/5`,
-                      {
-                        signal: controller.signal,
-                      },
-                    )
-                    .then(function (response) {
-                      data.push({
-                        id: 4,
-                        name: 'Evaluasi Peserta KP',
-                        tanggal:
-                          getDates(response.data.data.start_date) +
-                          ' - ' +
-                          getDates(response.data.data.end_date),
-                      })
-                      axios
-                        .get(
-                          `${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/6`,
-                          {
-                            signal: controller.signal,
-                          },
-                        )
-                        .then(function (response) {
-                          data.push({
-                            id: 5,
-                            name: 'Evaluasi 1 Peserta PKL',
-                            tanggal:
-                              getDates(response.data.data.start_date) +
-                              ' - ' +
-                              getDates(response.data.data.end_date),
-                          })
-                          axios
-                            .get(
-                              `${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/7`,
-                              {
-                                signal: controller.signal,
-                              },
-                            )
-                            .then(function (response) {
-                              data.push({
-                                id: 6,
-                                name: 'Evaluasi 2 Peserta PKL',
-                                tanggal:
-                                  getDates(response.data.data.start_date) +
-                                  ' - ' +
-                                  getDates(response.data.data.end_date),
-                              })
-                              axios
-                                .get(
-                                  `${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/8`,
-                                  {
-                                    signal: controller.signal,
-                                  },
-                                )
-                                .then(function (response) {
-                                  data.push({
-                                    id: 7,
-                                    name: 'Evaluasi 3 Peserta PKL',
-                                    tanggal:
-                                      getDates(response.data.data.start_date) +
-                                      ' - ' +
-                                      getDates(response.data.data.end_date),
-                                  })
-                                  axios
-                                    .get(
-                                      `${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/9`,
-                                      {
-                                        signal: controller.signal,
-                                      },
-                                    )
-                                    .then(function (response) {
-                                      data.push({
-                                        id: 8,
-                                        name: response.data.data.name,
-                                        tanggal:
-                                          getDates(response.data.data.start_date) +
-                                          ' - ' +
-                                          getDates(response.data.data.end_date),
-                                      })
-                                      axios
-                                        .get(
-                                          `${process.env.REACT_APP_API_GATEWAY_URL}management-content/form-submit-time/10`,
-                                          {
-                                            signal: controller.signal,
-                                          },
-                                        )
-                                        .then(function (response) {
-                                          data.push({
-                                            id: 9,
-                                            name: response.data.data.name,
-                                            tanggal:
-                                              getDates(response.data.data.start_date) +
-                                              ' - ' +
-                                              getDates(response.data.data.end_date),
-                                          })
-                                          setDate(data)
-                                          setIsLoading(false)
-                                        })
-                                    })
-                                })
-                            })
-                        })
-                    })
-                })
-            })
-        })
-        .catch(function (error) {
-<<<<<<< HEAD
-          if (error.toJSON().status === 401 || error.toJSON().status === 403) {
-            history.push({ pathname: "/login", state: { session: true } });
-          } else if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
-=======
-          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
-            return
-          }
-
-          if (error.toJSON().status >= 300 && error.toJSON().status <= 399) {
->>>>>>> 3467592ad474c65678ee364569cd30fcf96ae890
-            history.push({
-              pathname: '/login',
-              state: {
-                session: true,
-              },
-            })
-          } else if (error.toJSON().status >= 400 && error.toJSON().status <= 499) {
-            history.push('/404')
-          } else if (error.toJSON().status >= 500 && error.toJSON().status <= 599) {
-            history.push('/500')
-          }
-        })
+            id: i + 1,
+            name: eventName,
+            tanggal: getDates(response.data.data.start_date) + ' - ' + getDates(response.data.data.end_date),
+          });
+        }
+        
+        setDate(data);
+        setIsLoading(false);
+      } catch (error) {
+        if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+          return
+        }
+        setIsLoading(false);
+        if (error.toJSON && (error.toJSON().status === 401 || error.toJSON().status === 403)) {
+          history.push({ pathname: "/login", state: { session: true } });
+        } else if (error.toJSON && error.toJSON().status >= 300 && error.toJSON().status <= 399) {
+          history.push({ pathname: '/login', state: { session: true } })
+        } else if (error.toJSON && error.toJSON().status >= 400 && error.toJSON().status <= 499) {
+          history.push('/404')
+        } else if (error.toJSON && error.toJSON().status >= 500 && error.toJSON().status <= 599) {
+          history.push('/500')
+        }
+      }
     }
 
     if (localStorage.getItem('id_role') === '2') {
